@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="icon" type="image/x-icon" href="./AlifLogo.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>منصة ألف 5.3 التفاعلية - الإصدار المرئي الاحترافي</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/litegraph.js/css/litegraph.css">
+    <script src="https://cdn.jsdelivr.net/npm/litegraph.js/build/litegraph.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;500;700&display=swap');
+        
+        html, body { width: 100%; height: 100dvh; overflow: hidden; font-family: 'Tajawal', sans-serif; background-color: #0f172a; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* ✅ تم تصحيح touch-action ليسمح بـ pinch-zoom داخل المحرر المرئي */
+        @media (max-width: 767px) { 
+            body { 
+                position: fixed; 
+                inset: 0; 
+                width: 100vw; 
+                height: 100dvh; 
+                overscroll-behavior: none; 
+                touch-action: pan-x pan-y pinch-zoom; /* 👈 التغيير الأساسي */
+            } 
+        }
+        
+        .code-font { font-family: 'Noto Kufi Arabic', sans-serif !important; tab-size: 4; line-height: 1.7; font-size: 13px; letter-spacing: normal !important; word-spacing: normal !important; }
+        @media (min-width: 640px) { .code-font { font-size: 15px; } }
+        #output-content, #terminalInput { font-family: 'Noto Kufi Arabic', sans-serif; tab-size: 4; line-height: 1.6; }
+        #output-content { white-space: pre-wrap; word-break: break-all; overflow-wrap: anywhere; }
+
+        @media (min-width: 768px) {
+            ::-webkit-scrollbar { width: 6px; height: 6px; }
+            ::-webkit-scrollbar-track { background: transparent; }
+            ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+            ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        }
+
+        .litegraph .lgraphcanvas {
+            background-color: #0b1120 !important; 
+            background-image: linear-gradient(#1e293b 1.5px, transparent 1.5px), linear-gradient(90deg, #1e293b 1.5px, transparent 1.5px) !important;
+            background-size: 25px 25px !important;
+            image-rendering: optimizeQuality;
+        }
+        .litegraph .lgraphcanvas canvas { image-rendering: optimizeQuality; }
+
+        .custom-menu-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-menu-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-menu-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+    </style>
+</head>
+<body class="text-slate-200 flex flex-col overflow-hidden w-full max-w-full relative" oncontextmenu="return false;">
+
+    <!-- الهيدر يبقى كما هو -->
+    <header class="bg-slate-800/80 backdrop-blur-md border-b border-slate-700/50 p-3 sm:p-4 flex justify-between items-center shadow-lg z-10 shrink-0 w-full">
+        <div class="flex items-center gap-3 sm:gap-4">
+            <img src="./AlifLogo.ico" alt="شعار لغة ألف" class="h-8 sm:h-11 w-auto object-contain drop-shadow-md">
+            <h1 class="text-lg sm:text-2xl font-bold tracking-wide text-slate-100 pt-1">
+                محرر <span class="text-blue-400">ألف 5.3</span>
+            </h1>
+        </div>
+        <button onclick="startRun()" id="runBtn" class="bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 text-white px-5 py-2 sm:px-6 sm:py-2.5 rounded-xl text-sm sm:text-base font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-900/20 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed">
+            <span class="pt-[3px] sm:pt-[2px]">تشغيل</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" class="rotate-180"><polygon points="5 4 19 12 5 20"></polygon></svg>
+        </button>
+    </header>
+
+    <main id="main-container" class="flex-1 grid grid-rows-2 md:grid-rows-1 md:grid-cols-2 bg-[#0b1120] overflow-hidden w-full min-w-0 max-w-full transition-all duration-300">
+        
+        <!-- قسم المحرر -->
+        <section class="flex-1 flex flex-col border-b md:border-b-0 md:border-l border-slate-700/50 min-h-0 min-w-0 w-full max-w-full overflow-hidden">
+            <div class="bg-slate-800/50 py-2 px-2 sm:px-4 border-b border-slate-700/50 shrink-0 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+                
+                <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+                    <button onclick="toggleEditorMode()" id="editorModeBtn" class="flex items-center gap-1.5 sm:gap-2 whitespace-nowrap text-emerald-400 font-bold bg-slate-700/50 hover:bg-slate-700 px-3 py-1.5 rounded-lg transition-colors text-xs sm:text-sm border border-emerald-900/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> 
+                        <span>الشيفرة المصدرية</span>
+                    </button>
+                    
+                    <!-- أزرار التحكم بالمحرر -->
+                    <div class="flex items-center gap-1 text-slate-400 border-r border-slate-600/50 pr-2">
+                        <button onclick="copyCode()" title="نسخ الكود" class="p-1.5 hover:bg-slate-700 hover:text-white rounded transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+                        <button onclick="shareCode()" title="إنشاء رابط مشاركة" class="p-1.5 hover:bg-slate-700 hover:text-purple-400 rounded transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
+                        <button onclick="downloadCode()" title="تحميل ملف .alif" class="p-1.5 hover:bg-slate-700 hover:text-white rounded transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
+                        <button onclick="saveSnapshot()" title="حفظ لقطة آمنة" class="p-1.5 hover:bg-slate-700 hover:text-green-400 rounded transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg></button>
+                        <button onclick="restoreSnapshot()" title="استعادة اللقطة" class="p-1.5 hover:bg-slate-700 hover:text-amber-400 rounded transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg></button>
+                        <button onclick="toggleTerminalView()" title="تكبير/تصغير مساحة العمل" class="p-1.5 hover:bg-slate-700 hover:text-blue-400 rounded transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg></button>
+                    </div>
+                </div>
+                
+                <select id="examplesDropdown" onchange="loadExample()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs px-2 py-1.5 rounded outline-none border border-slate-600 transition-colors cursor-pointer w-[110px] sm:w-[160px] text-ellipsis overflow-hidden whitespace-nowrap shrink-0">
+                    <option value="hello">المثال 1: الطباعة</option>
+                    <option value="cond">المثال 2: الشروط</option>
+                    <option value="loop">المثال 3: التكرار</option>
+                    <option value="trycatch">المثال 8: الأخطاء</option>
+                    <option value="blank">-- ملف فارغ --</option>
+                </select>
+            </div>
+            
+            <div class="flex-1 relative overflow-hidden bg-transparent w-full">
+                <!-- المحرر النصي -->
+                <div id="text-editor-wrap" class="absolute inset-0 w-full h-full block">
+                    <pre id="highlightLayer" class="code-font absolute inset-0 w-full h-full p-4 overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-all pointer-events-none text-slate-300 z-0 text-right bg-transparent no-scrollbar" dir="rtl"></pre>
+                    <textarea id="editor" class="code-font absolute inset-0 w-full h-full p-4 bg-transparent text-transparent caret-white outline-none resize-none overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-all z-10 text-right no-scrollbar" dir="rtl" spellcheck="false" placeholder="اكتب كود ألف 5.3 هنا..."></textarea>
+                </div>
+
+                <!-- المحرر المرئي الاحترافي -->
+                <div id="visual-editor-wrap" class="absolute inset-0 w-full h-full hidden cursor-crosshair relative">
+                    <div class="absolute top-3 left-3 bg-slate-800/80 text-slate-300 text-xs px-3 py-1.5 rounded-lg border border-slate-700 shadow-md z-20 pointer-events-none flex flex-col gap-1">
+                        <span>👆 استخدم زر (إضافة عقدة) بالأسفل للكل</span>
+                        <span>⚙️ لتعديل أو حذف عُقدة: انقر عليها مرتين ✌️ (Double Click)</span>
+                        <span>✌️ للتحريك والتكبير استخدم السحب واللمس بحرية</span>
+                    </div>
+                    
+                    <!-- Canvas المحرر المرئي -->
+                    <canvas id="visual-canvas" class="w-full h-full" style="outline: none; -webkit-tap-highlight-color: transparent; display: block; touch-action: none;"></canvas>
+                    
+                    <!-- الزر العائم (FAB) المخصص للجميع لإضافة العُقد -->
+                    <button id="fab-add-node" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-2xl shadow-blue-900/40 px-6 py-3.5 flex items-center gap-2 z-30 transition-transform active:scale-95 border border-blue-400/30" style="pointer-events: auto;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <span class="font-bold text-sm">إضافة عُقدة</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- التيرمينال يبقى كما هو -->
+        <section id="terminal-section" class="flex-1 flex flex-col bg-black/40 shadow-inner min-h-0 min-w-0 w-full max-w-full overflow-hidden transition-all duration-300">
+            <div class="bg-slate-800/50 text-slate-400 text-xs sm:text-sm py-2 px-4 border-b border-slate-700/50 flex justify-between items-center shrink-0 w-full">
+                <span class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-400"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                    طرفية المخرجات
+                </span>
+                <button onclick="clearConsole()" class="text-slate-500 hover:text-slate-200 transition-colors px-2 py-1 rounded hover:bg-slate-700/50 text-xs">مسح الشاشة</button>
+            </div>
+            
+            <div id="output-container" class="flex-1 p-4 overflow-y-auto overflow-x-hidden no-scrollbar w-full min-w-0 max-w-full" dir="rtl">
+                <div id="output-content" class="text-slate-300 text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-all w-full text-right"></div>
+            </div>
+
+            <div class="bg-slate-900/80 backdrop-blur border-t border-slate-700/50 flex items-center px-3 py-2 sm:px-4 sm:py-3 shrink-0 w-full min-w-0">
+                <span class="text-green-500 font-bold ml-2 shrink-0">>></span>
+                <input type="text" id="terminalInput" class="flex-1 bg-transparent text-white outline-none text-sm sm:text-base placeholder-slate-600 min-w-0" placeholder="اكتب إدخالك هنا واضغط Enter..." disabled>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- رسالة الإشعارات -->
+    <div id="toastMessage" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-800 text-emerald-400 px-5 py-2.5 rounded-xl shadow-2xl transition-all duration-300 opacity-0 pointer-events-none z-50 text-sm font-bold border border-slate-700/80 flex items-center gap-2">
+        <span id="toastIcon"></span>
+        <span id="toastText">تمت العملية</span>
+    </div>
+
+    <!-- القائمة العربية المخصصة لإضافة العقد (للكل) -->
+    <div id="customNodeMenu" class="fixed hidden bg-slate-800/95 backdrop-blur-md border border-slate-600 rounded-xl shadow-2xl z-50 w-56 flex flex-col max-h-[75vh] overflow-y-auto custom-menu-scroll text-right" dir="rtl">
+        <!-- محتويات القائمة تبقى كما هي -->
+        <div class="bg-slate-700/80 text-emerald-300 px-4 py-2 font-bold text-xs sticky top-0 backdrop-blur z-10 border-b border-slate-600 flex justify-between items-center">
+            <span>🚀 أوامر أساسية</span>
+            <button onclick="hideCustomMenus()" class="text-slate-400 hover:text-white p-1 font-sans">✕</button>
+        </div>
+        <button onclick="addNodeFromMenu('أوامر/بداية البرنامج')" class="text-right px-4 py-2.5 hover:bg-blue-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">▶️ بداية البرنامج</button>
+        <button onclick="addNodeFromMenu('أوامر/اطبع')" class="text-right px-4 py-2.5 hover:bg-green-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">🖨️ اطبع</button>
+
+        <div class="bg-slate-700/80 text-fuchsia-300 px-4 py-2 font-bold text-xs sticky top-0 backdrop-blur z-10 border-y border-slate-600 mt-1">📦 بيانات ومتغيرات</div>
+        <button onclick="addNodeFromMenu('متغيرات/إسناد')" class="text-right px-4 py-2.5 hover:bg-red-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">📦 إسناد متغير</button>
+        <button onclick="addNodeFromMenu('متغيرات/قراءة')" class="text-right px-4 py-2.5 hover:bg-red-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">📖 قراءة متغير</button>
+        <button onclick="addNodeFromMenu('بيانات/نص')" class="text-right px-4 py-2.5 hover:bg-fuchsia-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">📝 نص</button>
+        <button onclick="addNodeFromMenu('بيانات/رقم')" class="text-right px-4 py-2.5 hover:bg-indigo-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">🔢 رقم</button>
+        <button onclick="addNodeFromMenu('بيانات/منطق')" class="text-right px-4 py-2.5 hover:bg-indigo-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">✅ صح / خطأ</button>
+        <button onclick="addNodeFromMenu('بيانات/عشوائي')" class="text-right px-4 py-2.5 hover:bg-indigo-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">🎲 رقم عشوائي</button>
+        <button onclick="addNodeFromMenu('بيانات/تقريب')" class="text-right px-4 py-2.5 hover:bg-indigo-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">🎯 تقريب رقم</button>
+        <button onclick="addNodeFromMenu('بيانات/طول')" class="text-right px-4 py-2.5 hover:bg-amber-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">📏 طول (نص/مصفوفة)</button>
+        <button onclick="addNodeFromMenu('بيانات/إدخال مستخدم')" class="text-right px-4 py-2.5 hover:bg-amber-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">⌨️ إدخال مستخدم</button>
+        <button onclick="addNodeFromMenu('بيانات/حساب')" class="text-right px-4 py-2.5 hover:bg-teal-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">🧮 عملية حسابية</button>
+        <button onclick="addNodeFromMenu('بيانات/دمج نصوص')" class="text-right px-4 py-2.5 hover:bg-teal-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">🔤 دمج نصوص</button>
+
+        <div class="bg-slate-700/80 text-rose-300 px-4 py-2 font-bold text-xs sticky top-0 backdrop-blur z-10 border-y border-slate-600 mt-1">🔀 شروط وحلقات</div>
+        <button onclick="addNodeFromMenu('شروط/اذا')" class="text-right px-4 py-2.5 hover:bg-rose-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">❓ اذا / والا</button>
+        <button onclick="addNodeFromMenu('شروط/مقارنة')" class="text-right px-4 py-2.5 hover:bg-orange-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">⚖️ مقارنة</button>
+        <button onclick="addNodeFromMenu('شروط/عملية منطقية')" class="text-right px-4 py-2.5 hover:bg-orange-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">🧠 عملية منطقية (و/أو)</button>
+        <button onclick="addNodeFromMenu('حلقات/لكل')" class="text-right px-4 py-2.5 hover:bg-orange-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">🔁 لكل (تكرار)</button>
+        <button onclick="addNodeFromMenu('حلقات/بينما')" class="text-right px-4 py-2.5 hover:bg-orange-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">🔄 بينما (While)</button>
+        <button onclick="addNodeFromMenu('حلقات/توقف')" class="text-right px-4 py-2.5 hover:bg-red-600/50 text-red-300 font-bold text-sm border-b border-slate-700/50 transition-colors">🛑 توقف (Break)</button>
+
+        <div class="bg-slate-700/80 text-sky-300 px-4 py-2 font-bold text-xs sticky top-0 backdrop-blur z-10 border-y border-slate-600 mt-1">🗂️ مصفوفات (متقدم)</div>
+        <button onclick="addNodeFromMenu('مصفوفات/جديدة')" class="text-right px-4 py-2.5 hover:bg-sky-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">🗂️ مصفوفة جديدة</button>
+        <button onclick="addNodeFromMenu('مصفوفات/إضافة')" class="text-right px-4 py-2.5 hover:bg-sky-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">📥 إضافة للمصفوفة</button>
+        <button onclick="addNodeFromMenu('مصفوفات/حذف')" class="text-right px-4 py-2.5 hover:bg-sky-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">🗑️ حذف من المصفوفة</button>
+        <button onclick="addNodeFromMenu('مصفوفات/قراءة')" class="text-right px-4 py-2.5 hover:bg-sky-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">🔍 قراءة عنصر</button>
+        <button onclick="addNodeFromMenu('مصفوفات/ترتيب')" class="text-right px-4 py-2.5 hover:bg-sky-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">📶 ترتيب المصفوفة</button>
+
+        <div class="bg-slate-700/80 text-violet-300 px-4 py-2 font-bold text-xs sticky top-0 backdrop-blur z-10 border-y border-slate-600 mt-1">⚙️ دوال (متقدم)</div>
+        <button onclick="addNodeFromMenu('دوال/تعريف دالة')" class="text-right px-4 py-2.5 hover:bg-violet-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">⚙️ تعريف دالة</button>
+        <button onclick="addNodeFromMenu('دوال/استدعاء')" class="text-right px-4 py-2.5 hover:bg-violet-600/50 text-slate-200 text-sm border-b border-slate-700/50 transition-colors">📞 استدعاء دالة</button>
+        <button onclick="addNodeFromMenu('دوال/إرجاع')" class="text-right px-4 py-2.5 hover:bg-violet-600/50 text-slate-200 text-sm transition-colors">🔙 إرجاع (Return)</button>
+    </div>
+
+    <!-- قائمة التعديل (تظهر عند النقر المزدوج على أي عقدة) - سيتم تعديل موقعها ديناميكياً -->
+    <div id="editNodeMenu" class="fixed hidden bg-slate-800/95 backdrop-blur-md border border-slate-600 rounded-xl shadow-2xl z-50 w-48 text-right" dir="rtl">
+        <div class="flex justify-between items-center bg-slate-700/50 px-4 py-2 border-b border-slate-600">
+            <span class="text-xs text-yellow-400 font-bold">⚙️ تعديل العقدة</span>
+            <button onclick="hideCustomMenus()" class="text-slate-400 hover:text-white text-xs font-sans">✕</button>
+        </div>
+        <button onclick="cloneSelectedNode()" class="block w-full text-right px-4 py-3 hover:bg-slate-700 text-slate-200 text-sm border-b border-slate-700 transition-colors">استنساخ العقدة 📄</button>
+        <button onclick="deleteSelectedNode()" class="block w-full text-right px-4 py-3 hover:bg-red-600/80 text-red-200 text-sm transition-colors">حذف العقدة 🗑️</button>
+    </div>
+
+    <script>
+        // ========================================================
+        // نظام العُقد المرئية الشامل - مع الإصلاحات
+        // ========================================================
+        
+        LiteGraph.pointerevents_method = "pointer"; 
+        LiteGraph.clearRegisteredTypes();
+        LiteGraph.NODE_DEFAULT_SHAPE = LiteGraph.ROUND_SHAPE;
+        LiteGraph.NODE_TITLE_HEIGHT = 34;
+        LiteGraph.NODE_TEXT_SIZE = 16;
+        LiteGraph.NODE_DEFAULT_BGCOLOR = "#1e293b"; 
+        LiteGraph.NODE_DEFAULT_COLOR = "#0f172a"; 
+        LiteGraph.DEFAULT_BACKGROUND_IMAGE = "";
+        
+        let graph = new LiteGraph.LGraph();
+        let canvas = new LiteGraph.LGraphCanvas("#visual-canvas", graph);
+        canvas.background_color = "transparent"; 
+        canvas.allow_drag = true;
+        canvas.allow_searchbox = false; 
+        canvas.render_canvas_border = true;
+        canvas.render_shadows = true;
+        canvas.node_title_color = "#f1f5f9";
+        canvas.default_link_color = "#60a5fa";
+
+        canvas.allow_touch = true;
+        canvas.allow_dragcanvas = true;
+        canvas.allow_zoom = true;
+        canvas.allow_interaction = true;
+
+        // تقليل FPS إلى 30 فريم
+        (function() {
+            let lastFrameTime = 0;
+            const FRAME_INTERVAL = 1000 / 30;
+            const originalDraw = canvas.draw.bind(canvas);
+            canvas.draw = function() {
+                const now = performance.now();
+                if (now - lastFrameTime < FRAME_INTERVAL) return;
+                lastFrameTime = now;
+                originalDraw();
+            };
+        })();
+
+        // ========================================================
+        // ✅ نظام Pinch-Zoom + Double-Tap المخصص للموبايل
+        // ========================================================
+        (function() {
+            const cvs = document.getElementById('visual-canvas');
+            let initialPinchDistance = null;
+            let initialScale = null;
+            let pinchCenter = null;
+            let lastTouchEndTime = 0;
+            let lastTouchNode = null;
+
+            function getDistance(t1, t2) {
+                const dx = t1.clientX - t2.clientX;
+                const dy = t1.clientY - t2.clientY;
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+
+            function getMidpoint(t1, t2) {
+                return {
+                    x: (t1.clientX + t2.clientX) / 2,
+                    y: (t1.clientY + t2.clientY) / 2
+                };
+            }
+
+            cvs.addEventListener('touchstart', function(e) {
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    initialPinchDistance = getDistance(e.touches[0], e.touches[1]);
+                    initialScale = canvas.ds.scale;
+                    pinchCenter = getMidpoint(e.touches[0], e.touches[1]);
+                }
+            }, { passive: false });
+
+            cvs.addEventListener('touchmove', function(e) {
+                if (e.touches.length === 2 && initialPinchDistance !== null) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const currentDistance = getDistance(e.touches[0], e.touches[1]);
+                    const ratio = currentDistance / initialPinchDistance;
+                    const newScale = Math.min(Math.max(initialScale * ratio, 0.15), 5);
+                    
+                    const rect = cvs.getBoundingClientRect();
+                    const centerX = pinchCenter.x - rect.left;
+                    const centerY = pinchCenter.y - rect.top;
+                    
+                    const oldScale = canvas.ds.scale;
+                    canvas.ds.scale = newScale;
+                    
+                    const scaleRatio = newScale / oldScale;
+                    canvas.ds.offset[0] = centerX - (centerX - canvas.ds.offset[0]) * scaleRatio;
+                    canvas.ds.offset[1] = centerY - (centerY - canvas.ds.offset[1]) * scaleRatio;
+                    
+                    canvas.draw();
+                }
+            }, { passive: false });
+
+            cvs.addEventListener('touchend', function(e) {
+                if (e.touches.length < 2) {
+                    initialPinchDistance = null;
+                    initialScale = null;
+                    pinchCenter = null;
+                }
+                if (e.changedTouches.length === 1) {
+                    const currentTime = new Date().getTime();
+                    const touch = e.changedTouches[0];
+                    const rect = cvs.getBoundingClientRect();
+                    
+                    const canvasX = (touch.clientX - rect.left - canvas.ds.offset[0]) / canvas.ds.scale;
+                    const canvasY = (touch.clientY - rect.top - canvas.ds.offset[1]) / canvas.ds.scale;
+                    
+                    const node = graph.getNodeOnPos(canvasX, canvasY);
+                    const tapInterval = currentTime - lastTouchEndTime;
+                    
+                    if (tapInterval < 400 && tapInterval > 80 && node && node === lastTouchNode) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        showEditMenuForNode(node, { x: touch.clientX, y: touch.clientY });
+                        lastTouchEndTime = 0;
+                        lastTouchNode = null;
+                    } else {
+                        lastTouchEndTime = currentTime;
+                        lastTouchNode = node;
+                    }
+                }
+            }, { passive: false });
+        })();
+
+        // ========================================================
+        // نافذة الإدخال (Modal) الاحترافية
+        // ========================================================
+        canvas.prompt = function(title, value, callback, event) {
+            let overlay = document.createElement("div");
+            overlay.className = "fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4 transition-opacity";
+            
+            let box = document.createElement("div");
+            box.className = "bg-slate-800 border border-slate-600 rounded-2xl shadow-2xl w-full max-w-xs p-5 flex flex-col gap-4 transform scale-100 transition-transform";
+            
+            let lbl = document.createElement("label");
+            lbl.innerText = title;
+            lbl.className = "text-slate-200 font-bold text-sm text-right font-['Tajawal']";
+            
+            let inp = document.createElement("input");
+            inp.type = "text";
+            inp.value = value;
+            inp.className = "w-full bg-slate-900 border border-blue-500 focus:border-emerald-400 text-emerald-400 rounded-lg p-3 outline-none text-right font-['Noto_Kufi_Arabic']";
+            inp.dir = "auto";
+            
+            let btnWrap = document.createElement("div");
+            btnWrap.className = "flex gap-3 w-full mt-2";
+            
+            let btnOk = document.createElement("button");
+            btnOk.innerText = "حفظ";
+            btnOk.className = "flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-lg transition-colors font-['Tajawal']";
+            
+            let btnCancel = document.createElement("button");
+            btnCancel.innerText = "إلغاء";
+            btnCancel.className = "flex-1 bg-slate-600 hover:bg-slate-500 text-white font-bold py-2.5 rounded-lg transition-colors font-['Tajawal']";
+            
+            box.appendChild(lbl); box.appendChild(inp); 
+            btnWrap.appendChild(btnOk); btnWrap.appendChild(btnCancel);
+            box.appendChild(btnWrap); overlay.appendChild(box);
+            document.body.appendChild(overlay);
+            
+            setTimeout(() => { inp.focus(); inp.select(); }, 100);
+            
+            let close = () => { document.body.removeChild(overlay); };
+            
+            btnOk.onclick = () => { callback(inp.value); close(); generateAlifCodeFromGraph(); };
+            btnCancel.onclick = close;
+            inp.onkeydown = (e) => { if(e.key === "Enter") btnOk.onclick(); if(e.key === "Escape") close(); };
+        };
+
+        // --- نظام القوائم المحسن ---
+        let nodeToEdit = null;
+        let menuJustOpened = false; // لمنع إغلاق القائمة فور فتحها بالدبل تاب
+        
+        function hideCustomMenus() {
+            document.getElementById('customNodeMenu').classList.add('hidden');
+            document.getElementById('editNodeMenu').classList.add('hidden');
+        }
+
+        document.addEventListener('pointerdown', function(e) {
+            if (menuJustOpened) { menuJustOpened = false; return; }
+            if (!e.target.closest('#customNodeMenu') && !e.target.closest('#editNodeMenu') && !e.target.closest('#fab-add-node')) {
+                hideCustomMenus();
+            }
+        });
+
+        window.addEventListener("contextmenu", function(e) {
+            if(isVisualMode) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        }, { capture: true });
+
+        canvas.processContextMenu = function(node, event) {
+            if(event && event.preventDefault) event.preventDefault();
+            return false;
+        };
+
+        // ==========================================
+        // الزر العائم: يضيف العقدة في منتصف الشاشة
+        // ==========================================
+        window.openMenuAtCenter = function(e) {
+            if(e) { e.preventDefault(); e.stopPropagation(); }
+            hideCustomMenus();
+            
+            let menu = document.getElementById('customNodeMenu');
+            menu.classList.remove('hidden');
+            menuJustOpened = true;
+            
+            let posX = (window.innerWidth - menu.offsetWidth) / 2;
+            let posY = (window.innerHeight - menu.offsetHeight) / 2;
+            menu.style.left = posX + 'px';
+            menu.style.top = posY + 'px';
+        };
+
+        // ربط الزر بشكل مباشر (يعمل دائماً حتى بعد resize)
+        document.getElementById('fab-add-node').addEventListener('click', function(e) {
+            e.stopPropagation();
+            openMenuAtCenter(e);
+        });
+        document.getElementById('fab-add-node').addEventListener('touchend', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            openMenuAtCenter(e);
+        });
+
+        function addNodeFromMenu(type) {
+            hideCustomMenus();
+            let node = LiteGraph.createNode(type);
+            if (node) {
+                let cx = -canvas.ds.offset[0] + (canvas.canvas.width / 2) / canvas.ds.scale;
+                let cy = -canvas.ds.offset[1] + (canvas.canvas.height / 2) / canvas.ds.scale;
+                
+                cx += (Math.random() - 0.5) * 60;
+                cy += (Math.random() - 0.5) * 60;
+
+                node.pos = [cx - node.size[0]/2, cy - node.size[1]/2];
+                graph.add(node); generateAlifCodeFromGraph();
+            }
+        }
+
+        // ==========================================
+        // ✅ تحسين قائمة التعديل: تظهر عند مكان النقر
+        // ==========================================
+        function showEditMenuForNode(node, eventPos = null) {
+            nodeToEdit = node;
+            hideCustomMenus();
+            menuJustOpened = true; // لمنع إغلاقها فوراً من pointerdown
+            let menu = document.getElementById('editNodeMenu');
+            menu.classList.remove('hidden');
+            
+            // تحديد الموقع: إن وجدت إحداثيات من الحدث نستخدمها، وإلا نضعها في المنتصف
+            if (eventPos) {
+                // التأكد من أن القائمة لا تخرج عن الشاشة
+                let menuWidth = menu.offsetWidth || 180;
+                let menuHeight = menu.offsetHeight || 120;
+                let left = Math.min(eventPos.x, window.innerWidth - menuWidth - 10);
+                let top = Math.min(eventPos.y, window.innerHeight - menuHeight - 10);
+                left = Math.max(10, left);
+                top = Math.max(10, top);
+                menu.style.left = left + 'px';
+                menu.style.top = top + 'px';
+            } else {
+                // fallback للمنتصف
+                let posX = (window.innerWidth - menu.offsetWidth) / 2;
+                let posY = (window.innerHeight - menu.offsetHeight) / 2;
+                menu.style.left = posX + 'px';
+                menu.style.top = posY + 'px';
+            }
+        }
+
+        // 1. الدبل كليك للكمبيوتر (مع إحداثيات الماوس)
+        canvas.onNodeDblClicked = function(node, event) {
+            // event هنا هو MouseEvent الأصلي من LiteGraph
+            let pos = null;
+            if (event && event.clientX !== undefined) {
+                pos = { x: event.clientX, y: event.clientY };
+            }
+            showEditMenuForNode(node, pos);
+        };
+
+        // 2. ✅ مستشعر "دبل تاب" محسن للموبايل + الكمبيوتر
+        let lastTapTime = 0;
+        let lastTappedNode = null;
+        const TAP_INTERVAL = 400; // ميلي ثانية
+        
+        // حفظ الدالة الأصلية لـ processMouseDown
+        const originalProcessMouseDown = LiteGraph.LGraphCanvas.prototype.processMouseDown;
+        
+        LiteGraph.LGraphCanvas.prototype.processMouseDown = function(e) {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTapTime;
+            const node = this.graph.getNodeOnPos(e.canvasX, e.canvasY);
+            
+            // تحقق من الدبل تاب: نقرة سريعة على نفس العقدة
+            if (tapLength < TAP_INTERVAL && tapLength > 80 && node && node === lastTappedNode) {
+                // حصلنا على دبل تاب!
+                let pos = null;
+                if (e.clientX !== undefined) {
+                    pos = { x: e.clientX, y: e.clientY };
+                }
+                showEditMenuForNode(node, pos);
+                lastTapTime = 0;
+                lastTappedNode = null;
+                e.preventDefault();
+                return false;
+            } else {
+                lastTapTime = currentTime;
+                lastTappedNode = node;
+            }
+            
+            return originalProcessMouseDown.apply(this, arguments);
+        };
+        
+        function deleteSelectedNode() { 
+            if (nodeToEdit) { graph.remove(nodeToEdit); nodeToEdit = null; hideCustomMenus(); generateAlifCodeFromGraph(); } 
+        }
+
+        function cloneSelectedNode() {
+            if (nodeToEdit) {
+                let newNode = LiteGraph.createNode(nodeToEdit.type);
+                if (newNode) {
+                    newNode.pos = [nodeToEdit.pos[0] + 30, nodeToEdit.pos[1] + 30];
+                    graph.add(newNode); newNode.properties = Object.assign({}, nodeToEdit.properties);
+                    hideCustomMenus(); generateAlifCodeFromGraph();
+                }
+            }
+        }
+
+        // ================== العقد البرمجية ==================
+        function AlifStartNode() { this.addOutput("تسلسل", LiteGraph.EVENT); this.title = "▶️ بداية البرنامج"; this.color = "#1d4ed8"; this.size = [200, 48]; }
+        LiteGraph.registerNodeType("أوامر/بداية البرنامج", AlifStartNode);
+
+        function AlifPrintNode() { this.addInput("تسلسل", LiteGraph.EVENT); this.addInput("القيمة", 0); this.addOutput("التالي", LiteGraph.EVENT); this.title = "🖨️ اطبع"; this.color = "#15803d"; this.size = [200, 70]; }
+        LiteGraph.registerNodeType("أوامر/اطبع", AlifPrintNode);
+
+        function AlifIfNode() { this.addInput("تسلسل", LiteGraph.EVENT); this.addInput("الشرط", 0); this.addOutput("اذا صح", LiteGraph.EVENT); this.addOutput("والا (خطأ)", LiteGraph.EVENT); this.title = "❓ اذا / والا"; this.color = "#be123c"; this.size = [200, 90]; }
+        LiteGraph.registerNodeType("شروط/اذا", AlifIfNode);
+
+        function AlifCompareNode() { this.addInput("أ", 0); this.addInput("ب", 0); this.addOutput("نتيجة", 0); this.properties = { op: "==" }; this.addWidget("combo", "مقارنة", this.properties.op, (v) => { this.properties.op = v; generateAlifCodeFromGraph(); }, { values: ["==", "!=", ">", "<", ">=", "<="] }); this.title = "⚖️ مقارنة"; this.color = "#ca8a04"; this.size = [200, 90]; }
+        LiteGraph.registerNodeType("شروط/مقارنة", AlifCompareNode);
+
+        function AlifLogicNode() { this.addInput("أ", 0); this.addInput("ب", 0); this.addOutput("نتيجة", 0); this.properties = { op: "و" }; this.addWidget("combo", "عملية", this.properties.op, (v) => { this.properties.op = v; generateAlifCodeFromGraph(); }, { values: ["و", "أو"] }); this.title = "🧠 عملية منطقية"; this.color = "#ca8a04"; this.size = [200, 90]; }
+        LiteGraph.registerNodeType("شروط/عملية منطقية", AlifLogicNode);
+
+        function AlifForLoopNode() { this.addInput("تسلسل", LiteGraph.EVENT); this.addInput("من رقم", 0); this.addInput("إلى رقم", 0); this.addOutput("جسم الحلقة", LiteGraph.EVENT); this.addOutput("انتهى", LiteGraph.EVENT); this.properties = { var_name: "س" }; this.addWidget("text", "المتغير", this.properties.var_name, (v) => { this.properties.var_name = v; generateAlifCodeFromGraph(); }); this.title = "🔁 لكل (تكرار)"; this.color = "#ea580c"; this.size = [220, 120]; }
+        LiteGraph.registerNodeType("حلقات/لكل", AlifForLoopNode);
+
+        function AlifWhileLoopNode() { this.addInput("تسلسل", LiteGraph.EVENT); this.addInput("الشرط", 0); this.addOutput("جسم الحلقة", LiteGraph.EVENT); this.addOutput("انتهى", LiteGraph.EVENT); this.title = "🔄 بينما (While)"; this.color = "#ea580c"; this.size = [210, 90]; }
+        LiteGraph.registerNodeType("حلقات/بينما", AlifWhileLoopNode);
+
+        function AlifBreakNode() { this.addInput("تسلسل", LiteGraph.EVENT); this.title = "🛑 توقف (Break)"; this.color = "#dc2626"; this.size = [200, 48]; }
+        LiteGraph.registerNodeType("حلقات/توقف", AlifBreakNode);
+
+        function AlifVarAssignNode() { this.addInput("تسلسل", LiteGraph.EVENT); this.addInput("القيمة", 0); this.addOutput("التالي", LiteGraph.EVENT); this.properties = { var_name: "س" }; this.addWidget("text", "المتغير", this.properties.var_name, (v) => { this.properties.var_name = v; generateAlifCodeFromGraph(); }); this.title = "📦 إسناد متغير"; this.color = "#b91c1c"; this.size = [200, 100]; }
+        LiteGraph.registerNodeType("متغيرات/إسناد", AlifVarAssignNode);
+
+        function AlifVarReadNode() { this.addOutput("القيمة", 0); this.properties = { var_name: "س" }; this.addWidget("text", "المتغير", this.properties.var_name, (v) => { this.properties.var_name = v; generateAlifCodeFromGraph(); }); this.title = "📖 قراءة متغير"; this.color = "#b91c1c"; this.size = [200, 70]; }
+        LiteGraph.registerNodeType("متغيرات/قراءة", AlifVarReadNode);
+
+        function AlifLengthNode() { this.addInput("القيمة", 0); this.addOutput("النتيجة", 0); this.title = "📏 طول (Length)"; this.color = "#d97706"; this.size = [200, 70]; }
+        LiteGraph.registerNodeType("بيانات/طول", AlifLengthNode);
+
+        function AlifArrayNewNode() { this.addOutput("مصفوفة", 0); this.title = "🗂️ مصفوفة جديدة"; this.color = "#0284c7"; this.size = [200, 48]; }
+        LiteGraph.registerNodeType("مصفوفات/جديدة", AlifArrayNewNode);
+
+        function AlifArrayAddNode() { this.addInput("تسلسل", LiteGraph.EVENT); this.addInput("المصفوفة", 0); this.addInput("القيمة", 0); this.addOutput("التالي", LiteGraph.EVENT); this.title = "📥 إضافة للمصفوفة"; this.color = "#0284c7"; this.size = [210, 70]; }
+        LiteGraph.registerNodeType("مصفوفات/إضافة", AlifArrayAddNode);
+
+        function AlifArrayRemoveNode() { this.addInput("تسلسل", LiteGraph.EVENT); this.addInput("المصفوفة", 0); this.addInput("القيمة", 0); this.addOutput("التالي", LiteGraph.EVENT); this.title = "🗑️ حذف من المصفوفة"; this.color = "#0284c7"; this.size = [210, 70]; }
+        LiteGraph.registerNodeType("مصفوفات/حذف", AlifArrayRemoveNode);
+
+        function AlifArrayReadNode() { this.addInput("المصفوفة", 0); this.addInput("الفهرس", 0); this.addOutput("النتيجة", 0); this.title = "🔍 قراءة عنصر"; this.color = "#0284c7"; this.size = [210, 70]; }
+        LiteGraph.registerNodeType("مصفوفات/قراءة", AlifArrayReadNode);
+
+        function AlifArraySortNode() { this.addInput("تسلسل", LiteGraph.EVENT); this.addInput("المصفوفة", 0); this.addOutput("التالي", LiteGraph.EVENT); this.title = "📶 ترتيب المصفوفة"; this.color = "#0284c7"; this.size = [210, 70]; }
+        LiteGraph.registerNodeType("مصفوفات/ترتيب", AlifArraySortNode);
+
+        function AlifFuncDefNode() { this.addOutput("جسم الدالة", LiteGraph.EVENT); this.properties = { func_name: "عملية", arg: "الرقم" }; this.addWidget("text", "الاسم", this.properties.func_name, (v) => { this.properties.func_name = v; generateAlifCodeFromGraph(); }); this.addWidget("text", "المعامل", this.properties.arg, (v) => { this.properties.arg = v; generateAlifCodeFromGraph(); }); this.title = "⚙️ تعريف دالة"; this.color = "#6d28d9"; this.size = [220, 100]; }
+        LiteGraph.registerNodeType("دوال/تعريف دالة", AlifFuncDefNode);
+
+        function AlifFuncCallNode() { this.addInput("تسلسل", LiteGraph.EVENT); this.addInput("المعامل", 0); this.addOutput("التالي", LiteGraph.EVENT); this.addOutput("النتيجة", 0); this.properties = { func_name: "عملية" }; this.addWidget("text", "الاسم", this.properties.func_name, (v) => { this.properties.func_name = v; generateAlifCodeFromGraph(); }); this.title = "📞 استدعاء دالة"; this.color = "#6d28d9"; this.size = [210, 90]; }
+        LiteGraph.registerNodeType("دوال/استدعاء", AlifFuncCallNode);
+
+        function AlifFuncReturnNode() { this.addInput("تسلسل", LiteGraph.EVENT); this.addInput("قيمة", 0); this.title = "🔙 إرجاع (Return)"; this.color = "#6d28d9"; this.size = [200, 70]; }
+        LiteGraph.registerNodeType("دوال/إرجاع", AlifFuncReturnNode);
+
+        function AlifMathNode() { this.addInput("أ", 0); this.addInput("ب", 0); this.addOutput("الناتج", 0); this.properties = { op: "+" }; this.addWidget("combo", "العملية", this.properties.op, (v) => { this.properties.op = v; generateAlifCodeFromGraph(); }, { values: ["+", "-", "*", "\\", "^", "%"] }); this.title = "🧮 حساب"; this.color = "#0d9488"; this.size = [200, 110]; }
+        LiteGraph.registerNodeType("بيانات/حساب", AlifMathNode);
+        
+        function AlifRandomNode() { this.addInput("من", 0); this.addInput("إلى", 0); this.addOutput("رقم", 0); this.title = "🎲 رقم عشوائي"; this.color = "#0d9488"; this.size = [200, 70]; }
+        LiteGraph.registerNodeType("بيانات/عشوائي", AlifRandomNode);
+        
+        function AlifRoundNode() { this.addInput("الرقم", 0); this.addOutput("النتيجة", 0); this.title = "🎯 تقريب رقم"; this.color = "#0d9488"; this.size = [200, 48]; }
+        LiteGraph.registerNodeType("بيانات/تقريب", AlifRoundNode);
+
+        function AlifConcatNode() { this.addInput("أ (نص)", 0); this.addInput("ب (نص)", 0); this.addOutput("الناتج", 0); this.title = "🔤 دمج نصوص"; this.color = "#0d9488"; this.size = [200, 70]; }
+        LiteGraph.registerNodeType("بيانات/دمج نصوص", AlifConcatNode);
+
+        function AlifStringNode() { this.addOutput("نص", 0); this.properties = { value: "مرحباً" }; this.addWidget("text", "النص", this.properties.value, (v) => { this.properties.value = v; generateAlifCodeFromGraph(); }); this.title = "📝 نص"; this.color = "#a21caf"; this.size = [200, 70]; }
+        LiteGraph.registerNodeType("بيانات/نص", AlifStringNode);
+
+        function AlifNumberNode() { this.addOutput("رقم", 0); this.properties = { value: 0 }; this.addWidget("number", "الرقم", this.properties.value, (v) => { this.properties.value = v; generateAlifCodeFromGraph(); }); this.title = "🔢 رقم"; this.color = "#4f46e5"; this.size = [200, 70]; }
+        LiteGraph.registerNodeType("بيانات/رقم", AlifNumberNode);
+
+        function AlifBooleanNode() { this.addOutput("قيمة", 0); this.properties = { value: "صح" }; this.addWidget("combo", "منطق", this.properties.value, (v) => { this.properties.value = v; generateAlifCodeFromGraph(); }, { values: ["صح", "خطأ"] }); this.title = "✅ صح / خطأ"; this.color = "#4f46e5"; this.size = [200, 70]; }
+        LiteGraph.registerNodeType("بيانات/منطق", AlifBooleanNode);
+
+        function AlifInputNode() { this.addOutput("إدخال", 0); this.properties = { prompt: "أدخل القيمة: " }; this.addWidget("text", "الرسالة", this.properties.prompt, (v) => { this.properties.prompt = v; generateAlifCodeFromGraph(); }); this.title = "⌨️ إدخال مستخدم"; this.color = "#d97706"; this.size = [210, 70]; }
+        LiteGraph.registerNodeType("بيانات/إدخال مستخدم", AlifInputNode);
+
+        let startNode = LiteGraph.createNode("أوامر/بداية البرنامج");
+        startNode.pos = [300, 200]; graph.add(startNode); graph.start();
+
+        let isVisualMode = false; let visitedNodes = new Set(); 
+
+        // دوال resolveValue و resolveInput و walkExecution و generateAlifCodeFromGraph تبقى دون تغيير
+        function resolveValue(node) {
+            if(!node) return 'عدم';
+            if(node.type === "بيانات/نص") return `"${node.properties.value}"`;
+            if(node.type === "بيانات/رقم") {
+                let val = Number(node.properties.value);
+                if (!Number.isInteger(val)) val = parseFloat(val.toFixed(4));
+                return val;
+            }
+            if(node.type === "بيانات/منطق") return node.properties.value;
+            if(node.type === "بيانات/إدخال مستخدم") return `ادخل("${node.properties.prompt}")`;
+            if(node.type === "متغيرات/قراءة") return node.properties.var_name;
+            if(node.type === "بيانات/طول") { let val = resolveInput(node, 0) || '""'; return `طول(${val})`; }
+            if(node.type === "بيانات/عشوائي") { let a = resolveInput(node, 0) || 1; let b = resolveInput(node, 1) || 100; return `عشوائي(${a}, ${b})`; }
+            if(node.type === "بيانات/تقريب") { let val = resolveInput(node, 0) || 0; return `قرب(${val})`; }
+            if(node.type === "دوال/استدعاء") { let arg = resolveInput(node, 1) || 'عدم'; return `${node.properties.func_name}(${arg})`; }
+            if(node.type === "بيانات/حساب" || node.type === "شروط/مقارنة" || node.type === "شروط/عملية منطقية") {
+                let a = resolveInput(node, 0) || 0; let b = resolveInput(node, 1) || 0; return `(${a} ${node.properties.op} ${b})`;
+            }
+            if(node.type === "بيانات/دمج نصوص") {
+                let a = resolveInput(node, 0) || '""'; let b = resolveInput(node, 1) || '""'; return `(${a} + ${b})`; 
+            }
+            if(node.type === "مصفوفات/جديدة") return `[]`;
+            if(node.type === "مصفوفات/قراءة") {
+                let arrName = resolveInput(node, 0) || 'مصفوفة'; let idx = resolveInput(node, 1) || 0; return `${arrName}[${idx}]`;
+            }
+            return 'عدم';
+        }
+
+        function resolveInput(node, inputIndex) {
+            let linkInfo = node.getInputLink(inputIndex);
+            if(linkInfo) { let inputNode = graph.getNodeById(linkInfo.origin_id); return resolveValue(inputNode); }
+            return null;
+        }
+
+        function getNextNode(node, outputIndex) {
+            if (node.outputs && node.outputs[outputIndex] && node.outputs[outputIndex].links && node.outputs[outputIndex].links.length > 0) {
+                let linkId = node.outputs[outputIndex].links[0]; let link = graph.links[linkId];
+                return link ? graph.getNodeById(link.target_id) : null;
+            } return null;
+        }
+
+        function walkExecution(currNode, indent) {
+            let code = ""; let safetyLimit = 0;
+            while(currNode && safetyLimit < 100) {
+                safetyLimit++;
+                if (visitedNodes.has(currNode.id)) { code += indent + "# تحذير: حلقة لا نهائية\n"; break; }
+                visitedNodes.add(currNode.id);
+                
+                if(currNode.type === "أوامر/اطبع") {
+                    let printVal = resolveInput(currNode, 1) || '""'; code += indent + `اطبع(${printVal})\n`; currNode = getNextNode(currNode, 0); 
+                }
+                else if (currNode.type === "متغيرات/إسناد") {
+                    let varName = currNode.properties.var_name; let val = resolveInput(currNode, 1) || 'عدم';
+                    code += indent + `${varName} = ${val}\n`; currNode = getNextNode(currNode, 0);
+                }
+                else if (currNode.type === "مصفوفات/إضافة") {
+                    let arrName = resolveInput(currNode, 1) || 'مصفوفة'; let val = resolveInput(currNode, 2) || 'عدم';
+                    code += indent + `${arrName}.اضف(${val})\n`; currNode = getNextNode(currNode, 0);
+                }
+                else if (currNode.type === "مصفوفات/حذف") {
+                    let arrName = resolveInput(currNode, 1) || 'مصفوفة'; let val = resolveInput(currNode, 2) || 'عدم';
+                    code += indent + `${arrName}.امسح(${val})\n`; currNode = getNextNode(currNode, 0);
+                }
+                else if (currNode.type === "مصفوفات/ترتيب") {
+                    let arrName = resolveInput(currNode, 1) || 'مصفوفة';
+                    code += indent + `${arrName}.رتب()\n`; currNode = getNextNode(currNode, 0);
+                }
+                else if (currNode.type === "دوال/استدعاء") {
+                    let arg = resolveInput(currNode, 1) || 'عدم';
+                    code += indent + `${currNode.properties.func_name}(${arg})\n`; currNode = getNextNode(currNode, 0);
+                }
+                else if (currNode.type === "دوال/إرجاع") {
+                    let retVal = resolveInput(currNode, 1) || 'عدم';
+                    code += indent + `ارجع ${retVal}\n`; currNode = getNextNode(currNode, 0);
+                }
+                else if (currNode.type === "شروط/اذا") {
+                    let cond = resolveInput(currNode, 1) || 'خطأ'; code += indent + `اذا ${cond}:\n`;
+                    let trueNode = getNextNode(currNode, 0);
+                    if (trueNode) code += walkExecution(trueNode, indent + "\t"); else code += indent + "\tاستمر\n"; 
+                    let falseNode = getNextNode(currNode, 1);
+                    if (falseNode) { code += indent + `والا:\n`; code += walkExecution(falseNode, indent + "\t"); }
+                    break; 
+                }
+                else if (currNode.type === "حلقات/لكل") {
+                    let startVal = resolveInput(currNode, 1) || 1; let endVal = resolveInput(currNode, 2) || 10;
+                    let varName = currNode.properties.var_name || "س";
+                    code += indent + `لكل ${varName} في مدى(${startVal}, ${endVal}):\n`;
+                    let bodyNode = getNextNode(currNode, 0); 
+                    if (bodyNode) code += walkExecution(bodyNode, indent + "\t"); else code += indent + "\tاستمر\n";
+                    currNode = getNextNode(currNode, 1); 
+                }
+                else if (currNode.type === "حلقات/بينما") {
+                    let cond = resolveInput(currNode, 1) || 'خطأ'; code += indent + `بينما ${cond}:\n`;
+                    let bodyNode = getNextNode(currNode, 0); 
+                    if (bodyNode) code += walkExecution(bodyNode, indent + "\t"); else code += indent + "\tاستمر\n";
+                    currNode = getNextNode(currNode, 1); 
+                }
+                else if (currNode.type === "حلقات/توقف") {
+                    code += indent + `توقف\n`; break; 
+                }
+                else if (currNode.type === "أوامر/بداية البرنامج" || currNode.type === "دوال/تعريف دالة") {
+                     currNode = getNextNode(currNode, 0);
+                } else { break; }
+            } return code;
+        }
+
+        function generateAlifCodeFromGraph() {
+            if(!isVisualMode) return; 
+            visitedNodes.clear(); 
+            let code = "# تم التوليد برمجياً من المحرر المرئي 🕸️\n\n";
+
+            let funcNodes = graph.findNodesByType("دوال/تعريف دالة");
+            funcNodes.forEach(node => {
+                code += `دالة ${node.properties.func_name}(${node.properties.arg}):\n`;
+                let bodyNode = getNextNode(node, 0);
+                if (bodyNode) code += walkExecution(bodyNode, "\t"); else code += "\tاستمر\n";
+                code += "\n";
+            });
+
+            let startNodes = graph.findNodesByType("أوامر/بداية البرنامج");
+            if(startNodes && startNodes.length > 0) {
+                code += walkExecution(startNodes[0], "");
+            } else if (funcNodes.length === 0) {
+                editor.value = "# يرجى إضافة وتوصيل عقدة (بداية البرنامج) أو (تعريف دالة)\n"; updateHighlight(); return;
+            }
+            editor.value = code; updateHighlight();
+        }
+
+        graph.onConnectionChange = generateAlifCodeFromGraph;
+        graph.onNodeAdded = generateAlifCodeFromGraph;
+        graph.onNodeRemoved = generateAlifCodeFromGraph;
+
+        const textWrap = document.getElementById('text-editor-wrap');
+        const visualWrap = document.getElementById('visual-editor-wrap');
+        const editorModeBtn = document.getElementById('editorModeBtn');
+        const examplesDropdown = document.getElementById('examplesDropdown');
+
+        function toggleEditorMode() {
+            isVisualMode = !isVisualMode;
+            if(isVisualMode) {
+                examplesDropdown.value = "blank";
+                textWrap.classList.replace('block', 'hidden'); visualWrap.classList.replace('hidden', 'block');
+                editorModeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg> <span>المحرر المرئي</span>`;
+                editorModeBtn.className = "flex items-center gap-1.5 sm:gap-2 whitespace-nowrap text-purple-400 font-bold bg-slate-700/50 hover:bg-slate-700 px-3 py-1.5 rounded-lg transition-colors text-xs sm:text-sm border border-purple-900/50 shadow-md shadow-purple-900/20";
+                setTimeout(() => canvas.resize(), 50);  generateAlifCodeFromGraph();
+            } else {
+                generateAlifCodeFromGraph(); 
+                visualWrap.classList.replace('block', 'hidden'); textWrap.classList.replace('hidden', 'block');
+                editorModeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> <span>الشيفرة المصدرية</span>`;
+                editorModeBtn.className = "flex items-center gap-1.5 sm:gap-2 whitespace-nowrap text-emerald-400 font-bold bg-slate-700/50 hover:bg-slate-700 px-3 py-1.5 rounded-lg transition-colors text-xs sm:text-sm border border-emerald-900/50";
+            }
+        }
+
+        // بقية دوال المنصة والمحرر النصي بدون تغيير
+        const editor = document.getElementById('editor');
+        const highlightLayer = document.getElementById('highlightLayer');
+        const outputContent = document.getElementById('output-content');
+        const outputContainer = document.getElementById('output-container');
+        const terminalInput = document.getElementById('terminalInput');
+        const runBtn = document.getElementById('runBtn');
+        const terminalSection = document.getElementById('terminal-section');
+        const mainContainer = document.getElementById('main-container');
+        
+        let ws; let totalOutputLines = 0; const MAX_LINES = 10000; let isRunning = false; let intentionalClose = false; let isTerminalHidden = false;
+
+        const codeExamples = {
+            hello: `# طباعة النصوص البسيطة على الشاشة\n\nاطبع("مرحباً بك في لغة ألف 5.3!")\nاطبع("لغة برمجة عربية قوية وسريعة.")\n\n# المتغيرات والعمليات الحسابية\nس = 10\nص = 15\nالنتيجة = س + ص\n\nاطبع(م"ناتج جمع {س} و {ص} هو: {النتيجة}")`,
+            cond: `# مثال يوضح استخدام الجمل الشرطية (اذا / اواذا / والا)\n\nدرجة_الطالب = 85\nاطبع(م"درجة الطالب هي: {درجة_الطالب}")\n\nاذا درجة_الطالب >= 90:\n\tاطبع("التقدير: ممتاز")\nاواذا درجة_الطالب >= 80:\n\tاطبع("التقدير: جيد جداً")\nوالا:\n\tاطبع("تحتاج إلى مزيد من الجهد")`,
+            loop: `# مثال على حلقات التكرار (لكل / بينما)\n\nاطبع("العد من 1 إلى 5 باستخدام حلقة (لكل):")\nلكل رقم في مدى(5):\n\tاطبع(رقم + 1)\n\nاطبع("-------------------")\n\nالعد = 3\nاطبع("العد التنازلي باستخدام حلقة (بينما):")\nبينما العد > 0:\n\tاطبع(العد)\n\tالعد -= 1\nاطبع("انطلاق 🚀!")`,
+            trycatch: `# معالجة الأخطاء الاستثنائية\n\nصنف سيارة:\n\tدالة __تهيئة__(هذا, السرعة, اللون):\n\t\tهذا.السرعة = السرعة\n\t\tهذا.اللون = اللون\n\nالسيارة = سيارة(240, "اسود")\n\nحاول:\n\tالوزن = السيارة.الوزن\n\tاطبع(الوزن)\nخلل خطأ_خاصية:\n\tاطبع("هذه الخاصية غير متوفرة في هذا الكائن")\nوالا:\n\tاطبع("تم إسناد الصفة")`,
+            blank: ``
+        };
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toastMessage'); const text = document.getElementById('toastText'); const icon = document.getElementById('toastIcon');
+            text.innerText = message;
+            if (type === 'success') {
+                toast.className = "fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-800 text-emerald-400 px-5 py-2.5 rounded-xl shadow-2xl transition-all duration-300 pointer-events-none z-50 text-sm font-bold border border-slate-700 flex items-center gap-2";
+                icon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
+            } else {
+                toast.className = "fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-800 text-red-400 px-5 py-2.5 rounded-xl shadow-2xl transition-all duration-300 pointer-events-none z-50 text-sm font-bold border border-slate-700 flex items-center gap-2";
+                icon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+            }
+            toast.classList.remove('opacity-0', 'translate-y-4'); setTimeout(() => { toast.classList.add('opacity-0', 'translate-y-4'); }, 2500);
+        }
+
+        function copyCode() { navigator.clipboard.writeText(editor.value).then(() => { showToast("تم نسخ الكود بنجاح", "success"); }); }
+        
+        function shareCode() {
+            try {
+                const code = editor.value; const encoded = btoa(unescape(encodeURIComponent(code)));
+                const url = window.location.origin + window.location.pathname + "?code=" + encoded;
+                navigator.clipboard.writeText(url).then(() => { showToast("تم نسخ رابط المشاركة بنجاح!", "success"); });
+            } catch (err) { showToast("حدث خطأ أثناء توليد الرابط", "error"); }
+        }
+
+        function downloadCode() {
+            const blob = new Blob([editor.value], { type: "application/octet-stream" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "main.alif";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+            showToast("تم تحميل ملف (main.alif) بنجاح", "success");
+        }
+
+        function saveSnapshot() { localStorage.setItem('alif_snapshot', editor.value); showToast("تم حفظ اللقطة الزمنية للكود!", "success"); }
+
+        function restoreSnapshot() {
+            const snap = localStorage.getItem('alif_snapshot');
+            if (snap !== null) { editor.value = snap; updateHighlight(); showToast("تمت استعادة اللقطة بنجاح", "success"); } 
+            else { showToast("لا توجد لقطة محفوظة مسبقاً!", "error"); }
+        }
+
+        function toggleTerminalView() {
+            isTerminalHidden = !isTerminalHidden;
+            if (isTerminalHidden) {
+                terminalSection.style.display = 'none'; mainContainer.className = "flex-1 flex flex-col bg-[#0b1120] overflow-hidden w-full min-w-0 max-w-full transition-all duration-300"; showToast("تم إخفاء الطرفية لتوسيع المحرر");
+            } else {
+                terminalSection.style.display = 'flex'; mainContainer.className = "flex-1 grid grid-rows-2 md:grid-rows-1 md:grid-cols-2 bg-[#0b1120] overflow-hidden w-full min-w-0 max-w-full transition-all duration-300";
+            }
+            if (isVisualMode) { setTimeout(() => canvas.resize(), 100); }
+        }
+
+        window.addEventListener("resize", () => { if(isVisualMode && canvas) canvas.resize(); });
+
+        function updateHighlight() {
+            let code = editor.value; let html = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            const regex = /(#.*)|(م?"[^"]*")|(^|[^أ-يa-zA-Z0-9_])(اطبع|ادخل|اذا|اواذا|والا|بينما|لكل|في|دالة|ارجع|صح|خطأ|عدم|صنف|اصل|حاول|خلل|نهاية|توقف|استمر|احذف|استورد|من)(?=[^أ-يa-zA-Z0-9_]|$)|(^|[^أ-يa-zA-Z0-9_])(\d+(\.\d+)?)(?=[^أ-يa-zA-Z0-9_]|$)|([=+\-*/!^|]|&lt;|&gt;|&amp;)/g;
+            html = html.replace(regex, (match, comment, str, beforeKw, kw, beforeNum, num, numDec, op) => {
+                if (comment) return `<span class="text-slate-500">${comment}</span>`; if (str) return `<span class="text-amber-400">${str}</span>`;
+                if (kw) return `${beforeKw}<span class="text-fuchsia-400">${kw}</span>`; if (num) return `${beforeNum}<span class="text-cyan-400">${num}</span>`;
+                if (op) return `<span class="text-blue-400">${op}</span>`; return match;
+            });
+            highlightLayer.innerHTML = html + (code.endsWith('\n') ? '\n ' : '');
+        }
+
+        function loadExample() {
+            if (isVisualMode) return; 
+            const selectedVal = document.getElementById('examplesDropdown').value; editor.value = codeExamples[selectedVal]; updateHighlight(); editor.scrollTop = 0; highlightLayer.scrollTop = 0;
+        }
+
+        const urlParams = new URLSearchParams(window.location.search); const sharedCode = urlParams.get('code');
+        if (sharedCode) {
+            try { editor.value = decodeURIComponent(escape(atob(sharedCode))); document.getElementById('examplesDropdown').value = 'blank'; updateHighlight(); setTimeout(() => showToast("تم استيراد الكود المشترك بنجاح", "success"), 500); } catch (e) { loadExample(); }
+        } else { loadExample(); }
+
+        terminalInput.addEventListener('focus', () => { setTimeout(() => { outputContainer.scrollTop = outputContainer.scrollHeight; outputContainer.scrollLeft = 0; }, 50); });
+
+        editor.addEventListener('input', updateHighlight); editor.addEventListener('scroll', () => { highlightLayer.scrollTop = editor.scrollTop; highlightLayer.scrollLeft = editor.scrollLeft; });
+
+        editor.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault(); const start = this.selectionStart; const end = this.selectionEnd;
+                this.value = this.value.substring(0, start) + "\t" + this.value.substring(end); this.selectionStart = this.selectionEnd = start + 1; updateHighlight();
+            } 
+            else if (e.key === 'Enter') {
+                e.preventDefault(); const start = this.selectionStart; const end = this.selectionEnd;
+                const textBeforeCursor = this.value.substring(0, start); const lastNewlineIndex = textBeforeCursor.lastIndexOf('\n'); const currentLine = textBeforeCursor.substring(lastNewlineIndex + 1);
+                const match = currentLine.match(/^([ \t]*)/); let indent = match ? match[1] : ""; const trimmedLine = currentLine.trim();
+                const blockKeywords = ["صنف", "دالة", "اذا", "اواذا", "والا", "لكل", "بينما", "حاول", "خلل"];
+                const startsWithBlockKeyword = blockKeywords.some(kw => trimmedLine.startsWith(kw + " ") || trimmedLine === kw || trimmedLine.startsWith(kw + ":"));
+                if (trimmedLine.endsWith(':') || startsWithBlockKeyword) { indent += "\t"; }
+                const textToInsert = '\n' + indent; this.value = this.value.substring(0, start) + textToInsert + this.value.substring(end);
+                this.selectionStart = this.selectionEnd = start + textToInsert.length; updateHighlight(); this.blur(); this.focus();
+            }
+        });
+
+        function clearConsole() { outputContent.innerHTML = ''; totalOutputLines = 0; }
+
+        function appendToTerminal(text, colorClass) {
+            const span = document.createElement('span'); span.className = colorClass; span.innerHTML = text;
+            let linesCount = (text.match(/\n/g) || []).length + (text.trim() === '' ? 0 : 1); span.dataset.lines = linesCount; totalOutputLines += linesCount;
+            outputContent.appendChild(span);
+            while (totalOutputLines > MAX_LINES && outputContent.firstChild) { let oldLines = parseInt(outputContent.firstChild.dataset.lines || 1); totalOutputLines -= oldLines; outputContent.removeChild(outputContent.firstChild); }
+            outputContainer.scrollTop = outputContainer.scrollHeight;
+        }
+
+        function setButtonState(state) {
+            if (state === 'connecting') {
+                isRunning = false; runBtn.innerHTML = '<span class="pt-[3px] sm:pt-[2px]">جاري الاتصال...</span> <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+                runBtn.disabled = true; runBtn.className = "bg-slate-600 text-white px-5 py-2 sm:px-6 sm:py-2.5 rounded-xl text-sm sm:text-base font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-not-allowed opacity-80";
+            } else if (state === 'ready') {
+                isRunning = false; runBtn.innerHTML = '<span class="pt-[3px] sm:pt-[2px]">تشغيل</span> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" class="rotate-180"><polygon points="5 4 19 12 5 20"></polygon></svg>';
+                runBtn.disabled = false; runBtn.className = "bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 text-white px-5 py-2 sm:px-6 sm:py-2.5 rounded-xl text-sm sm:text-base font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-900/20 active:scale-95";
+            } else if (state === 'running') {
+                isRunning = true; runBtn.innerHTML = '<span class="pt-[3px] sm:pt-[2px]">إيقاف</span> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="6" y="6" width="12" height="12" rx="2" ry="2"></rect></svg>';
+                runBtn.disabled = false; runBtn.className = "bg-red-600 hover:bg-red-500 text-white px-5 py-2 sm:px-6 sm:py-2.5 rounded-xl text-sm sm:text-base font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-900/20 active:scale-95";
+            } else if (state === 'error') {
+                isRunning = false; runBtn.innerHTML = '<span class="pt-[3px] sm:pt-[2px]">انقطع الاتصال</span> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+                runBtn.disabled = true; runBtn.className = "bg-red-600 text-white px-5 py-2 sm:px-6 sm:py-2.5 rounded-xl text-sm sm:text-base font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-not-allowed opacity-90";
+            }
+        }
+
+        function connectWebSocket() {
+            setButtonState('connecting');
+            try {
+                ws = new WebSocket('wss://alif-playground.onrender.com');
+                ws.onopen = () => {
+                    setButtonState('ready');
+                    if (outputContent.innerHTML.trim() === '') { appendToTerminal("--- تم الاتصال بمحرك ألف 5.3 بنجاح ---\n", "text-green-500 font-bold"); } 
+                    else { appendToTerminal("\n--- تم إعادة الاتصال والمحرك جاهز ---\n", "text-green-500 font-bold bg-green-900/20 px-2 py-1 rounded inline-block mt-2"); }
+                };
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'output' || data.type === 'error') {
+                        const colorClass = data.type === 'error' ? 'text-red-400' : 'text-slate-300';
+                        appendToTerminal(escapeHTML(data.text), colorClass); terminalInput.disabled = false; terminalInput.focus();
+                    } else if (data.type === 'done') { appendToTerminal("\n--- انتهى تنفيذ البرنامج ---\n", "text-slate-500"); terminalInput.disabled = true; setButtonState('ready'); }
+                };
+                ws.onclose = () => { if (intentionalClose) { intentionalClose = false; connectWebSocket(); } else { setButtonState('error'); setTimeout(connectWebSocket, 3000); } };
+                ws.onerror = () => { if(ws.readyState !== WebSocket.CLOSED) appendToTerminal("\nحدث خطأ في الاتصال بالسحابة.\n", "text-red-400"); };
+            } catch (error) { console.error("خطأ في تهيئة الاتصال:", error); }
+        }
+
+        function toggleRun() {
+            if (isRunning) {
+                if (ws && ws.readyState === WebSocket.OPEN) { intentionalClose = true; ws.close(); appendToTerminal("\n⚠️ تم إيقاف التنفيذ يدوياً.\n", "text-amber-400 font-bold"); terminalInput.disabled = true; }
+            } else { startRun(); }
+        }
+
+        function startRun() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            clearConsole(); setButtonState('running'); terminalInput.disabled = false; terminalInput.value = '';
+            if(isVisualMode) generateAlifCodeFromGraph();
+            let cleanCode = editor.value.replace(/\u00A0/g, " ");
+            ws.send(JSON.stringify({ type: 'run', code: cleanCode }));
+        }
+
+        terminalInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const val = terminalInput.value; if (!val) return; 
+                appendToTerminal(escapeHTML(val) + "\n", "text-green-400"); ws.send(JSON.stringify({ type: 'input', text: val })); terminalInput.value = ''; 
+                if(window.innerWidth > 768) terminalInput.focus();
+            }
+        });
+
+        function escapeHTML(text) { return text.replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+        connectWebSocket();
+    </script>
+</body>
+</html>
