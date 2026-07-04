@@ -41,7 +41,8 @@ export default function DeletableEdge({
               className="w-6 h-6 bg-red-500 border-2 border-slate-800 rounded-full flex items-center justify-center text-sm font-bold text-white hover:bg-red-600 transition-all shadow-xl cursor-pointer hover:scale-110"
               onClick={(e) => {
                 e.stopPropagation();
-                data?.onDelete?.(id);
+                const edgeData = data as { onDelete?: (id: string) => void } | undefined;
+                edgeData?.onDelete?.(id);
               }}
               title="حذف هذا الاتصال"
             >
