@@ -106,75 +106,77 @@ export default function EditorToolbar() {
   };
 
   return (
-    <div className="relative z-50 bg-[#1e293b] py-2 px-2 sm:px-4 flex items-center justify-between border-b border-slate-700/50 w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-      {/* Right Side (Start) - Icons and Toggle */}
-      <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-        {/* Toggle Button */}
-        <button
-          onClick={() => setMode(activeMode === 'visual' ? 'code' : 'visual')}
-          className="flex items-center gap-1.5 sm:gap-2 text-emerald-400 font-bold bg-slate-800/50 hover:bg-slate-700/80 px-2.5 sm:px-3 py-1.5 rounded-lg border border-emerald-500/30 text-xs sm:text-sm transition-colors whitespace-nowrap"
-        >
-          <FileText size={16} className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          {activeMode === 'visual' ? 'المحرر المرئي' : 'الشيفرة المصدرية'}
-        </button>
-
-        {/* Icon Group - Always Visible on Mobile */}
-        <div className="flex items-center">
-          <button onClick={handleCopy} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="نسخ">
-            <Copy size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
-          </button>
-          <button onClick={handleShare} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="مشاركة">
-            <Share2 size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
-          </button>
-          <button onClick={handleDownload} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="تنزيل">
-            <Download size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
-          </button>
-          <button onClick={handleSave} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="حفظ">
-            <Save size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
-          </button>
-          <button onClick={handleRestore} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="استعادة (تراجع)">
-            <RotateCcw size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
-          </button>
-          <button onClick={handleFullscreen} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="ملء الشاشة">
-            <Maximize size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
-          </button>
-        </div>
-      </div>
-      
-      {/* Left Side (End) - Examples Dropdown */}
-      <div className="flex items-center shrink-0 pr-2">
-        <div className="relative" ref={dropdownRef}>
+    <div className="relative z-50 bg-[#1e293b] border-b border-slate-700/50 w-full">
+      <div className="py-2 px-2 sm:px-4 flex items-center justify-between w-full">
+        {/* Right Side (Start) - Icons and Toggle */}
+        <div className="flex items-center flex-1 min-w-0">
+          {/* Toggle Button */}
           <button
-            onClick={() => setIsExamplesOpen(!isExamplesOpen)}
-            className="flex items-center gap-1.5 bg-slate-800/80 backdrop-blur-md text-slate-300 border border-slate-600/50 hover:border-emerald-500/50 hover:text-emerald-400 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm outline-none transition-all cursor-pointer shadow-sm active:scale-95 whitespace-nowrap max-w-[140px] sm:max-w-none"
-            dir="rtl"
+            onClick={() => setMode(activeMode === 'visual' ? 'code' : 'visual')}
+            className="flex items-center gap-1.5 sm:gap-2 text-emerald-400 font-bold bg-slate-800/50 hover:bg-slate-700/80 px-2.5 sm:px-3 py-1.5 rounded-lg border border-emerald-500/30 text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0"
           >
-            <ChevronDown size={14} className={`transition-transform duration-300 shrink-0 ${isExamplesOpen ? 'rotate-180' : ''}`} />
-            <span className="font-semibold truncate">
-              {examplesList.find(ex => codeExamples[ex.id] === textCode)?.title || 'الأمثلة البرمجية'}
-            </span>
+            <FileText size={16} className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            {activeMode === 'visual' ? 'المحرر المرئي' : 'الشيفرة المصدرية'}
           </button>
-          
-          {/* Dropdown Menu */}
-          {isExamplesOpen && (
-            <div className="absolute top-full left-0 mt-2 w-52 bg-slate-800/95 backdrop-blur-xl border border-slate-700 rounded-xl shadow-2xl overflow-hidden flex flex-col z-50 transform origin-top transition-all animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="bg-slate-700/30 px-3 py-2 border-b border-slate-700/50">
-                <span className="text-xs font-bold text-slate-400">اختر مثالاً لتجربته:</span>
+
+          {/* Icon Group - Scrollable on Mobile to prevent dropdown clipping */}
+          <div className="flex items-center overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-1 sm:px-2 mr-1 sm:mr-2">
+            <button onClick={handleCopy} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="نسخ">
+              <Copy size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
+            </button>
+            <button onClick={handleShare} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="مشاركة">
+              <Share2 size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
+            </button>
+            <button onClick={handleDownload} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="تنزيل">
+              <Download size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
+            </button>
+            <button onClick={handleSave} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="حفظ">
+              <Save size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
+            </button>
+            <button onClick={handleRestore} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="استعادة (تراجع)">
+              <RotateCcw size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
+            </button>
+            <button onClick={handleFullscreen} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="ملء الشاشة">
+              <Maximize size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
+            </button>
+          </div>
+        </div>
+        
+        {/* Left Side (End) - Examples Dropdown */}
+        <div className="flex items-center shrink-0 pr-1 sm:pr-2">
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsExamplesOpen(!isExamplesOpen)}
+              className="flex items-center gap-1.5 bg-slate-800/80 backdrop-blur-md text-slate-300 border border-slate-600/50 hover:border-emerald-500/50 hover:text-emerald-400 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm outline-none transition-all cursor-pointer shadow-sm active:scale-95 whitespace-nowrap max-w-[120px] sm:max-w-none"
+              dir="rtl"
+            >
+              <ChevronDown size={14} className={`transition-transform duration-300 shrink-0 ${isExamplesOpen ? 'rotate-180' : ''}`} />
+              <span className="font-semibold truncate">
+                {examplesList.find(ex => codeExamples[ex.id] === textCode)?.title || 'الأمثلة البرمجية'}
+              </span>
+            </button>
+            
+            {/* Dropdown Menu */}
+            {isExamplesOpen && (
+              <div className="absolute top-full left-0 mt-2 w-52 bg-slate-800/95 backdrop-blur-xl border border-slate-700 rounded-xl shadow-2xl overflow-hidden flex flex-col z-50 transform origin-top transition-all animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="bg-slate-700/30 px-3 py-2 border-b border-slate-700/50">
+                  <span className="text-xs font-bold text-slate-400">اختر مثالاً لتجربته:</span>
+                </div>
+                <div className="max-h-64 overflow-y-auto custom-menu-scroll py-1">
+                  {examplesList.map((ex) => (
+                    <button
+                      key={ex.id}
+                      onClick={() => handleSelectExample(ex.id)}
+                      className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700/80 hover:text-emerald-400 transition-colors border-b border-slate-700/30 last:border-0"
+                      dir="rtl"
+                    >
+                      <span>{ex.title}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="max-h-64 overflow-y-auto custom-menu-scroll py-1">
-                {examplesList.map((ex) => (
-                  <button
-                    key={ex.id}
-                    onClick={() => handleSelectExample(ex.id)}
-                    className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700/80 hover:text-emerald-400 transition-colors border-b border-slate-700/30 last:border-0"
-                    dir="rtl"
-                  >
-                    <span>{ex.title}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>
