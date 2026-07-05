@@ -94,7 +94,7 @@ export default function EditorToolbar() {
   };
 
   return (
-    <div className="bg-[#1e293b] py-2 px-2 sm:px-4 flex justify-between items-center z-10 border-b border-slate-700/50">
+    <div className="relative z-50 bg-[#1e293b] py-2 px-2 sm:px-4 flex justify-between items-center border-b border-slate-700/50">
       {/* Right Side (Start) - Icons and Toggle */}
       <div className="flex items-center gap-2">
         {/* Toggle Button */}
