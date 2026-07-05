@@ -3,7 +3,7 @@ import { useEditorStore, codeExamples } from '../../store/useEditorStore';
 import { FileText, Copy, Share2, Download, Save, RotateCcw, Maximize, ChevronDown } from 'lucide-react';
 
 export default function EditorToolbar() {
-  const { activeMode, setMode, setTextCode, isTerminalHidden, setIsTerminalHidden } = useEditorStore();
+  const { activeMode, setMode, setTextCode } = useEditorStore();
 
   const handleExampleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
@@ -56,7 +56,7 @@ export default function EditorToolbar() {
         {activeMode === 'visual' ? 'المحرر المرئي' : 'الشيفرة المصدرية'}
       </div>
 
-      {/* Left Side (End) - Examples Dropdown and Terminal Toggle */}
+      {/* Left Side (End) - Examples Dropdown */}
       <div className="flex items-center gap-3">
         <div className="relative">
           <select
@@ -72,14 +72,6 @@ export default function EditorToolbar() {
           </select>
           <ChevronDown size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         </div>
-
-        {/* Terminal Toggle (Hidden on mobile) */}
-        <button 
-          onClick={() => setIsTerminalHidden(!isTerminalHidden)} 
-          className="hidden md:block text-blue-400 hover:text-blue-300 hover:bg-slate-700/50 px-2 py-1.5 rounded-md text-xs font-bold transition-colors"
-        >
-          {isTerminalHidden ? 'إظهار الطرفية' : 'إخفاء الطرفية'}
-        </button>
       </div>
     </div>
   );
