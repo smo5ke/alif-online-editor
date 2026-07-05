@@ -1,15 +1,45 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useEditorStore, codeExamples } from '../../store/useEditorStore';
-import { FileText, Copy, Share2, Download, Save, RotateCcw, Maximize, ChevronDown } from 'lucide-react';
+import { FileText, Copy, Share2, Download, Save, RotateCcw, Maximize, ChevronDown, Code } from 'lucide-react';
 
 export default function EditorToolbar() {
   const { activeMode, setMode, setTextCode, textCode, isTerminalHidden, setIsTerminalHidden } = useEditorStore();
+  
+  const [isExamplesOpen, setIsExamplesOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const handleExampleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = e.target.value;
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsExamplesOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const examplesList = [
+    { id: 'hello', title: 'المثال 1: الطباعة' },
+    { id: 'cond', title: 'المثال 2: الشروط' },
+    { id: 'loop', title: 'المثال 3: التكرار' },
+    { id: 'func', title: 'المثال 4: الدوال' },
+    { id: 'oop', title: 'المثال 5: الكائنات' },
+    { id: 'arrays', title: 'المثال 6: المصفوفات' },
+    { id: 'dict', title: 'المثال 7: الفهارس' },
+    { id: 'trycatch', title: 'المثال 8: الأخطاء' },
+    { id: 'input', title: 'المثال 9: الإدخال' },
+    { id: 'blank', title: 'مستند فارغ' },
+  ];
+
+  const handleSelectExample = (val: string) => {
     if (codeExamples[val]) {
       setTextCode(codeExamples[val]);
+      if (activeMode !== 'code') {
+        setMode('code'); // Switch to code mode to see the example
+      }
     }
+    setIsExamplesOpen(false);
   };
 
   const handleCopy = async () => {
@@ -109,19 +139,37 @@ export default function EditorToolbar() {
 
       {/* Left Side (End) - Examples Dropdown */}
       <div className="flex items-center gap-3">
-        <div className="relative">
-          <select
-            onChange={handleExampleChange}
-            className="appearance-none bg-slate-700/40 text-slate-300 border border-slate-600/50 rounded-md pl-8 pr-3 py-1.5 text-sm outline-none hover:bg-slate-700/60 transition-colors cursor-pointer min-w-[140px] text-right"
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setIsExamplesOpen(!isExamplesOpen)}
+            className="flex items-center gap-2 bg-slate-800/80 backdrop-blur-md text-slate-300 border border-slate-600/50 hover:border-emerald-500/50 hover:text-emerald-400 rounded-lg px-3 py-1.5 text-sm outline-none transition-all cursor-pointer min-w-[140px] shadow-sm active:scale-95"
             dir="rtl"
           >
-            <option value="hello">المثال 1: الطباعة</option>
-            <option value="cond">المثال 2: الشروط</option>
-            <option value="loop">المثال 3: التكرار</option>
-            <option value="trycatch">المثال 4: الأخطاء</option>
-            <option value="blank">مستند فارغ</option>
-          </select>
-          <ChevronDown size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <ChevronDown size={14} className={`transition-transform duration-300 ${isExamplesOpen ? 'rotate-180' : ''}`} />
+            <span className="flex-1 text-right font-semibold">الأمثلة البرمجية</span>
+            <Code size={14} className="text-emerald-500/70" />
+          </button>
+          
+          {/* Dropdown Menu */}
+          {isExamplesOpen && (
+            <div className="absolute top-full left-0 mt-2 w-52 bg-slate-800/95 backdrop-blur-xl border border-slate-700 rounded-xl shadow-2xl overflow-hidden flex flex-col z-50 transform origin-top transition-all animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="bg-slate-700/30 px-3 py-2 border-b border-slate-700/50">
+                <span className="text-xs font-bold text-slate-400">اختر مثالاً لتجربته:</span>
+              </div>
+              <div className="max-h-64 overflow-y-auto custom-menu-scroll py-1">
+                {examplesList.map((ex) => (
+                  <button
+                    key={ex.id}
+                    onClick={() => handleSelectExample(ex.id)}
+                    className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700/80 hover:text-emerald-400 transition-colors border-b border-slate-700/30 last:border-0"
+                    dir="rtl"
+                  >
+                    <span>{ex.title}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
