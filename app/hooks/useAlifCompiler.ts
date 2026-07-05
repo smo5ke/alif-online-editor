@@ -15,7 +15,8 @@ export function useAlifCompiler() {
     edges, 
     appendTerminalOutput, 
     clearTerminal,
-    setMode
+    setMode,
+    setIsTerminalHidden
   } = useEditorStore();
 
   const connectWebSocket = useCallback(() => {
@@ -70,10 +71,8 @@ export function useAlifCompiler() {
     clearTerminal();
     setRunState('running');
     
-    // Auto switch to terminal on mobile
-    if (window.innerWidth < 768) {
-      setMode('terminal');
-    }
+    // Ensure terminal is visible when running
+    setIsTerminalHidden(false);
 
     let codeToRun = '';
     
