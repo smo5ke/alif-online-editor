@@ -3,7 +3,7 @@ import { useEditorStore, codeExamples } from '../../store/useEditorStore';
 import { FileText, Copy, Share2, Download, Save, RotateCcw, Maximize, ChevronDown } from 'lucide-react';
 
 export default function EditorToolbar() {
-  const { activeMode, setMode, setTextCode, textCode } = useEditorStore();
+  const { activeMode, setMode, setTextCode, textCode, isTerminalHidden, setIsTerminalHidden } = useEditorStore();
 
   const handleExampleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
@@ -60,13 +60,7 @@ export default function EditorToolbar() {
   };
 
   const handleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(err => {
-        console.error(`Error attempting to enable fullscreen: ${err.message}`);
-      });
-    } else {
-      document.exitFullscreen();
-    }
+    setIsTerminalHidden(!isTerminalHidden);
   };
 
   return (
