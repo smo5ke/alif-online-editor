@@ -3,12 +3,69 @@ import { useEditorStore, codeExamples } from '../../store/useEditorStore';
 import { FileText, Copy, Share2, Download, Save, RotateCcw, Maximize, ChevronDown } from 'lucide-react';
 
 export default function EditorToolbar() {
-  const { activeMode, setMode, setTextCode } = useEditorStore();
+  const { activeMode, setMode, setTextCode, textCode } = useEditorStore();
 
   const handleExampleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
     if (codeExamples[val]) {
       setTextCode(codeExamples[val]);
+    }
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(textCode);
+      alert('تم نسخ الكود بنجاح!');
+    } catch (err) {
+      console.error('فشل النسخ:', err);
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      const encoded = btoa(encodeURIComponent(textCode));
+      const url = `${window.location.origin}${window.location.pathname}?code=${encoded}`;
+      await navigator.clipboard.writeText(url);
+      alert('تم نسخ رابط المشاركة!');
+    } catch (err) {
+      console.error('فشل المشاركة:', err);
+    }
+  };
+
+  const handleDownload = () => {
+    const blob = new Blob([textCode], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'main.alif';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleSave = () => {
+    localStorage.setItem('alif_saved_code', textCode);
+    alert('تم حفظ الكود محلياً المتصفح!');
+  };
+
+  const handleRestore = () => {
+    const saved = localStorage.getItem('alif_saved_code');
+    if (saved) {
+      setTextCode(saved);
+      alert('تم استعادة آخر نسخة محفوظة!');
+    } else {
+      alert('لا توجد نسخة محفوظة سابقاً.');
+    }
+  };
+
+  const handleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
     }
   };
 
@@ -30,22 +87,22 @@ export default function EditorToolbar() {
 
         {/* Icon Group */}
         <div className="hidden sm:flex items-center gap-1">
-          <button className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors" title="نسخ">
+          <button onClick={handleCopy} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors" title="نسخ">
             <Copy size={16} />
           </button>
-          <button className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors" title="مشاركة">
+          <button onClick={handleShare} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors" title="مشاركة">
             <Share2 size={16} />
           </button>
-          <button className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors" title="تحميل">
+          <button onClick={handleDownload} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors" title="تنزيل">
             <Download size={16} />
           </button>
-          <button className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors" title="حفظ">
+          <button onClick={handleSave} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors" title="حفظ">
             <Save size={16} />
           </button>
-          <button className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors" title="إعادة ضبط">
+          <button onClick={handleRestore} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors" title="استعادة (تراجع)">
             <RotateCcw size={16} />
           </button>
-          <button className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors" title="ملء الشاشة">
+          <button onClick={handleFullscreen} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors" title="ملء الشاشة">
             <Maximize size={16} />
           </button>
         </div>
