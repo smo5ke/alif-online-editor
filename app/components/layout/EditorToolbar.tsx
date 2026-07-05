@@ -106,60 +106,53 @@ export default function EditorToolbar() {
   };
 
   return (
-    <div className="relative z-50 bg-[#1e293b] py-2 px-2 sm:px-4 flex justify-between items-center border-b border-slate-700/50">
+    <div className="relative z-50 bg-[#1e293b] py-2 px-2 sm:px-4 flex items-center justify-between border-b border-slate-700/50 w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
       {/* Right Side (Start) - Icons and Toggle */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2 shrink-0">
         {/* Toggle Button */}
         <button
           onClick={() => setMode(activeMode === 'visual' ? 'code' : 'visual')}
-          className="flex items-center gap-2 text-emerald-400 font-bold bg-slate-800/50 hover:bg-slate-700/80 px-3 py-1.5 rounded-lg border border-emerald-500/30 text-sm transition-colors"
+          className="flex items-center gap-1.5 sm:gap-2 text-emerald-400 font-bold bg-slate-800/50 hover:bg-slate-700/80 px-2.5 sm:px-3 py-1.5 rounded-lg border border-emerald-500/30 text-xs sm:text-sm transition-colors whitespace-nowrap"
         >
-          <FileText size={16} />
+          <FileText size={16} className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           {activeMode === 'visual' ? 'المحرر المرئي' : 'الشيفرة المصدرية'}
         </button>
 
-        {/* Separator */}
-        <div className="w-[1px] h-6 bg-slate-600/50 mx-1 hidden sm:block"></div>
-
-        {/* Icon Group */}
-        <div className="hidden sm:flex items-center gap-1">
-          <button onClick={handleCopy} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors" title="نسخ">
-            <Copy size={16} />
+        {/* Icon Group - Always Visible on Mobile */}
+        <div className="flex items-center">
+          <button onClick={handleCopy} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="نسخ">
+            <Copy size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
           </button>
-          <button onClick={handleShare} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors" title="مشاركة">
-            <Share2 size={16} />
+          <button onClick={handleShare} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="مشاركة">
+            <Share2 size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
           </button>
-          <button onClick={handleDownload} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors" title="تنزيل">
-            <Download size={16} />
+          <button onClick={handleDownload} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="تنزيل">
+            <Download size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
           </button>
-          <button onClick={handleSave} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors" title="حفظ">
-            <Save size={16} />
+          <button onClick={handleSave} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="حفظ">
+            <Save size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
           </button>
-          <button onClick={handleRestore} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors" title="استعادة (تراجع)">
-            <RotateCcw size={16} />
+          <button onClick={handleRestore} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="استعادة (تراجع)">
+            <RotateCcw size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
           </button>
-          <button onClick={handleFullscreen} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors" title="ملء الشاشة">
-            <Maximize size={16} />
+          <button onClick={handleFullscreen} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="ملء الشاشة">
+            <Maximize size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
           </button>
         </div>
       </div>
       
-      {/* Mobile Title (Hidden on Desktop) */}
-      <div className="sm:hidden font-bold text-slate-300 text-sm px-2 flex-1 text-center">
-        {activeMode === 'visual' ? 'المحرر المرئي' : 'الشيفرة المصدرية'}
-      </div>
-
       {/* Left Side (End) - Examples Dropdown */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center shrink-0 pr-2">
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsExamplesOpen(!isExamplesOpen)}
-            className="flex items-center gap-2 bg-slate-800/80 backdrop-blur-md text-slate-300 border border-slate-600/50 hover:border-emerald-500/50 hover:text-emerald-400 rounded-lg px-3 py-1.5 text-sm outline-none transition-all cursor-pointer min-w-[140px] shadow-sm active:scale-95"
+            className="flex items-center gap-1.5 bg-slate-800/80 backdrop-blur-md text-slate-300 border border-slate-600/50 hover:border-emerald-500/50 hover:text-emerald-400 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm outline-none transition-all cursor-pointer shadow-sm active:scale-95 whitespace-nowrap max-w-[140px] sm:max-w-none"
             dir="rtl"
           >
-            <ChevronDown size={14} className={`transition-transform duration-300 ${isExamplesOpen ? 'rotate-180' : ''}`} />
-            <span className="flex-1 text-right font-semibold">الأمثلة البرمجية</span>
-            <Code size={14} className="text-emerald-500/70" />
+            <ChevronDown size={14} className={`transition-transform duration-300 shrink-0 ${isExamplesOpen ? 'rotate-180' : ''}`} />
+            <span className="font-semibold truncate">
+              {examplesList.find(ex => codeExamples[ex.id] === textCode)?.title || 'الأمثلة البرمجية'}
+            </span>
           </button>
           
           {/* Dropdown Menu */}
