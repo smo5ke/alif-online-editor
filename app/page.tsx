@@ -7,6 +7,7 @@ import BottomNav from './components/layout/BottomNav';
 import VisualEditor from './components/editors/VisualEditor';
 import TextEditor from './components/editors/TextEditor';
 import TerminalConsole from './components/terminal/TerminalConsole';
+import EditorToolbar from './components/layout/EditorToolbar';
 export default function Page() {
   const { activeMode, setMode, isTerminalHidden, setIsTerminalHidden } = useEditorStore();
 
@@ -21,30 +22,7 @@ export default function Page() {
           ${activeMode === 'terminal' ? 'hidden md:flex' : 'flex'}
           ${isTerminalHidden ? 'md:flex-none md:w-full' : ''}`}
         >
-          {/* Top Bar for Editor Section */}
-          <div className="bg-slate-800/50 py-2 px-2 sm:px-4 border-b border-slate-700/50 flex justify-between items-center z-10">
-            {/* Desktop Toggle (Hidden on mobile) */}
-            <div className="hidden md:flex items-center gap-2">
-              <button
-                onClick={() => setMode(activeMode === 'visual' ? 'code' : 'visual')}
-                className="flex items-center gap-2 text-emerald-400 font-bold bg-slate-700/50 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-emerald-900/50 text-sm"
-              >
-                {activeMode === 'visual' ? 'المحرر المرئي' : 'الشيفرة المصدرية'}
-              </button>
-            </div>
-            
-            {/* Mobile Title */}
-            <div className="md:hidden font-bold text-slate-300 text-sm px-2">
-              {activeMode === 'visual' ? 'المحرر المرئي' : 'الشيفرة المصدرية'}
-            </div>
-
-            {/* Terminal Toggle (Hidden on mobile) */}
-            <div className="hidden md:flex items-center gap-2">
-              <button onClick={() => setIsTerminalHidden(!isTerminalHidden)} className="text-blue-400 p-1.5 hover:bg-slate-700 rounded text-sm font-bold">
-                 {isTerminalHidden ? 'إظهار الطرفية' : 'إخفاء الطرفية'}
-              </button>
-            </div>
-          </div>
+          <EditorToolbar />
 
           <div className="flex-1 relative">
             <VisualEditor />
