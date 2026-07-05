@@ -79,3 +79,47 @@ body {
   height: 12px;
   border-radius: 50%;
 }
+
+/* React Flow Controls Redesign (Modern Dark UI) */
+.react-flow__controls {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.react-flow__controls-button {
+  background-color: rgba(30, 41, 59, 0.8) !important; /* slate-800 with opacity */
+  backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(51, 65, 85, 0.8) !important; /* slate-700 with opacity */
+  border-radius: 12px !important;
+  width: 36px !important;
+  height: 36px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #94a3b8 !important; /* slate-400 */
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+  transition: all 0.2s ease !important;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.8) !important;
+}
+
+.react-flow__controls-button svg {
+  fill: currentColor !important;
+  width: 16px !important;
+  height: 16px !important;
+  transition: transform 0.2s ease;
+}
+
+.react-flow__controls-button:hover {
+  background-color: #334155 !important; /* slate-700 */
+  color: #10b981 !important; /* emerald-500 for a pop of color */
+  border-color: #10b981 !important; /* emerald-500 */
+  transform: scale(1.05);
+}
+
+.react-flow__controls-button:active {
+  transform: scale(0.95);
+}
