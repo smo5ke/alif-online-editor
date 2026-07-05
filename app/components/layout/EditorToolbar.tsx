@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useEditorStore, codeExamples } from '../../store/useEditorStore';
+import { visualExamples } from '../../store/visualExamples';
 import { FileText, Copy, Share2, Download, Save, RotateCcw, Maximize, ChevronDown, Code } from 'lucide-react';
 
 export default function EditorToolbar() {
-  const { activeMode, setMode, setTextCode, textCode, isTerminalHidden, setIsTerminalHidden } = useEditorStore();
+  const { activeMode, setMode, setTextCode, textCode, isTerminalHidden, setIsTerminalHidden, setNodes, setEdges } = useEditorStore();
   
   const [isExamplesOpen, setIsExamplesOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -35,8 +36,19 @@ export default function EditorToolbar() {
   const handleSelectExample = (val: string) => {
     if (codeExamples[val]) {
       setTextCode(codeExamples[val]);
-      if (activeMode !== 'code') {
-        setMode('code'); // Switch to code mode to see the example
+      
+      if (visualExamples[val]) {
+        // Populate visual editor if there's a visual example
+        setNodes(visualExamples[val].nodes);
+        setEdges(visualExamples[val].edges);
+        // Switch to visual mode to show off the visual graph!
+        setMode('visual');
+      } else {
+        // Fallback to code mode for advanced examples
+        if (activeMode !== 'code') {
+          setMode('code');
+          alert('هذا المثال المتقدم متوفر فقط في محرر الشيفرة حالياً.');
+        }
       }
     }
     setIsExamplesOpen(false);
