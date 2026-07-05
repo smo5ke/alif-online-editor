@@ -131,6 +131,8 @@ export default function Page() {
     setTimeout(() => setToast(null), 2500);
   };
 
+  const [activeMobileTab, setActiveMobileTab] = useState<'visual' | 'code' | 'terminal'>('visual');
+
   const onConnect = useCallback((params: Connection) => {
     setEdges((eds) => addEdge({
       ...params,
@@ -193,6 +195,8 @@ export default function Page() {
       terminalInputRef.current.disabled = false;
       terminalInputRef.current.value = '';
     }
+    // Auto switch to terminal on mobile
+    setActiveMobileTab('terminal');
     const cleanCode = code.replace(/\u00A0/g, " ");
     ws.current.send(JSON.stringify({ type: 'run', code: cleanCode }));
   };
@@ -216,7 +220,7 @@ export default function Page() {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden text-slate-200" onContextMenu={e => e.preventDefault()}>
+    <div className="flex flex-col h-[100dvh] overflow-hidden text-slate-200" onContextMenu={e => e.preventDefault()}>
       {/* Header */}
       <header className="bg-slate-800/80 backdrop-blur-md border-b border-slate-700/50 p-3 sm:p-4 flex justify-between items-center shadow-lg z-10 shrink-0">
         <div className="flex items-center gap-3 sm:gap-4">
@@ -236,17 +240,32 @@ export default function Page() {
         </button>
       </header>
 
-      <main className="flex-1 flex flex-col md:flex-row bg-[#0b1120] overflow-hidden transition-all duration-300">
-        {/* Editor Section */}
-        <section className={`flex-1 flex flex-col border-b md:border-b-0 md:border-l border-slate-700/50 min-h-0 min-w-0 ${isTerminalHidden ? 'md:flex-none md:w-full' : ''}`}>
+      <main className="flex-1 flex flex-col md:flex-row bg-[#0b1120] overflow-hidden transition-all duration-300 relative pb-16 md:pb-0">
+        
+        {/* Editor Section (Visible on Desktop always, or on Mobile if activeTab is visual/code) */}
+        <section className={`flex-1 flex-col border-b md:border-b-0 md:border-l border-slate-700/50 min-h-0 min-w-0
+          ${activeMobileTab === 'terminal' ? 'hidden md:flex' : 'flex'}
+          ${isTerminalHidden ? 'md:flex-none md:w-full' : ''}`}
+        >
+          {/* Top Bar for Editor Section */}
           <div className="bg-slate-800/50 py-2 px-2 sm:px-4 border-b border-slate-700/50 flex justify-between items-center z-10">
-            <button
-              onClick={() => setIsVisualMode(!isVisualMode)}
-              className="flex items-center gap-2 text-emerald-400 font-bold bg-slate-700/50 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-emerald-900/50 text-sm"
-            >
-              {isVisualMode ? 'المحرر المرئي' : 'الشيفرة المصدرية'}
-            </button>
-            <div className="flex items-center gap-2">
+            {/* Desktop Toggle (Hidden on mobile) */}
+            <div className="hidden md:flex items-center gap-2">
+              <button
+                onClick={() => setIsVisualMode(!isVisualMode)}
+                className="flex items-center gap-2 text-emerald-400 font-bold bg-slate-700/50 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-emerald-900/50 text-sm"
+              >
+                {isVisualMode ? 'المحرر المرئي' : 'الشيفرة المصدرية'}
+              </button>
+            </div>
+            
+            {/* Mobile Title */}
+            <div className="md:hidden font-bold text-slate-300 text-sm px-2">
+              {activeMobileTab === 'visual' ? 'المحرر المرئي' : 'الشيفرة المصدرية'}
+            </div>
+
+            {/* Terminal Toggle (Hidden on mobile) */}
+            <div className="hidden md:flex items-center gap-2">
               <button onClick={() => setIsTerminalHidden(!isTerminalHidden)} className="text-blue-400 p-1.5 hover:bg-slate-700 rounded text-sm font-bold">
                  {isTerminalHidden ? 'إظهار الطرفية' : 'إخفاء الطرفية'}
               </button>
@@ -255,7 +274,7 @@ export default function Page() {
 
           <div className="flex-1 relative">
             {/* Visual Editor */}
-            <div className={`absolute inset-0 transition-opacity duration-200 ${isVisualMode ? 'z-10 opacity-100' : 'z-0 opacity-0 pointer-events-none'}`}>
+            <div className={`absolute inset-0 transition-opacity duration-200 ${(isVisualMode && activeMobileTab !== 'code') || activeMobileTab === 'visual' ? 'z-10 opacity-100' : 'z-0 opacity-0 pointer-events-none'}`}>
               <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -275,19 +294,19 @@ export default function Page() {
                 }}
               >
                 <Background color="#334155" gap={25} size={1.5} />
-                <Controls />
+                <Controls className="!bottom-20 md:!bottom-4" />
               </ReactFlow>
 
               <button
                 onClick={(e) => { e.stopPropagation(); setMenuPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 }); }}
-                className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-2xl px-6 py-3.5 font-bold z-30"
+                className="absolute bottom-6 md:bottom-6 left-1/2 transform -translate-x-1/2 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-2xl px-6 py-3.5 font-bold z-30"
               >
                 إضافة عقدة
               </button>
             </div>
 
             {/* Text Editor */}
-            <div className={`absolute inset-0 transition-opacity duration-200 ${!isVisualMode ? 'z-10 opacity-100' : 'z-0 opacity-0 pointer-events-none'}`}>
+            <div className={`absolute inset-0 transition-opacity duration-200 ${(!isVisualMode && activeMobileTab !== 'visual') || activeMobileTab === 'code' ? 'z-10 opacity-100' : 'z-0 opacity-0 pointer-events-none'}`}>
               <pre
                 className="code-font absolute inset-0 p-4 overflow-y-auto whitespace-pre-wrap break-all pointer-events-none text-slate-300 z-0 text-right no-scrollbar"
                 dangerouslySetInnerHTML={{ __html: highlightedCode }}
@@ -305,82 +324,130 @@ export default function Page() {
           </div>
         </section>
 
-        {/* Terminal Section */}
-        {!isTerminalHidden && (
-          <section className="flex-1 flex flex-col bg-black/40 shadow-inner min-h-0 min-w-0 transition-all duration-300">
-            <div className="bg-slate-800/50 text-slate-400 text-sm py-2 px-4 border-b border-slate-700/50 flex justify-between items-center shrink-0">
-              <span>طرفية المخرجات</span>
-              <button onClick={() => setTerminalOutput([])} className="text-slate-500 hover:text-slate-200 px-2 py-1 hover:bg-slate-700/50 rounded text-xs">مسح الشاشة</button>
-            </div>
-            
-            <div ref={outputContainerRef} className="flex-1 p-4 overflow-y-auto w-full text-right">
-              {terminalOutput.map((out, i) => (
-                <span key={i} className={out.color} style={{ whiteSpace: 'pre-wrap' }}>{out.text}</span>
-              ))}
-            </div>
+        {/* Terminal Section (Visible on Desktop if not hidden, Visible on Mobile if tab is terminal) */}
+        <section className={`flex-1 flex-col bg-black/40 shadow-inner min-h-0 min-w-0 transition-all duration-300
+          ${activeMobileTab === 'terminal' ? 'flex' : 'hidden md:flex'}
+          ${isTerminalHidden && activeMobileTab !== 'terminal' ? 'md:hidden' : ''}`}
+        >
+          <div className="bg-slate-800/50 text-slate-400 text-sm py-2 px-4 border-b border-slate-700/50 flex justify-between items-center shrink-0">
+            <span>طرفية المخرجات</span>
+            <button onClick={() => setTerminalOutput([])} className="text-slate-500 hover:text-slate-200 px-2 py-1 hover:bg-slate-700/50 rounded text-xs">مسح الشاشة</button>
+          </div>
+          
+          <div ref={outputContainerRef} className="flex-1 p-4 overflow-y-auto w-full text-right pb-24 md:pb-4">
+            {terminalOutput.map((out, i) => (
+              <span key={i} className={out.color} style={{ whiteSpace: 'pre-wrap' }}>{out.text}</span>
+            ))}
+          </div>
 
-            <div className="bg-slate-900/80 backdrop-blur border-t border-slate-700/50 flex items-center px-4 py-3">
-              <span className="text-green-500 font-bold ml-2">{'>>'}</span>
-              <input
-                ref={terminalInputRef}
-                type="text"
-                disabled
-                onKeyDown={handleTerminalInput}
-                className="flex-1 bg-transparent text-white outline-none text-sm placeholder-slate-600"
-                placeholder="اكتب إدخالك هنا واضغط Enter..."
-              />
-            </div>
-          </section>
-        )}
+          <div className="bg-slate-900/80 backdrop-blur border-t border-slate-700/50 flex items-center px-4 py-3 shrink-0">
+            <span className="text-green-500 font-bold ml-2">{'>>'}</span>
+            <input
+              ref={terminalInputRef}
+              type="text"
+              disabled
+              onKeyDown={handleTerminalInput}
+              className="flex-1 bg-transparent text-white outline-none text-sm placeholder-slate-600"
+              placeholder="اكتب إدخالك هنا واضغط Enter..."
+            />
+          </div>
+        </section>
+
+        {/* Mobile Bottom Navigation Bar */}
+        <nav className="md:hidden fixed bottom-0 w-full bg-slate-800 border-t border-slate-700 flex justify-around items-center z-40 pb-safe">
+          <button
+            onClick={() => { setActiveMobileTab('visual'); setIsVisualMode(true); }}
+            className={`flex-1 py-3 flex flex-col items-center gap-1 ${activeMobileTab === 'visual' ? 'text-blue-400 bg-slate-700/30' : 'text-slate-400'}`}
+          >
+            <div className="text-xl">🎨</div>
+            <span className="text-[10px] font-bold">المرئي</span>
+          </button>
+          <button
+            onClick={() => { setActiveMobileTab('code'); setIsVisualMode(false); }}
+            className={`flex-1 py-3 flex flex-col items-center gap-1 ${activeMobileTab === 'code' ? 'text-blue-400 bg-slate-700/30' : 'text-slate-400'}`}
+          >
+            <div className="text-xl">💻</div>
+            <span className="text-[10px] font-bold">الشيفرة</span>
+          </button>
+          <button
+            onClick={() => setActiveMobileTab('terminal')}
+            className={`flex-1 py-3 flex flex-col items-center gap-1 ${activeMobileTab === 'terminal' ? 'text-blue-400 bg-slate-700/30' : 'text-slate-400'}`}
+          >
+            <div className="text-xl">🖥️</div>
+            <span className="text-[10px] font-bold">الطرفية</span>
+          </button>
+        </nav>
       </main>
 
-      {/* Add Node Menu */}
+      {/* Add Node Menu (Mobile friendly Bottom Sheet style on small screens) */}
       {menuPos && (
-        <div
-          className="fixed bg-slate-800/95 backdrop-blur-md border border-slate-600 rounded-xl shadow-2xl z-50 w-56 max-h-[75vh] overflow-y-auto custom-menu-scroll text-right"
-          style={{ top: menuPos.y, left: menuPos.x, transform: 'translate(-50%, -50%)' }}
-        >
-          <div className="bg-slate-700/80 px-4 py-2 flex justify-between sticky top-0 border-b border-slate-600">
-            <span className="text-xs font-bold text-emerald-300">🚀 أوامر</span>
-            <button onClick={() => setMenuPos(null)} className="text-white text-xs">✕</button>
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center pointer-events-none">
+          {/* Backdrop for mobile */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm md:hidden pointer-events-auto" onClick={() => setMenuPos(null)} />
+          
+          <div
+            className="pointer-events-auto bg-slate-800/95 backdrop-blur-md border border-slate-600 rounded-t-2xl md:rounded-xl shadow-2xl w-full md:w-56 max-h-[60vh] md:max-h-[75vh] overflow-hidden flex flex-col transform transition-transform text-right"
+            style={{
+              position: window.innerWidth < 768 ? 'relative' : 'absolute',
+              top: window.innerWidth < 768 ? 'auto' : menuPos.y,
+              left: window.innerWidth < 768 ? 'auto' : menuPos.x,
+              transform: window.innerWidth < 768 ? 'none' : 'translate(-50%, -50%)',
+            }}
+          >
+            <div className="bg-slate-700/80 px-4 py-3 md:py-2 flex justify-between shrink-0 border-b border-slate-600">
+              <span className="text-sm md:text-xs font-bold text-emerald-300">🚀 إضافة أوامر</span>
+              <button onClick={() => setMenuPos(null)} className="text-white text-sm md:text-xs px-2">✕</button>
+            </div>
+            <div className="overflow-y-auto custom-menu-scroll pb-6 md:pb-0">
+              {Object.entries(nodeDefinitions).map(([key, def]) => (
+                <button
+                  key={key}
+                  onClick={() => addNode(key)}
+                  className="w-full text-right px-5 md:px-4 py-3.5 md:py-2 hover:bg-slate-700 text-slate-200 text-sm border-b border-slate-700/50 active:bg-slate-600"
+                >
+                  {def.label}
+                </button>
+              ))}
+            </div>
           </div>
-          {Object.entries(nodeDefinitions).map(([key, def]) => (
-            <button
-              key={key}
-              onClick={() => addNode(key)}
-              className="w-full text-right px-4 py-2 hover:bg-slate-700 text-slate-200 text-sm border-b border-slate-700/50"
-            >
-              {def.label}
-            </button>
-          ))}
         </div>
       )}
 
       {/* Edit Node Menu */}
       {editMenuPos && (
-        <div
-          className="fixed bg-slate-800/95 backdrop-blur-md border border-slate-600 rounded-xl shadow-2xl z-50 w-48 text-right"
-          style={{ top: editMenuPos.y, left: editMenuPos.x }}
-        >
-          <div className="bg-slate-700/50 px-4 py-2 flex justify-between border-b border-slate-600">
-            <span className="text-xs text-yellow-400 font-bold">⚙️ تعديل العقدة</span>
-            <button onClick={() => setEditMenuPos(null)} className="text-white text-xs">✕</button>
-          </div>
-          <button
-            onClick={() => {
-              setNodes(nds => nds.filter(n => n.id !== editMenuPos.nodeId));
-              setEditMenuPos(null);
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center pointer-events-none">
+          {/* Backdrop for mobile */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm md:hidden pointer-events-auto" onClick={() => setEditMenuPos(null)} />
+          
+          <div
+            className="pointer-events-auto bg-slate-800/95 backdrop-blur-md border border-slate-600 rounded-t-2xl md:rounded-xl shadow-2xl w-full md:w-48 overflow-hidden text-right"
+            style={{
+              position: window.innerWidth < 768 ? 'relative' : 'absolute',
+              top: window.innerWidth < 768 ? 'auto' : editMenuPos.y,
+              left: window.innerWidth < 768 ? 'auto' : editMenuPos.x,
             }}
-            className="w-full text-right px-4 py-3 hover:bg-red-600 text-red-200 text-sm"
           >
-            حذف العقدة 🗑️
-          </button>
+            <div className="bg-slate-700/50 px-4 py-3 md:py-2 flex justify-between border-b border-slate-600">
+              <span className="text-sm md:text-xs text-yellow-400 font-bold">⚙️ تعديل العقدة</span>
+              <button onClick={() => setEditMenuPos(null)} className="text-white text-sm md:text-xs px-2">✕</button>
+            </div>
+            <button
+              onClick={() => {
+                setNodes(nds => nds.filter(n => n.id !== editMenuPos.nodeId));
+                setEditMenuPos(null);
+              }}
+              className="w-full text-right px-5 md:px-4 py-4 md:py-3 hover:bg-red-600 text-red-200 text-sm active:bg-red-500"
+            >
+              حذف العقدة 🗑️
+            </button>
+            <div className="h-6 md:hidden"></div>
+          </div>
         </div>
       )}
 
       {/* Toast Message */}
       {toast && (
-        <div className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-800 px-5 py-2.5 rounded-xl shadow-2xl z-50 text-sm font-bold border border-slate-700 ${toast.type === 'error' ? 'text-red-400' : 'text-emerald-400'}`}>
+        <div className={`fixed bottom-20 md:bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-800 px-5 py-2.5 rounded-xl shadow-2xl z-50 text-sm font-bold border border-slate-700 ${toast.type === 'error' ? 'text-red-400' : 'text-emerald-400'}`}>
           {toast.message}
         </div>
       )}
