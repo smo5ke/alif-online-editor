@@ -26,16 +26,15 @@ export default function TerminalConsole() {
   };
 
   return (
-    <section className={`flex-1 flex-col bg-black/40 shadow-inner min-h-0 min-w-0 transition-all duration-300
-      ${activeMode === 'terminal' ? 'flex' : 'hidden md:flex'}
-      ${isTerminalHidden && activeMode !== 'terminal' ? 'md:hidden' : ''}`}
+    <section className={`flex-1 flex flex-col bg-black/40 shadow-inner min-h-0 min-w-0 transition-all duration-300
+      ${isTerminalHidden ? 'hidden' : 'flex'}`}
     >
       <div className="bg-slate-800/50 text-slate-400 text-sm py-2 px-4 border-b border-slate-700/50 flex justify-between items-center shrink-0">
         <span>طرفية المخرجات</span>
         <button onClick={clearTerminal} className="text-slate-500 hover:text-slate-200 px-2 py-1 hover:bg-slate-700/50 rounded text-xs">مسح الشاشة</button>
       </div>
       
-      <div ref={outputContainerRef} className="flex-1 p-4 overflow-y-auto w-full text-right pb-24 md:pb-4">
+      <div ref={outputContainerRef} className="flex-1 p-4 overflow-y-auto w-full text-right pb-4">
         {terminalOutput.map((out, i) => (
           <span key={i} className={out.color} style={{ whiteSpace: 'pre-wrap' }}>{out.text}</span>
         ))}
