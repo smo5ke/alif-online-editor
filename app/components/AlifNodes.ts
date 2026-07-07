@@ -162,6 +162,30 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     outputs: [{ id: 'val_out', label: 'نص', type: 'data' }],
     controls: [{ id: 'value', type: 'text', label: 'النص', value: 'مرحباً' }],
   },
+  'بيانات/تحويل لنص': {
+    label: 'تحويل لنص',
+    subtitle: 'نص()',
+    iconName: 'WholeWord',
+    color: '#eab308',
+    inputs: [{ id: 'val_in', label: 'القيمة', type: 'data' }],
+    outputs: [{ id: 'res_out', label: 'النص', type: 'data' }],
+  },
+  'بيانات/تحويل لرقم': {
+    label: 'تحويل لرقم',
+    subtitle: 'رقم()',
+    iconName: 'Binary',
+    color: '#3b82f6',
+    inputs: [{ id: 'val_in', label: 'القيمة', type: 'data' }],
+    outputs: [{ id: 'res_out', label: 'الرقم', type: 'data' }],
+  },
+  'بيانات/نوع': {
+    label: 'نوع البيانات',
+    subtitle: 'نوع()',
+    iconName: 'Fingerprint',
+    color: '#8b5cf6',
+    inputs: [{ id: 'val_in', label: 'القيمة', type: 'data' }],
+    outputs: [{ id: 'res_out', label: 'النوع', type: 'data' }],
+  },
   'بيانات/دمج نصوص': {
     label: 'دمج نصوص',
     subtitle: 'ربط',
@@ -180,6 +204,30 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     color: '#3b82f6',
     outputs: [{ id: 'val_out', label: 'قيمة', type: 'data' }],
     controls: [{ id: 'value', type: 'select', label: 'منطق', value: 'صح', options: ['صح', 'خطأ'] }],
+  },
+  'نصوص/قص': {
+    label: 'قص نص',
+    subtitle: 'اقتطاع جزء',
+    iconName: 'Scissors',
+    color: '#eab308',
+    inputs: [
+      { id: 'str_in', label: 'النص', type: 'data' },
+      { id: 'start_in', label: 'من', type: 'data' },
+      { id: 'end_in', label: 'إلى', type: 'data' },
+    ],
+    outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
+  },
+  'نصوص/استبدال': {
+    label: 'استبدال نص',
+    subtitle: 'تغيير كلمة',
+    iconName: 'Replace',
+    color: '#eab308',
+    inputs: [
+      { id: 'str_in', label: 'النص', type: 'data' },
+      { id: 'old_in', label: 'القديم', type: 'data' },
+      { id: 'new_in', label: 'الجديد', type: 'data' },
+    ],
+    outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
   },
   'بيانات/إدخال مستخدم': {
     label: 'إدخال مستخدم',
@@ -237,6 +285,38 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     inputs: [
       { id: 'arr_in', label: 'المصفوفة', type: 'data' },
       { id: 'idx_in', label: 'الفهرس', type: 'data' },
+    ],
+    outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
+  },
+  
+  'فهارس/جديد': {
+    label: 'فهرس جديد',
+    subtitle: 'قاموس فارغ',
+    iconName: 'Library',
+    color: '#a855f7', // Purple
+    outputs: [{ id: 'dict_out', label: 'فهرس', type: 'data' }],
+  },
+  'فهارس/إضافة': {
+    label: 'إضافة للفهرس',
+    subtitle: 'مفتاح وقيمة',
+    iconName: 'BookPlus',
+    color: '#a855f7',
+    inputs: [
+      { id: 'seq_in', label: 'تسلسل', type: 'event' },
+      { id: 'dict_in', label: 'الفهرس', type: 'data' },
+      { id: 'key_in', label: 'المفتاح', type: 'data' },
+      { id: 'val_in', label: 'القيمة', type: 'data' },
+    ],
+    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+  },
+  'فهارس/قراءة': {
+    label: 'قراءة من فهرس',
+    subtitle: 'جلب قيمة',
+    iconName: 'BookOpen',
+    color: '#a855f7',
+    inputs: [
+      { id: 'dict_in', label: 'الفهرس', type: 'data' },
+      { id: 'key_in', label: 'المفتاح', type: 'data' },
     ],
     outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
   },

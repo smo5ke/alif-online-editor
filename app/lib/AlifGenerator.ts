@@ -40,6 +40,18 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
       let val = resolveInput(node.id, 'val_in') || '""';
       return `طول(${val})`;
     }
+    if (type === 'بيانات/تحويل لنص') {
+      let val = resolveInput(node.id, 'val_in') || 'عدم';
+      return `نص(${val})`;
+    }
+    if (type === 'بيانات/تحويل لرقم') {
+      let val = resolveInput(node.id, 'val_in') || 'عدم';
+      return `رقم(${val})`;
+    }
+    if (type === 'بيانات/نوع') {
+      let val = resolveInput(node.id, 'val_in') || 'عدم';
+      return `نوع(${val})`;
+    }
     if (type === 'بيانات/عشوائي') {
       let a = resolveInput(node.id, 'min_in') || 1;
       let b = resolveInput(node.id, 'max_in') || 100;
@@ -72,6 +84,24 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
       let arrName = resolveInput(node.id, 'arr_in') || 'مصفوفة';
       let idx = resolveInput(node.id, 'idx_in') || 0;
       return `${arrName}[${idx}]`;
+    }
+    if (type === 'نصوص/قص') {
+      let str = resolveInput(node.id, 'str_in') || '""';
+      let start = resolveInput(node.id, 'start_in') || 0;
+      let end = resolveInput(node.id, 'end_in') || 0;
+      return `${str}[${start}:${end}]`;
+    }
+    if (type === 'نصوص/استبدال') {
+      let str = resolveInput(node.id, 'str_in') || '""';
+      let oldStr = resolveInput(node.id, 'old_in') || '""';
+      let newStr = resolveInput(node.id, 'new_in') || '""';
+      return `${str}.استبدل(${oldStr}, ${newStr})`;
+    }
+    if (type === 'فهارس/جديد') return `{}`;
+    if (type === 'فهارس/قراءة') {
+      let dictName = resolveInput(node.id, 'dict_in') || 'فهرس';
+      let key = resolveInput(node.id, 'key_in') || '""';
+      return `${dictName}[${key}]`;
     }
     return 'عدم';
   }
@@ -117,6 +147,12 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
       } else if (type === 'مصفوفات/ترتيب') {
         let arrName = resolveInput(currNode.id, 'arr_in') || 'مصفوفة';
         code += indent + `${arrName}.رتب()\n`;
+        currNodeId = getNextNodeId(currNode.id, 'seq_out');
+      } else if (type === 'فهارس/إضافة') {
+        let dictName = resolveInput(currNode.id, 'dict_in') || 'فهرس';
+        let key = resolveInput(currNode.id, 'key_in') || '""';
+        let val = resolveInput(currNode.id, 'val_in') || 'عدم';
+        code += indent + `${dictName}[${key}] = ${val}\n`;
         currNodeId = getNextNodeId(currNode.id, 'seq_out');
       } else if (type === 'دوال/استدعاء') {
         let arg = resolveInput(currNode.id, 'arg_in') || 'عدم';
