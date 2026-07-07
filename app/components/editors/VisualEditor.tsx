@@ -7,6 +7,9 @@ import DeletableEdge from '../DeletableEdge';
 import { nodeDefinitions } from '../AlifNodes';
 import '@xyflow/react/dist/style.css';
 
+import { getLayoutedElements } from '../../lib/layoutUtils';
+import { LayoutTemplate } from 'lucide-react';
+
 const nodeTypes = {
   dynamic: DynamicNode,
 };
@@ -20,6 +23,16 @@ export default function VisualEditor() {
   
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [editMenuPos, setEditMenuPos] = useState<{ x: number; y: number; nodeId: string } | null>(null);
+
+  const onLayout = useCallback(() => {
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+      nodes,
+      edges,
+      'LR'
+    );
+    setNodes(layoutedNodes);
+    setEdges(layoutedEdges);
+  }, [nodes, edges, setNodes, setEdges]);
 
   const onConnect = useCallback((params: Connection) => {
     setEdges((eds) => [
@@ -97,12 +110,21 @@ export default function VisualEditor() {
         <Controls className="!bottom-20 md:!bottom-4" />
       </ReactFlow>
 
-      <button
-        onClick={(e) => { e.stopPropagation(); setMenuPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 }); }}
-        className="absolute bottom-6 md:bottom-6 left-1/2 transform -translate-x-1/2 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-2xl px-6 py-3.5 font-bold z-30"
-      >
-        إضافة عقدة
-      </button>
+      <div className="absolute bottom-6 md:bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-3 z-30">
+        <button
+          onClick={onLayout}
+          className="bg-slate-700 hover:bg-slate-600 text-white rounded-full shadow-2xl w-12 h-12 flex items-center justify-center transition-colors border border-slate-600/50"
+          title="ترتيب العقد تلقائياً"
+        >
+          <LayoutTemplate size={20} className="text-emerald-400" />
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); setMenuPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 }); }}
+          className="bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-2xl px-6 py-3.5 font-bold"
+        >
+          إضافة عقدة
+        </button>
+      </div>
 
       {/* Add Node Menu (Mobile friendly Bottom Sheet style on small screens) */}
       {menuPos && (
