@@ -119,20 +119,50 @@ export default function VisualEditor() {
               transform: window.innerWidth < 768 ? 'none' : 'translate(-50%, -50%)',
             }}
           >
-            <div className="bg-slate-700/80 px-4 py-3 md:py-2 flex justify-between shrink-0 border-b border-slate-600">
+            <div className="bg-slate-700/80 px-4 py-3 md:py-2 flex justify-between items-center shrink-0 border-b border-slate-600">
               <span className="text-sm md:text-xs font-bold text-emerald-300">🚀 إضافة أوامر</span>
-              <button onClick={() => setMenuPos(null)} className="text-white text-sm md:text-xs px-2">✕</button>
+              <button onClick={() => setMenuPos(null)} className="text-slate-300 hover:text-white text-sm md:text-xs px-2 py-1 bg-slate-600/50 hover:bg-slate-500 rounded transition-colors">✕</button>
             </div>
-            <div className="overflow-y-auto custom-menu-scroll pb-6 md:pb-0">
-              {Object.entries(nodeDefinitions).map(([key, def]) => (
-                <button
-                  key={key}
-                  onClick={() => addNode(key)}
-                  className="w-full text-right px-5 md:px-4 py-3.5 md:py-2 hover:bg-slate-700 text-slate-200 text-sm border-b border-slate-700/50 active:bg-slate-600"
-                >
-                  {def.label}
-                </button>
-              ))}
+            <div className="overflow-y-auto custom-menu-scroll pb-6 md:pb-0 flex-1">
+              {(() => {
+                const grouped = Object.entries(nodeDefinitions).reduce((acc, [key, def]) => {
+                  const category = key.split('/')[0] || 'أخرى';
+                  if (!acc[category]) acc[category] = [];
+                  acc[category].push({ key, def });
+                  return acc;
+                }, {} as Record<string, { key: string, def: any }[]>);
+                
+                // Import LucideIcons to use them dynamically in the menu
+                const LucideIcons = require('lucide-react');
+
+                return Object.entries(grouped).map(([category, items]) => (
+                  <div key={category} className="mb-2 last:mb-0">
+                    <div className="bg-slate-800/80 px-4 py-1.5 border-b border-y border-slate-700/50 flex items-center justify-end sticky top-0 z-10 backdrop-blur-sm">
+                      <span className="text-xs font-black text-slate-400 tracking-wider">{category}</span>
+                    </div>
+                    <div>
+                      {items.map(({ key, def }) => {
+                        const IconComponent = def.iconName ? LucideIcons[def.iconName] : LucideIcons.Code;
+                        return (
+                          <button
+                            key={key}
+                            onClick={() => addNode(key)}
+                            className="w-full text-right px-4 py-3 hover:bg-slate-700/80 text-slate-200 border-b border-slate-700/30 last:border-0 active:bg-slate-600 flex items-center justify-end gap-3 transition-colors group"
+                          >
+                            <div className="flex flex-col items-end">
+                              <span className="text-sm font-bold text-slate-200 group-hover:text-emerald-400 transition-colors">{def.label}</span>
+                              {def.subtitle && <span className="text-[10px] text-slate-400">{def.subtitle}</span>}
+                            </div>
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-white/5" style={{ backgroundColor: def.color || '#475569' }}>
+                              <IconComponent size={16} className="text-white drop-shadow-md" />
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ));
+              })()}
             </div>
           </div>
         </div>

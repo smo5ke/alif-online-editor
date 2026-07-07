@@ -53,6 +53,10 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
       let arg = resolveInput(node.id, 'arg_in') || 'عدم';
       return `${getControlValue('func_name')}(${arg})`;
     }
+    if (type === 'شروط/ليس') {
+      let val = resolveInput(node.id, 'val_in') || 'خطأ';
+      return `(ليس ${val})`;
+    }
     if (type === 'بيانات/حساب' || type === 'شروط/مقارنة' || type === 'شروط/عملية منطقية') {
       let a = resolveInput(node.id, 'a_in') || 0;
       let b = resolveInput(node.id, 'b_in') || 0;
@@ -157,6 +161,27 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
         currNodeId = getNextNodeId(currNode.id, 'done_out');
       } else if (type === 'حلقات/توقف') {
         code += indent + `توقف\n`;
+        break;
+      } else if (type === 'أوامر/مسح الشاشة') {
+        code += indent + `مسح()\n`;
+        currNodeId = getNextNodeId(currNode.id, 'seq_out');
+      } else if (type === 'أخطاء/محاولة') {
+        code += indent + `حاول:\n`;
+        let tryNodeId = getNextNodeId(currNode.id, 'try_out');
+        if (tryNodeId) code += walkExecution(tryNodeId, indent + '\t', new Set(pathVisited));
+        else code += indent + '\tاستمر\n';
+        
+        let catchNodeId = getNextNodeId(currNode.id, 'catch_out');
+        if (catchNodeId) {
+          code += indent + `امسك:\n`;
+          code += walkExecution(catchNodeId, indent + '\t', new Set(pathVisited));
+        }
+        
+        let finallyNodeId = getNextNodeId(currNode.id, 'finally_out');
+        if (finallyNodeId) {
+          code += indent + `اخيرا:\n`;
+          code += walkExecution(finallyNodeId, indent + '\t', new Set(pathVisited));
+        }
         break;
       } else if (type === 'أوامر/بداية البرنامج' || type === 'دوال/تعريف دالة') {
         currNodeId = getNextNodeId(currNode.id, 'seq_out') || getNextNodeId(currNode.id, 'body_out');

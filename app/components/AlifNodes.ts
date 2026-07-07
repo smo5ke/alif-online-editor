@@ -19,6 +19,14 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     ],
     outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
   },
+  'أوامر/مسح الشاشة': {
+    label: 'مسح الشاشة',
+    subtitle: 'إفراغ المخرجات',
+    iconName: 'Eraser',
+    color: '#ec4899',
+    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }],
+    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+  },
   
   'شروط/اذا': {
     label: 'اذا / والا',
@@ -57,6 +65,14 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     ],
     outputs: [{ id: 'res_out', label: 'نتيجة', type: 'data' }],
     controls: [{ id: 'op', type: 'select', label: 'عملية', value: 'و', options: ['و', 'أو'] }],
+  },
+  'شروط/ليس': {
+    label: 'نفي (ليس)',
+    subtitle: 'عكس الشرط',
+    iconName: 'ToggleLeft',
+    color: '#8b5cf6',
+    inputs: [{ id: 'val_in', label: 'الشرط', type: 'data' }],
+    outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
   },
 
   'حلقات/لكل': {
@@ -173,6 +189,14 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     outputs: [{ id: 'res_out', label: 'إدخال', type: 'data' }],
     controls: [{ id: 'prompt', type: 'text', label: 'الرسالة', value: 'أدخل القيمة: ' }],
   },
+  'بيانات/طول': {
+    label: 'طول',
+    subtitle: 'نص أو مصفوفة',
+    iconName: 'Ruler',
+    color: '#3b82f6',
+    inputs: [{ id: 'val_in', label: 'القيمة', type: 'data' }],
+    outputs: [{ id: 'res_out', label: 'الطول', type: 'data' }],
+  },
 
   'مصفوفات/جديدة': {
     label: 'مصفوفة جديدة',
@@ -251,6 +275,18 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     inputs: [
       { id: 'seq_in', label: 'تسلسل', type: 'event' },
       { id: 'val_in', label: 'قيمة', type: 'data' },
+    ],
+  },
+  'أخطاء/محاولة': {
+    label: 'محاولة / خطأ',
+    subtitle: 'معالجة الاستثناءات',
+    iconName: 'ShieldAlert',
+    color: '#ef4444', // Red
+    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }],
+    outputs: [
+      { id: 'try_out', label: 'حاول', type: 'event' },
+      { id: 'catch_out', label: 'في حال الخطأ', type: 'event' },
+      { id: 'finally_out', label: 'في النهاية', type: 'event' },
     ],
   },
 };
