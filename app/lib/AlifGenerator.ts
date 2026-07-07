@@ -116,6 +116,36 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
       let key = resolveInput(node.id, 'key_in') || '""';
       return `${dictName}[${key}]`;
     }
+    if (type === 'ملفات/فتح') {
+      let path = resolveInput(node.id, 'path_in') || '""';
+      return `افتح(${path}, "${getControlValue('mode')}")`;
+    }
+    if (type === 'ملفات/قراءة') {
+      let file = resolveInput(node.id, 'file_in') || 'س';
+      return getControlValue('type') === 'سطر' ? `${file}.اقرا_سطر()` : `${file}.اقرا()`;
+    }
+    if (type === 'وقت/الآن') return `الوقت.الان()`;
+    if (type === 'وقت/منسق') return `الوقت.منسق()`;
+    if (type === 'رياضيات/دوال') {
+      let val = resolveInput(node.id, 'val_in') || 0;
+      return `الرياضيات.${getControlValue('func')}(${val})`;
+    }
+    if (type === 'فهارس/مفاتيح_وقيم') {
+      let dict = resolveInput(node.id, 'dict_in') || 'فهرس';
+      return `${dict}.${getControlValue('type')}()`;
+    }
+    if (type === 'شروط/انتماء') {
+      let val = resolveInput(node.id, 'val_in') || '""';
+      let list = resolveInput(node.id, 'list_in') || '[]';
+      return `(${val} ${getControlValue('op')} ${list})`;
+    }
+    if (type === 'كائنات/هذا') {
+      return `هذا.${getControlValue('prop_name')}`;
+    }
+    if (type === 'كائنات/إنشاء') {
+      let arg = resolveInput(node.id, 'arg_in') || '';
+      return `${getControlValue('class_name')}(${arg})`;
+    }
     return 'عدم';
   }
 
@@ -147,6 +177,22 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
         let val = resolveInput(currNode.id, 'val_in') || 'عدم';
         code += indent + `${varName} = ${val}\n`;
         currNodeId = getNextNodeId(currNode.id, 'seq_out');
+      } else if (type === 'متغيرات/إسناد رجعي') {
+        let varName = getControlValue('var_name');
+        let op = getControlValue('op');
+        let val = resolveInput(currNode.id, 'val_in') || 'عدم';
+        code += indent + `${varName} ${op} ${val}\n`;
+        currNodeId = getNextNodeId(currNode.id, 'seq_out');
+      } else if (type === 'متغيرات/إسناد شرطي') {
+        let varName = getControlValue('var_name');
+        let cond = resolveInput(currNode.id, 'cond_in') || 'خطأ';
+        let tVal = resolveInput(currNode.id, 'true_in') || 'عدم';
+        let fVal = resolveInput(currNode.id, 'false_in') || 'عدم';
+        code += indent + `${varName} = ${tVal} اذا ${cond} والا ${fVal}\n`;
+        currNodeId = getNextNodeId(currNode.id, 'seq_out');
+      } else if (type === 'متغيرات/حذف') {
+        code += indent + `احذف ${getControlValue('var_name')}\n`;
+        currNodeId = getNextNodeId(currNode.id, 'seq_out');
       } else if (type === 'مصفوفات/إضافة') {
         let arrName = resolveInput(currNode.id, 'arr_in') || 'مصفوفة';
         let val = resolveInput(currNode.id, 'val_in') || 'عدم';
@@ -156,6 +202,12 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
         let arrName = resolveInput(currNode.id, 'arr_in') || 'مصفوفة';
         let val = resolveInput(currNode.id, 'val_in') || 'عدم';
         code += indent + `${arrName}.امسح(${val})\n`;
+        currNodeId = getNextNodeId(currNode.id, 'seq_out');
+      } else if (type === 'مصفوفات/إدراج') {
+        let arrName = resolveInput(currNode.id, 'arr_in') || 'مصفوفة';
+        let idx = resolveInput(currNode.id, 'idx_in') || 0;
+        let val = resolveInput(currNode.id, 'val_in') || 'عدم';
+        code += indent + `${arrName}.ادرج(${idx}, ${val})\n`;
         currNodeId = getNextNodeId(currNode.id, 'seq_out');
       } else if (type === 'مصفوفات/ترتيب') {
         let arrName = resolveInput(currNode.id, 'arr_in') || 'مصفوفة';
@@ -174,6 +226,19 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
       } else if (type === 'شبكة/جلب') {
         let url = resolveInput(currNode.id, 'url_in') || '""';
         code += indent + `جلب(${url})\n`;
+        currNodeId = getNextNodeId(currNode.id, 'seq_out');
+      } else if (type === 'ملفات/إغلاق') {
+        let file = resolveInput(currNode.id, 'file_in') || 'س';
+        code += indent + `${file}.اغلق()\n`;
+        currNodeId = getNextNodeId(currNode.id, 'seq_out');
+      } else if (type === 'كائنات/تعيين_خاصية') {
+        let prop = getControlValue('prop_name');
+        let val = resolveInput(currNode.id, 'val_in') || 'عدم';
+        code += indent + `هذا.${prop} = ${val}\n`;
+        currNodeId = getNextNodeId(currNode.id, 'seq_out');
+      } else if (type === 'حزم/استيراد') {
+        let pkg = getControlValue('pkg_name') || 'مكتبة';
+        code += indent + `استورد ${pkg}\n`;
         currNodeId = getNextNodeId(currNode.id, 'seq_out');
       } else if (type === 'أوامر/انتظر') {
         let ms = resolveInput(currNode.id, 'ms_in') || 3;
@@ -241,6 +306,18 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
         }
         code += indent + `نهاية:\n`;
         break;
+      } else if (type === 'كائنات/صنف') {
+        let className = getControlValue('class_name');
+        let inherits = getControlValue('inherits');
+        code += indent + `صنف ${className}`;
+        if (inherits) code += `(${inherits})`;
+        code += `:\n`;
+        
+        let bodyNodeId = getNextNodeId(currNode.id, 'body_out');
+        if (bodyNodeId) code += walkExecution(bodyNodeId, indent + '\t', new Set(pathVisited));
+        else code += indent + '\tاستمر\n';
+        
+        currNodeId = getNextNodeId(currNode.id, 'seq_out');
       } else if (type === 'أوامر/بداية البرنامج' || type === 'دوال/تعريف دالة') {
         currNodeId = getNextNodeId(currNode.id, 'seq_out') || getNextNodeId(currNode.id, 'body_out');
       } else {
@@ -253,9 +330,14 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
   let code = '# تم التوليد برمجياً من المحرر المرئي 🕸️\n\n';
   
   // Auto-import modules if specific nodes are used
-  const usesTime = nodes.some(n => (n.data as any).originalType === 'أوامر/انتظر');
+  const usesTime = nodes.some(n => (n.data as any).originalType === 'أوامر/انتظر' || (n.data as any).originalType === 'وقت/الآن' || (n.data as any).originalType === 'وقت/منسق');
   if (usesTime) {
     code += 'استورد الوقت\n\n';
+  }
+  
+  const usesMath = nodes.some(n => (n.data as any).originalType === 'رياضيات/دوال');
+  if (usesMath) {
+    code += 'استورد الرياضيات\n\n';
   }
   
   const funcNodes = nodes.filter(n => (n.data as any).originalType === 'دوال/تعريف دالة');

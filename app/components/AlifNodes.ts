@@ -22,6 +22,91 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
       { id: 'data_out', label: 'البيانات', type: 'data' }
     ],
   },
+  'متغيرات/إسناد رجعي': {
+    label: 'إسناد رجعي', subtitle: '+=, -=, ...', iconName: 'ArrowRightLeft', color: '#f97316',
+    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }, { id: 'val_in', label: 'القيمة', type: 'data' }],
+    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+    controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'س' }, { id: 'op', type: 'select', label: 'العملية', value: '+=', options: ['+=', '-=', '*=', '\\=', '^='] }],
+  },
+  'متغيرات/إسناد شرطي': {
+    label: 'إسناد شرطي', subtitle: 'اذا / والا', iconName: 'HelpCircle', color: '#f97316',
+    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }, { id: 'cond_in', label: 'الشرط', type: 'data' }, { id: 'true_in', label: 'صح', type: 'data' }, { id: 'false_in', label: 'خطأ', type: 'data' }],
+    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+    controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'س' }],
+  },
+  'متغيرات/حذف': {
+    label: 'حذف متغير', subtitle: 'احذف', iconName: 'Trash2', color: '#f97316',
+    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }], outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+    controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'س' }],
+  },
+  'ملفات/فتح': {
+    label: 'فتح ملف', subtitle: 'افتح', iconName: 'FileText', color: '#64748b',
+    inputs: [{ id: 'path_in', label: 'المسار', type: 'data' }], outputs: [{ id: 'file_out', label: 'الملف', type: 'data' }],
+    controls: [{ id: 'mode', type: 'select', label: 'الوضع', value: 'ق', options: ['ق', 'ك', 'ا'] }],
+  },
+  'ملفات/قراءة': {
+    label: 'قراءة ملف', subtitle: 'اقرا', iconName: 'BookOpen', color: '#64748b',
+    inputs: [{ id: 'file_in', label: 'الملف', type: 'data' }], outputs: [{ id: 'res_out', label: 'المحتوى', type: 'data' }],
+    controls: [{ id: 'type', type: 'select', label: 'قراءة', value: 'الكل', options: ['الكل', 'سطر'] }],
+  },
+  'ملفات/إغلاق': {
+    label: 'إغلاق ملف', subtitle: 'اغلق', iconName: 'XSquare', color: '#64748b',
+    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }, { id: 'file_in', label: 'الملف', type: 'data' }], outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+  },
+  'وقت/الآن': {
+    label: 'الوقت الحالي', subtitle: 'الان()', iconName: 'Clock', color: '#0ea5e9',
+    outputs: [{ id: 'res_out', label: 'الوقت', type: 'data' }],
+  },
+  'وقت/منسق': {
+    label: 'تاريخ منسق', subtitle: 'منسق()', iconName: 'Calendar', color: '#0ea5e9',
+    outputs: [{ id: 'res_out', label: 'التاريخ', type: 'data' }],
+  },
+  'رياضيات/دوال': {
+    label: 'دالة رياضية', subtitle: 'الرياضيات', iconName: 'Sigma', color: '#3b82f6',
+    inputs: [{ id: 'val_in', label: 'القيمة', type: 'data' }], outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
+    controls: [{ id: 'func', type: 'select', label: 'الدالة', value: 'جيب', options: ['جيب', 'تجيب', 'ظل', 'قيمة_مطلقة', 'المضروب', 'قم_اكبر', 'قم_اصغر', 'حد_اعلى', 'حد_ادنى', 'لوغ', 'راديان', 'درجة'] }],
+  },
+  'مصفوفات/إدراج': {
+    label: 'إدراج عنصر', subtitle: 'ادرج', iconName: 'ListPlus', color: '#06b6d4',
+    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }, { id: 'arr_in', label: 'المصفوفة', type: 'data' }, { id: 'idx_in', label: 'الفهرس', type: 'data' }, { id: 'val_in', label: 'القيمة', type: 'data' }],
+    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+  },
+  'فهارس/مفاتيح_وقيم': {
+    label: 'مفاتيح وقيم', subtitle: 'الفهرس', iconName: 'Key', color: '#a855f7',
+    inputs: [{ id: 'dict_in', label: 'الفهرس', type: 'data' }], outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
+    controls: [{ id: 'type', type: 'select', label: 'استخراج', value: 'مفاتيح', options: ['مفاتيح', 'قيم'] }],
+  },
+  'شروط/انتماء': {
+    label: 'انتماء', subtitle: 'في / ليس في', iconName: 'Inspect', color: '#8b5cf6',
+    inputs: [{ id: 'val_in', label: 'العنصر', type: 'data' }, { id: 'list_in', label: 'المجموعة', type: 'data' }], outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
+    controls: [{ id: 'op', type: 'select', label: 'العملية', value: 'في', options: ['في', 'ليس في'] }],
+  },
+  'كائنات/صنف': {
+    label: 'تعريف صنف', subtitle: 'صنف', iconName: 'Component', color: '#f43f5e',
+    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }],
+    outputs: [{ id: 'body_out', label: 'المحتوى', type: 'event' }, { id: 'seq_out', label: 'التالي', type: 'event' }],
+    controls: [{ id: 'class_name', type: 'text', label: 'اسم الصنف', value: 'شخص' }, { id: 'inherits', type: 'text', label: 'يرث من', value: '' }],
+  },
+  'كائنات/هذا': {
+    label: 'خاصية الكائن', subtitle: 'هذا.', iconName: 'Target', color: '#f43f5e',
+    outputs: [{ id: 'res_out', label: 'الخاصية', type: 'data' }],
+    controls: [{ id: 'prop_name', type: 'text', label: 'الاسم', value: 'العمر' }],
+  },
+  'كائنات/تعيين_خاصية': {
+    label: 'تعيين خاصية', subtitle: 'هذا.س =', iconName: 'Target', color: '#f43f5e',
+    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }, { id: 'val_in', label: 'القيمة', type: 'data' }], outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+    controls: [{ id: 'prop_name', type: 'text', label: 'الخاصية', value: 'العمر' }],
+  },
+  'كائنات/إنشاء': {
+    label: 'إنشاء كائن', subtitle: 'جديد()', iconName: 'Box', color: '#f43f5e',
+    inputs: [{ id: 'arg_in', label: 'المعطيات', type: 'data' }], outputs: [{ id: 'obj_out', label: 'الكائن', type: 'data' }],
+    controls: [{ id: 'class_name', type: 'text', label: 'اسم الصنف', value: 'شخص' }],
+  },
+  'حزم/استيراد': {
+    label: 'استيراد حزمة', subtitle: 'استورد', iconName: 'Package', color: '#14b8a6',
+    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }], outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+    controls: [{ id: 'pkg_name', type: 'text', label: 'الحزمة', value: 'مكتبة' }],
+  },
   'أوامر/اطبع': {
     label: 'اطبع',
     subtitle: 'مخرجات الشاشة',
