@@ -310,5 +310,279 @@ export const visualExamples: Record<string, VisualExample> = {
       { id: 'e8', type: 'deletable', source: 'read_dict2', target: 'print', sourceHandle: 'res_out', targetHandle: 'val_in' },
       { id: 'e9', type: 'deletable', source: 'read_dict_var', target: 'read_dict2', sourceHandle: 'val_out', targetHandle: 'dict_in' }
     ]
+  },
+  cond: {
+    nodes: [
+      { id: 'start', type: 'dynamic', position: { x: 50, y: 50 }, data: { ...nodeDefinitions['أوامر/بداية البرنامج'], originalType: 'أوامر/بداية البرنامج' } },
+      { 
+        id: 'var_assign', 
+        type: 'dynamic', 
+        position: { x: 50, y: 200 }, 
+        data: { 
+          ...nodeDefinitions['متغيرات/إسناد'], 
+          originalType: 'متغيرات/إسناد',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'الدرجة' }] 
+        } 
+      },
+      { 
+        id: 'grade_val', 
+        type: 'dynamic', 
+        position: { x: -300, y: 200 }, 
+        data: { 
+          ...nodeDefinitions['بيانات/رقم'], 
+          originalType: 'بيانات/رقم',
+          controls: [{ id: 'value', type: 'number', label: 'الرقم', value: 85 }] 
+        } 
+      },
+      { 
+        id: 'if_node', 
+        type: 'dynamic', 
+        position: { x: 50, y: 350 }, 
+        data: { ...nodeDefinitions['شروط/إذا'], originalType: 'شروط/إذا' } 
+      },
+      { 
+        id: 'cond_logic', 
+        type: 'dynamic', 
+        position: { x: -300, y: 350 }, 
+        data: { 
+          ...nodeDefinitions['عمليات/مقارنة'], 
+          originalType: 'عمليات/مقارنة',
+          controls: [{ id: 'op', type: 'select', label: 'مقارنة', value: '>=', options: ['==', '!=', '>', '<', '>=', '<='] }] 
+        } 
+      },
+      { 
+        id: 'read_grade', 
+        type: 'dynamic', 
+        position: { x: -600, y: 350 }, 
+        data: { 
+          ...nodeDefinitions['متغيرات/قراءة'], 
+          originalType: 'متغيرات/قراءة',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'الدرجة' }] 
+        } 
+      },
+      { 
+        id: 'num_80', 
+        type: 'dynamic', 
+        position: { x: -600, y: 450 }, 
+        data: { 
+          ...nodeDefinitions['بيانات/رقم'], 
+          originalType: 'بيانات/رقم',
+          controls: [{ id: 'value', type: 'number', label: 'الرقم', value: 80 }] 
+        } 
+      },
+      { id: 'print_good', type: 'dynamic', position: { x: 300, y: 500 }, data: { ...nodeDefinitions['أوامر/اطبع'], originalType: 'أوامر/اطبع' } },
+      { 
+        id: 'text_good', 
+        type: 'dynamic', 
+        position: { x: 300, y: 650 }, 
+        data: { 
+          ...nodeDefinitions['بيانات/نص'], 
+          originalType: 'بيانات/نص',
+          controls: [{ id: 'value', type: 'text', label: 'النص', value: 'الدرجة 80 أو أكثر: جيد جداً' }] 
+        } 
+      },
+      { id: 'print_bad', type: 'dynamic', position: { x: -100, y: 500 }, data: { ...nodeDefinitions['أوامر/اطبع'], originalType: 'أوامر/اطبع' } },
+      { 
+        id: 'text_bad', 
+        type: 'dynamic', 
+        position: { x: -100, y: 650 }, 
+        data: { 
+          ...nodeDefinitions['بيانات/نص'], 
+          originalType: 'بيانات/نص',
+          controls: [{ id: 'value', type: 'text', label: 'النص', value: 'الدرجة أقل من 80: تحتاج إلى مزيد من الجهد' }] 
+        } 
+      }
+    ],
+    edges: [
+      { id: 'e1', type: 'deletable', source: 'start', target: 'var_assign', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e2', type: 'deletable', source: 'grade_val', target: 'var_assign', sourceHandle: 'val_out', targetHandle: 'val_in' },
+      { id: 'e3', type: 'deletable', source: 'var_assign', target: 'if_node', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e4', type: 'deletable', source: 'cond_logic', target: 'if_node', sourceHandle: 'res_out', targetHandle: 'cond_in' },
+      { id: 'e5', type: 'deletable', source: 'read_grade', target: 'cond_logic', sourceHandle: 'val_out', targetHandle: 'a_in' },
+      { id: 'e6', type: 'deletable', source: 'num_80', target: 'cond_logic', sourceHandle: 'val_out', targetHandle: 'b_in' },
+      { id: 'e7', type: 'deletable', source: 'if_node', target: 'print_good', sourceHandle: 'true_out', targetHandle: 'seq_in' },
+      { id: 'e8', type: 'deletable', source: 'if_node', target: 'print_bad', sourceHandle: 'false_out', targetHandle: 'seq_in' },
+      { id: 'e9', type: 'deletable', source: 'text_good', target: 'print_good', sourceHandle: 'val_out', targetHandle: 'val_in' },
+      { id: 'e10', type: 'deletable', source: 'text_bad', target: 'print_bad', sourceHandle: 'val_out', targetHandle: 'val_in' }
+    ]
+  },
+  func: {
+    nodes: [
+      { id: 'start', type: 'dynamic', position: { x: 50, y: 50 }, data: { ...nodeDefinitions['أوامر/بداية البرنامج'], originalType: 'أوامر/بداية البرنامج' } },
+      { 
+        id: 'func_def', 
+        type: 'dynamic', 
+        position: { x: 50, y: 200 }, 
+        data: { 
+          ...nodeDefinitions['دوال/تعريف دالة'], 
+          originalType: 'دوال/تعريف دالة',
+          controls: [{ id: 'func_name', type: 'text', label: 'الاسم', value: 'حساب_المربع' }, { id: 'params', type: 'text', label: 'المعاملات', value: 'العدد' }] 
+        } 
+      },
+      { 
+        id: 'func_ret', 
+        type: 'dynamic', 
+        position: { x: 300, y: 350 }, 
+        data: { ...nodeDefinitions['دوال/إرجاع'], originalType: 'دوال/إرجاع' } 
+      },
+      { 
+        id: 'math_op', 
+        type: 'dynamic', 
+        position: { x: 550, y: 350 }, 
+        data: { 
+          ...nodeDefinitions['عمليات/حسابية'], 
+          originalType: 'عمليات/حسابية',
+          controls: [{ id: 'op', type: 'select', label: 'عملية', value: '*', options: ['+', '-', '*', '\\'] }] 
+        } 
+      },
+      { 
+        id: 'read_param1', 
+        type: 'dynamic', 
+        position: { x: 800, y: 350 }, 
+        data: { 
+          ...nodeDefinitions['متغيرات/قراءة'], 
+          originalType: 'متغيرات/قراءة',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'العدد' }] 
+        } 
+      },
+      { 
+        id: 'read_param2', 
+        type: 'dynamic', 
+        position: { x: 800, y: 450 }, 
+        data: { 
+          ...nodeDefinitions['متغيرات/قراءة'], 
+          originalType: 'متغيرات/قراءة',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'العدد' }] 
+        } 
+      },
+      { id: 'print', type: 'dynamic', position: { x: 50, y: 400 }, data: { ...nodeDefinitions['أوامر/اطبع'], originalType: 'أوامر/اطبع' } },
+      { 
+        id: 'call_func', 
+        type: 'dynamic', 
+        position: { x: -300, y: 400 }, 
+        data: { 
+          ...nodeDefinitions['دوال/استدعاء دالة'], 
+          originalType: 'دوال/استدعاء دالة',
+          controls: [{ id: 'func_name', type: 'text', label: 'الاسم', value: 'حساب_المربع' }] 
+        } 
+      },
+      { 
+        id: 'arg_val', 
+        type: 'dynamic', 
+        position: { x: -550, y: 400 }, 
+        data: { 
+          ...nodeDefinitions['بيانات/رقم'], 
+          originalType: 'بيانات/رقم',
+          controls: [{ id: 'value', type: 'number', label: 'الرقم', value: 6 }] 
+        } 
+      }
+    ],
+    edges: [
+      { id: 'e1', type: 'deletable', source: 'start', target: 'func_def', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e2', type: 'deletable', source: 'func_def', target: 'func_ret', sourceHandle: 'body_out', targetHandle: 'seq_in' },
+      { id: 'e3', type: 'deletable', source: 'math_op', target: 'func_ret', sourceHandle: 'res_out', targetHandle: 'val_in' },
+      { id: 'e4', type: 'deletable', source: 'read_param1', target: 'math_op', sourceHandle: 'val_out', targetHandle: 'a_in' },
+      { id: 'e5', type: 'deletable', source: 'read_param2', target: 'math_op', sourceHandle: 'val_out', targetHandle: 'b_in' },
+      { id: 'e6', type: 'deletable', source: 'func_def', target: 'print', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e7', type: 'deletable', source: 'call_func', target: 'print', sourceHandle: 'res_out', targetHandle: 'val_in' },
+      { id: 'e8', type: 'deletable', source: 'arg_val', target: 'call_func', sourceHandle: 'val_out', targetHandle: 'args_in' }
+    ]
+  },
+  trycatch: {
+    nodes: [
+      { id: 'start', type: 'dynamic', position: { x: 50, y: 50 }, data: { ...nodeDefinitions['أوامر/بداية البرنامج'], originalType: 'أوامر/بداية البرنامج' } },
+      { id: 'try_node', type: 'dynamic', position: { x: 50, y: 200 }, data: { ...nodeDefinitions['أخطاء/محاولة'], originalType: 'أخطاء/محاولة' } },
+      { id: 'print_try', type: 'dynamic', position: { x: 300, y: 350 }, data: { ...nodeDefinitions['أوامر/اطبع'], originalType: 'أوامر/اطبع' } },
+      { 
+        id: 'var_err', 
+        type: 'dynamic', 
+        position: { x: 550, y: 350 }, 
+        data: { 
+          ...nodeDefinitions['متغيرات/قراءة'], 
+          originalType: 'متغيرات/قراءة',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'متغير_غير_موجود' }] 
+        } 
+      },
+      { id: 'print_catch', type: 'dynamic', position: { x: 50, y: 350 }, data: { ...nodeDefinitions['أوامر/اطبع'], originalType: 'أوامر/اطبع' } },
+      { 
+        id: 'text_catch', 
+        type: 'dynamic', 
+        position: { x: 50, y: 500 }, 
+        data: { 
+          ...nodeDefinitions['بيانات/نص'], 
+          originalType: 'بيانات/نص',
+          controls: [{ id: 'value', type: 'text', label: 'النص', value: 'حدث خطأ وتم التقاطه!' }] 
+        } 
+      },
+      { id: 'print_finally', type: 'dynamic', position: { x: -200, y: 350 }, data: { ...nodeDefinitions['أوامر/اطبع'], originalType: 'أوامر/اطبع' } },
+      { 
+        id: 'text_finally', 
+        type: 'dynamic', 
+        position: { x: -200, y: 500 }, 
+        data: { 
+          ...nodeDefinitions['بيانات/نص'], 
+          originalType: 'بيانات/نص',
+          controls: [{ id: 'value', type: 'text', label: 'النص', value: 'الجزء (نهاية) يتنفذ دائماً' }] 
+        } 
+      }
+    ],
+    edges: [
+      { id: 'e1', type: 'deletable', source: 'start', target: 'try_node', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e2', type: 'deletable', source: 'try_node', target: 'print_try', sourceHandle: 'try_out', targetHandle: 'seq_in' },
+      { id: 'e3', type: 'deletable', source: 'var_err', target: 'print_try', sourceHandle: 'val_out', targetHandle: 'val_in' },
+      { id: 'e4', type: 'deletable', source: 'try_node', target: 'print_catch', sourceHandle: 'catch_out', targetHandle: 'seq_in' },
+      { id: 'e5', type: 'deletable', source: 'text_catch', target: 'print_catch', sourceHandle: 'val_out', targetHandle: 'val_in' },
+      { id: 'e6', type: 'deletable', source: 'try_node', target: 'print_finally', sourceHandle: 'finally_out', targetHandle: 'seq_in' },
+      { id: 'e7', type: 'deletable', source: 'text_finally', target: 'print_finally', sourceHandle: 'val_out', targetHandle: 'val_in' }
+    ]
+  },
+  input: {
+    nodes: [
+      { id: 'start', type: 'dynamic', position: { x: 50, y: 50 }, data: { ...nodeDefinitions['أوامر/بداية البرنامج'], originalType: 'أوامر/بداية البرنامج' } },
+      { 
+        id: 'assign_input', 
+        type: 'dynamic', 
+        position: { x: 50, y: 200 }, 
+        data: { 
+          ...nodeDefinitions['متغيرات/إسناد'], 
+          originalType: 'متغيرات/إسناد',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'الاسم' }] 
+        } 
+      },
+      { 
+        id: 'user_input', 
+        type: 'dynamic', 
+        position: { x: -300, y: 200 }, 
+        data: { ...nodeDefinitions['الطرفية/إدخال مستخدم'], originalType: 'الطرفية/إدخال مستخدم' } 
+      },
+      { 
+        id: 'prompt_text', 
+        type: 'dynamic', 
+        position: { x: -600, y: 200 }, 
+        data: { 
+          ...nodeDefinitions['بيانات/نص'], 
+          originalType: 'بيانات/نص',
+          controls: [{ id: 'value', type: 'text', label: 'النص', value: 'ما هو اسمك؟ ' }] 
+        } 
+      },
+      { id: 'print', type: 'dynamic', position: { x: 50, y: 350 }, data: { ...nodeDefinitions['أوامر/اطبع'], originalType: 'أوامر/اطبع' } },
+      { 
+        id: 'read_input', 
+        type: 'dynamic', 
+        position: { x: -300, y: 350 }, 
+        data: { 
+          ...nodeDefinitions['متغيرات/قراءة'], 
+          originalType: 'متغيرات/قراءة',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'الاسم' }] 
+        } 
+      }
+    ],
+    edges: [
+      { id: 'e1', type: 'deletable', source: 'start', target: 'assign_input', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e2', type: 'deletable', source: 'user_input', target: 'assign_input', sourceHandle: 'res_out', targetHandle: 'val_in' },
+      { id: 'e3', type: 'deletable', source: 'prompt_text', target: 'user_input', sourceHandle: 'val_out', targetHandle: 'prompt_in' },
+      { id: 'e4', type: 'deletable', source: 'assign_input', target: 'print', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e5', type: 'deletable', source: 'read_input', target: 'print', sourceHandle: 'val_out', targetHandle: 'val_in' }
+    ]
   }
 };
