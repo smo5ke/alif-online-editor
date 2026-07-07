@@ -7,7 +7,7 @@ export default function TopBar() {
   return (
     <header className="bg-slate-800/80 backdrop-blur-md border-b border-slate-700/50 p-3 sm:p-4 flex justify-between items-center shadow-lg z-10 shrink-0">
       <div className="flex items-center gap-3 sm:gap-4">
-        <img src="/AlifLogo.ico" alt="شعار ألف" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
+        <img src="/AlifLogo.png" alt="شعار ألف" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
         <h1 className="text-lg sm:text-2xl font-bold tracking-wide text-slate-100 pt-1">
           محرر <span className="text-blue-400">ألف 5.3</span>
         </h1>
