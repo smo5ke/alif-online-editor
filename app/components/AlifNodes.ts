@@ -8,6 +8,20 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     color: '#ec4899', // Pink
     outputs: [{ id: 'seq_out', label: 'تسلسل', type: 'event' }],
   },
+  'شبكة/جلب': {
+    label: 'جلب بيانات',
+    subtitle: 'API Request',
+    iconName: 'Globe',
+    color: '#10b981', // Emerald
+    inputs: [
+      { id: 'seq_in', label: 'تسلسل', type: 'event' },
+      { id: 'url_in', label: 'الرابط', type: 'data' },
+    ],
+    outputs: [
+      { id: 'seq_out', label: 'التالي', type: 'event' },
+      { id: 'data_out', label: 'البيانات', type: 'data' }
+    ],
+  },
   'أوامر/اطبع': {
     label: 'اطبع',
     subtitle: 'مخرجات الشاشة',
@@ -25,6 +39,17 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     iconName: 'Eraser',
     color: '#ec4899',
     inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }],
+    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+  },
+  'أوامر/انتظر': {
+    label: 'انتظر (تأخير)',
+    subtitle: 'إيقاف مؤقت',
+    iconName: 'Hourglass',
+    color: '#ec4899',
+    inputs: [
+      { id: 'seq_in', label: 'تسلسل', type: 'event' },
+      { id: 'ms_in', label: 'ثواني', type: 'data' },
+    ],
     outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
   },
   
@@ -143,8 +168,19 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
       { id: 'a_in', label: 'أ', type: 'data' },
       { id: 'b_in', label: 'ب', type: 'data' },
     ],
-    outputs: [{ id: 'res_out', label: 'الناتج', type: 'data' }],
-    controls: [{ id: 'op', type: 'select', label: 'العملية', value: '+', options: ['+', '-', '*', '/', '^', '%'] }],
+    outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
+    controls: [{ id: 'op', type: 'select', label: 'عملية', value: '+', options: ['+', '-', '*', '/'] }],
+  },
+  'رياضيات/باقي القسمة': {
+    label: 'باقي القسمة',
+    subtitle: 'موديولو (%)',
+    iconName: 'Percent',
+    color: '#3b82f6',
+    inputs: [
+      { id: 'a_in', label: 'الرقم', type: 'data' },
+      { id: 'b_in', label: 'القاسم', type: 'data' },
+    ],
+    outputs: [{ id: 'res_out', label: 'الباقي', type: 'data' }],
   },
   'بيانات/رقم': {
     label: 'رقم',
@@ -227,6 +263,22 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
       { id: 'old_in', label: 'القديم', type: 'data' },
       { id: 'new_in', label: 'الجديد', type: 'data' },
     ],
+    outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
+  },
+  'نصوص/تكبير': {
+    label: 'تكبير الحروف',
+    subtitle: 'نص كبير',
+    iconName: 'CaseUpper',
+    color: '#eab308',
+    inputs: [{ id: 'str_in', label: 'النص', type: 'data' }],
+    outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
+  },
+  'نصوص/تصغير': {
+    label: 'تصغير الحروف',
+    subtitle: 'نص صغير',
+    iconName: 'CaseLower',
+    color: '#eab308',
+    inputs: [{ id: 'str_in', label: 'النص', type: 'data' }],
     outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
   },
   'بيانات/إدخال مستخدم': {

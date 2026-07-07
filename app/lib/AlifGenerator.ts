@@ -74,6 +74,11 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
       let b = resolveInput(node.id, 'b_in') || 0;
       return `(${a} ${getControlValue('op')} ${b})`;
     }
+    if (type === 'رياضيات/باقي القسمة') {
+      let a = resolveInput(node.id, 'a_in') || 0;
+      let b = resolveInput(node.id, 'b_in') || 1;
+      return `(${a} % ${b})`;
+    }
     if (type === 'بيانات/دمج نصوص') {
       let a = resolveInput(node.id, 'a_in') || '""';
       let b = resolveInput(node.id, 'b_in') || '""';
@@ -96,6 +101,14 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
       let oldStr = resolveInput(node.id, 'old_in') || '""';
       let newStr = resolveInput(node.id, 'new_in') || '""';
       return `${str}.استبدل(${oldStr}, ${newStr})`;
+    }
+    if (type === 'نصوص/تكبير') {
+      let str = resolveInput(node.id, 'str_in') || '""';
+      return `${str}.كبير()`;
+    }
+    if (type === 'نصوص/تصغير') {
+      let str = resolveInput(node.id, 'str_in') || '""';
+      return `${str}.صغير()`;
     }
     if (type === 'فهارس/جديد') return `{}`;
     if (type === 'فهارس/قراءة') {
@@ -157,6 +170,14 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
       } else if (type === 'دوال/استدعاء') {
         let arg = resolveInput(currNode.id, 'arg_in') || 'عدم';
         code += indent + `${getControlValue('func_name')}(${arg})\n`;
+        currNodeId = getNextNodeId(currNode.id, 'seq_out');
+      } else if (type === 'شبكة/جلب') {
+        let url = resolveInput(currNode.id, 'url_in') || '""';
+        code += indent + `جلب(${url})\n`;
+        currNodeId = getNextNodeId(currNode.id, 'seq_out');
+      } else if (type === 'أوامر/انتظر') {
+        let ms = resolveInput(currNode.id, 'ms_in') || 1000;
+        code += indent + `انتظر(${ms})\n`;
         currNodeId = getNextNodeId(currNode.id, 'seq_out');
       } else if (type === 'دوال/إرجاع') {
         let retVal = resolveInput(currNode.id, 'val_in') || 'عدم';
