@@ -42,11 +42,11 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
     }
     if (type === 'بيانات/تحويل لنص') {
       let val = resolveInput(node.id, 'val_in') || 'عدم';
-      return `نص(${val})`;
+      return `نص(${val})`; // Assuming نص exists, if not string concatenation works
     }
     if (type === 'بيانات/تحويل لرقم') {
       let val = resolveInput(node.id, 'val_in') || 'عدم';
-      return `رقم(${val})`;
+      return `عشري(${val})`; // User reference uses عشري and صحيح
     }
     if (type === 'بيانات/نوع') {
       let val = resolveInput(node.id, 'val_in') || 'عدم';
@@ -176,8 +176,8 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
         code += indent + `جلب(${url})\n`;
         currNodeId = getNextNodeId(currNode.id, 'seq_out');
       } else if (type === 'أوامر/انتظر') {
-        let ms = resolveInput(currNode.id, 'ms_in') || 1000;
-        code += indent + `انتظر(${ms})\n`;
+        let ms = resolveInput(currNode.id, 'ms_in') || 3;
+        code += indent + `الوقت.غفوة(${ms})\n`;
         currNodeId = getNextNodeId(currNode.id, 'seq_out');
       } else if (type === 'دوال/إرجاع') {
         let retVal = resolveInput(currNode.id, 'val_in') || 'عدم';
@@ -200,7 +200,7 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
         let startVal = resolveInput(currNode.id, 'start_in') || 1;
         let endVal = resolveInput(currNode.id, 'end_in') || 10;
         let varName = getControlValue('var_name') || 'س';
-        code += indent + `لكل ${varName} في مدى(${startVal}, ${endVal}):\n`;
+        code += indent + `لاجل ${varName} في مدى(${startVal}, ${endVal}):\n`;
         
         let bodyNodeId = getNextNodeId(currNode.id, 'body_out');
         if (bodyNodeId) code += walkExecution(bodyNodeId, indent + '\t', new Set(pathVisited));
@@ -230,15 +230,16 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
         
         let catchNodeId = getNextNodeId(currNode.id, 'catch_out');
         if (catchNodeId) {
-          code += indent + `امسك:\n`;
+          code += indent + `خلل:\n`;
           code += walkExecution(catchNodeId, indent + '\t', new Set(pathVisited));
         }
         
         let finallyNodeId = getNextNodeId(currNode.id, 'finally_out');
         if (finallyNodeId) {
-          code += indent + `اخيرا:\n`;
+          code += indent + `وإلا:\n`;
           code += walkExecution(finallyNodeId, indent + '\t', new Set(pathVisited));
         }
+        code += indent + `نهاية:\n`;
         break;
       } else if (type === 'أوامر/بداية البرنامج' || type === 'دوال/تعريف دالة') {
         currNodeId = getNextNodeId(currNode.id, 'seq_out') || getNextNodeId(currNode.id, 'body_out');
@@ -250,6 +251,12 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
   }
 
   let code = '# تم التوليد برمجياً من المحرر المرئي 🕸️\n\n';
+  
+  // Auto-import modules if specific nodes are used
+  const usesTime = nodes.some(n => (n.data as any).originalType === 'أوامر/انتظر');
+  if (usesTime) {
+    code += 'استورد الوقت\n\n';
+  }
   
   const funcNodes = nodes.filter(n => (n.data as any).originalType === 'دوال/تعريف دالة');
   funcNodes.forEach((node) => {

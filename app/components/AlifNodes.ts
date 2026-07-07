@@ -169,7 +169,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
       { id: 'b_in', label: 'ب', type: 'data' },
     ],
     outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
-    controls: [{ id: 'op', type: 'select', label: 'عملية', value: '+', options: ['+', '-', '*', '/'] }],
+    controls: [{ id: 'op', type: 'select', label: 'عملية', value: '+', options: ['+', '-', '*', '\\'] }],
   },
   'رياضيات/باقي القسمة': {
     label: 'باقي القسمة',
