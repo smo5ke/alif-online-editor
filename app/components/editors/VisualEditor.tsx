@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { ReactFlow, MiniMap, Controls, Background, Connection } from '@xyflow/react';
+import { ReactFlow, MiniMap, Controls, Background, Connection, ReactFlowInstance } from '@xyflow/react';
 import { v4 as uuidv4 } from 'uuid';
 import { useEditorStore } from '../../store/useEditorStore';
 import DynamicNode, { NodeData } from '../DynamicNode';
@@ -23,6 +23,7 @@ export default function VisualEditor() {
   
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [editMenuPos, setEditMenuPos] = useState<{ x: number; y: number; nodeId: string } | null>(null);
+  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 
   const onLayout = useCallback(() => {
     const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
@@ -64,10 +65,20 @@ export default function VisualEditor() {
     const template = nodeDefinitions[typeKey];
     if (!template) return;
     
+    const screenX = menuPos?.x || window.innerWidth / 2;
+    const screenY = menuPos?.y || window.innerHeight / 2;
+    
+    let position = { x: screenX - 100, y: screenY - 100 };
+    if (reactFlowInstance) {
+      position = reactFlowInstance.screenToFlowPosition({ x: screenX, y: screenY });
+      position.x -= 100; // offset by half typical node width
+      position.y -= 50;  // offset by half typical node height
+    }
+
     const newNode = {
       id: uuidv4(),
       type: 'dynamic',
-      position: { x: (menuPos?.x || window.innerWidth / 2) - 100, y: (menuPos?.y || window.innerHeight / 2) - 100 },
+      position,
       data: {
         ...template,
         originalType: typeKey,
@@ -96,6 +107,7 @@ export default function VisualEditor() {
         onConnect={onConnect}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
+        onInit={setReactFlowInstance}
         onPaneContextMenu={(e) => { e.preventDefault(); setMenuPos({ x: e.clientX, y: e.clientY }); }}
         onNodeContextMenu={(e, node) => { e.preventDefault(); setEditMenuPos({ x: e.clientX, y: e.clientY, nodeId: node.id }); }}
         fitView
