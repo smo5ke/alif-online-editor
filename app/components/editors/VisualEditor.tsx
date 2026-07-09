@@ -29,7 +29,7 @@ export default function VisualEditor() {
     const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
       nodes,
       edges,
-      'LR'
+      'RL'
     );
     setNodes(layoutedNodes);
     setEdges(layoutedEdges);
