@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { ReactFlow, MiniMap, Controls, Background, Connection, ReactFlowInstance } from '@xyflow/react';
 import { v4 as uuidv4 } from 'uuid';
 import { useEditorStore } from '../../store/useEditorStore';
@@ -24,6 +24,7 @@ export default function VisualEditor() {
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [editMenuPos, setEditMenuPos] = useState<{ x: number; y: number; nodeId: string } | null>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const onLayout = useCallback(() => {
     const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
@@ -65,8 +66,17 @@ export default function VisualEditor() {
     const template = nodeDefinitions[typeKey];
     if (!template) return;
     
-    const screenX = menuPos?.x || window.innerWidth / 2;
-    const screenY = menuPos?.y || window.innerHeight / 2;
+    let screenX = window.innerWidth / 2;
+    let screenY = window.innerHeight / 2;
+    
+    if (menuPos) {
+      screenX = menuPos.x;
+      screenY = menuPos.y;
+    } else if (wrapperRef.current) {
+      const rect = wrapperRef.current.getBoundingClientRect();
+      screenX = rect.left + rect.width / 2;
+      screenY = rect.top + rect.height / 2;
+    }
     
     let position = { x: screenX - 100, y: screenY - 100 };
     if (reactFlowInstance) {
@@ -98,7 +108,7 @@ export default function VisualEditor() {
   }, []);
 
   return (
-    <div className={`absolute inset-0 transition-opacity duration-200 ${activeMode === 'visual' ? 'z-10 opacity-100' : 'z-0 opacity-0 pointer-events-none'}`}>
+    <div ref={wrapperRef} className={`absolute inset-0 transition-opacity duration-200 ${activeMode === 'visual' ? 'z-10 opacity-100' : 'z-0 opacity-0 pointer-events-none'}`}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -131,7 +141,15 @@ export default function VisualEditor() {
           <LayoutTemplate size={20} className="text-emerald-400" />
         </button>
         <button
-          onClick={(e) => { e.stopPropagation(); setMenuPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 }); }}
+          onClick={(e) => { 
+            e.stopPropagation(); 
+            if (wrapperRef.current) {
+              const rect = wrapperRef.current.getBoundingClientRect();
+              setMenuPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+            } else {
+              setMenuPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 }); 
+            }
+          }}
           className="bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-2xl px-6 py-3.5 font-bold"
         >
           إضافة عقدة
