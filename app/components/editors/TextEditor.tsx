@@ -4,6 +4,7 @@ import { useEditorStore } from '../../store/useEditorStore';
 export default function TextEditor() {
   const { activeMode, textCode, setTextCode } = useEditorStore();
   const editorRef = useRef<HTMLTextAreaElement>(null);
+  const lineNumbersRef = useRef<HTMLDivElement>(null);
   const [highlightedCode, setHighlightedCode] = useState('');
 
   // Highlighting Logic
@@ -19,25 +20,46 @@ export default function TextEditor() {
   }, [textCode]);
 
   return (
-    <div className={`absolute inset-0 transition-opacity duration-200 ${activeMode === 'code' ? 'z-10 opacity-100' : 'z-0 opacity-0 pointer-events-none'}`}>
-      <pre
-        className="code-font absolute inset-0 p-4 overflow-y-auto whitespace-pre-wrap break-all pointer-events-none text-slate-300 z-0 text-right no-scrollbar"
-        dangerouslySetInnerHTML={{ __html: highlightedCode }}
-      />
-      <textarea
-        ref={editorRef}
-        value={textCode}
-        onChange={(e) => setTextCode(e.target.value)}
-        onScroll={() => { 
-          if(editorRef.current) { 
-            const pre = editorRef.current.previousSibling as HTMLPreElement; 
-            if(pre) { pre.scrollTop = editorRef.current.scrollTop; } 
-          } 
-        }}
-        className="code-font absolute inset-0 w-full h-full p-4 bg-transparent text-transparent caret-white outline-none resize-none overflow-y-auto whitespace-pre-wrap break-all z-10 text-right no-scrollbar"
-        spellCheck="false"
-        placeholder="اكتب كود ألف 5.3 هنا..."
-      />
+    <div className={`absolute inset-0 flex bg-slate-900 transition-opacity duration-200 ${activeMode === 'code' ? 'z-10 opacity-100' : 'z-0 opacity-0 pointer-events-none'}`}>
+      
+      {/* Line Numbers */}
+      <div 
+        ref={lineNumbersRef}
+        className="code-font w-10 sm:w-12 shrink-0 bg-slate-800/80 border-l border-slate-700/50 text-slate-500 text-center py-4 select-none overflow-hidden flex flex-col items-center"
+      >
+        {textCode.split('\n').map((_, i) => (
+          <div key={i}>{i + 1}</div>
+        ))}
+      </div>
+
+      {/* Editor Area */}
+      <div className="relative flex-1 overflow-hidden bg-[#0f172a]">
+        <pre
+          className="code-font absolute inset-0 p-4 overflow-auto whitespace-pre pointer-events-none text-slate-300 z-0 text-right no-scrollbar"
+          dangerouslySetInnerHTML={{ __html: highlightedCode }}
+        />
+        <textarea
+          ref={editorRef}
+          value={textCode}
+          onChange={(e) => setTextCode(e.target.value)}
+          onScroll={() => { 
+            if(editorRef.current) { 
+              const pre = editorRef.current.previousSibling as HTMLPreElement; 
+              if(pre) { 
+                pre.scrollTop = editorRef.current.scrollTop; 
+                pre.scrollLeft = editorRef.current.scrollLeft;
+              } 
+              if(lineNumbersRef.current) {
+                lineNumbersRef.current.scrollTop = editorRef.current.scrollTop;
+              }
+            } 
+          }}
+          className="code-font absolute inset-0 w-full h-full p-4 bg-transparent text-transparent caret-white outline-none resize-none overflow-auto whitespace-pre z-10 text-right no-scrollbar"
+          spellCheck="false"
+          wrap="off"
+          placeholder="اكتب كود ألف 5.3 هنا..."
+        />
+      </div>
     </div>
   );
 }
