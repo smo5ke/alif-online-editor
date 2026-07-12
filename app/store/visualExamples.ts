@@ -97,7 +97,7 @@ export const visualExamples: Record<string, VisualExample> = {
         id: 'new_arr', 
         type: 'dynamic', 
         position: { x: -300, y: 200 }, 
-        data: { ...nodeDefinitions['مصفوفات/مصفوفة جديدة'], originalType: 'مصفوفات/مصفوفة جديدة' } 
+        data: { ...nodeDefinitions['مصفوفات/جديدة'], originalType: 'مصفوفات/جديدة' } 
       },
       { 
         id: 'arr_insert', 
@@ -239,13 +239,13 @@ export const visualExamples: Record<string, VisualExample> = {
         id: 'new_dict', 
         type: 'dynamic', 
         position: { x: -300, y: 200 }, 
-        data: { ...nodeDefinitions['فهارس/فهرس جديد'], originalType: 'فهارس/فهرس جديد' } 
+        data: { ...nodeDefinitions['فهارس/جديد'], originalType: 'فهارس/جديد' } 
       },
       { 
         id: 'dict_add', 
         type: 'dynamic', 
         position: { x: 50, y: 350 }, 
-        data: { ...nodeDefinitions['فهارس/إضافة للفهرس'], originalType: 'فهارس/إضافة للفهرس' } 
+        data: { ...nodeDefinitions['فهارس/إضافة'], originalType: 'فهارس/إضافة' } 
       },
       { 
         id: 'read_dict', 
@@ -338,15 +338,15 @@ export const visualExamples: Record<string, VisualExample> = {
         id: 'if_node', 
         type: 'dynamic', 
         position: { x: 50, y: 350 }, 
-        data: { ...nodeDefinitions['شروط/إذا'], originalType: 'شروط/إذا' } 
+        data: { ...nodeDefinitions['شروط/اذا'], originalType: 'شروط/اذا' } 
       },
       { 
         id: 'cond_logic', 
         type: 'dynamic', 
         position: { x: -300, y: 350 }, 
         data: { 
-          ...nodeDefinitions['عمليات/مقارنة'], 
-          originalType: 'عمليات/مقارنة',
+          ...nodeDefinitions['شروط/مقارنة'], 
+          originalType: 'شروط/مقارنة',
           controls: [{ id: 'op', type: 'select', label: 'مقارنة', value: '>=', options: ['==', '!=', '>', '<', '>=', '<='] }] 
         } 
       },
@@ -430,8 +430,8 @@ export const visualExamples: Record<string, VisualExample> = {
         type: 'dynamic', 
         position: { x: 550, y: 350 }, 
         data: { 
-          ...nodeDefinitions['عمليات/حسابية'], 
-          originalType: 'عمليات/حسابية',
+          ...nodeDefinitions['بيانات/حساب'], 
+          originalType: 'بيانات/حساب',
           controls: [{ id: 'op', type: 'select', label: 'عملية', value: '*', options: ['+', '-', '*', '\\'] }] 
         } 
       },
@@ -461,8 +461,8 @@ export const visualExamples: Record<string, VisualExample> = {
         type: 'dynamic', 
         position: { x: -300, y: 400 }, 
         data: { 
-          ...nodeDefinitions['دوال/استدعاء دالة'], 
-          originalType: 'دوال/استدعاء دالة',
+          ...nodeDefinitions['دوال/استدعاء'], 
+          originalType: 'دوال/استدعاء',
           controls: [{ id: 'func_name', type: 'text', label: 'الاسم', value: 'حساب_المربع' }] 
         } 
       },
@@ -553,7 +553,7 @@ export const visualExamples: Record<string, VisualExample> = {
         id: 'user_input', 
         type: 'dynamic', 
         position: { x: -300, y: 200 }, 
-        data: { ...nodeDefinitions['الطرفية/إدخال مستخدم'], originalType: 'الطرفية/إدخال مستخدم' } 
+        data: { ...nodeDefinitions['بيانات/إدخال مستخدم'], originalType: 'بيانات/إدخال مستخدم' } 
       },
       { 
         id: 'prompt_text', 
