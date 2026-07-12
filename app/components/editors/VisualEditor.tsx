@@ -8,7 +8,8 @@ import { nodeDefinitions } from '../AlifNodes';
 import '@xyflow/react/dist/style.css';
 
 import { getLayoutedElements } from '../../lib/layoutUtils';
-import { LayoutTemplate } from 'lucide-react';
+import { generateAlifCodeFromGraph } from '../../lib/AlifGenerator';
+import { LayoutTemplate, Code, X } from 'lucide-react';
 
 const nodeTypes = {
   dynamic: DynamicNode,
@@ -25,6 +26,9 @@ export default function VisualEditor() {
   const [editMenuPos, setEditMenuPos] = useState<{ x: number; y: number; nodeId: string } | null>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  
+  const [showCodeModal, setShowCodeModal] = useState(false);
+  const [generatedCode, setGeneratedCode] = useState('');
 
   const onLayout = useCallback(() => {
     const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
@@ -133,6 +137,16 @@ export default function VisualEditor() {
       </ReactFlow>
 
       <div className="absolute bottom-6 md:bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-3 z-30">
+        <button
+          onClick={() => {
+            setGeneratedCode(generateAlifCodeFromGraph(nodes, edges));
+            setShowCodeModal(true);
+          }}
+          className="bg-slate-700 hover:bg-slate-600 text-white rounded-full shadow-2xl w-12 h-12 flex items-center justify-center transition-colors border border-slate-600/50"
+          title="عرض الشيفرة المصدرية"
+        >
+          <Code size={20} className="text-blue-400" />
+        </button>
         <button
           onClick={onLayout}
           className="bg-slate-700 hover:bg-slate-600 text-white rounded-full shadow-2xl w-12 h-12 flex items-center justify-center transition-colors border border-slate-600/50"
@@ -248,6 +262,56 @@ export default function VisualEditor() {
               حذف العقدة 🗑️
             </button>
             <div className="h-6 md:hidden"></div>
+          </div>
+        </div>
+      )}
+
+      {/* Code Preview Modal */}
+      {showCodeModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" dir="rtl">
+          <div className="bg-[#1e1e24] w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[80vh] border border-white/10 overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#18181b]">
+              <div className="flex items-center gap-3">
+                <Code className="text-blue-400" size={20} />
+                <h3 className="text-lg font-bold text-white">الشيفرة المصدرية المولدة</h3>
+              </div>
+              <button 
+                onClick={() => setShowCodeModal(false)}
+                className="text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full p-2 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-auto p-6 bg-[#18181b]/50">
+              {generatedCode.trim() ? (
+                <pre className="text-sm font-mono text-emerald-400 leading-relaxed whitespace-pre-wrap" dir="ltr" style={{ textAlign: 'left' }}>
+                  {generatedCode}
+                </pre>
+              ) : (
+                <div className="h-full flex items-center justify-center text-slate-500 font-medium text-center">
+                  المحرر فارغ. أضف بعض العقد لرؤية الشيفرة المولدة.
+                </div>
+              )}
+            </div>
+            
+            <div className="px-6 py-4 border-t border-white/5 bg-[#18181b] flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(generatedCode);
+                }}
+                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm font-medium transition-colors border border-white/10 flex items-center gap-2"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                نسخ
+              </button>
+              <button
+                onClick={() => setShowCodeModal(false)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-blue-900/20"
+              >
+                إغلاق
+              </button>
+            </div>
           </div>
         </div>
       )}
