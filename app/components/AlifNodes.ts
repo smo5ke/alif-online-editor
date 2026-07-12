@@ -186,7 +186,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
   },
 
   'حلقات/لكل': {
-    label: 'لكل (تكرار)',
+    label: 'لكل',
     subtitle: 'حلقة تكرارية',
     iconName: 'Repeat',
     color: '#f97316', // Orange

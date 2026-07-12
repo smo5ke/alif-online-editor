@@ -265,7 +265,7 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
         let startVal = resolveInput(currNode.id, 'start_in') || 1;
         let endVal = resolveInput(currNode.id, 'end_in') || 10;
         let varName = getControlValue('var_name') || 'س';
-        code += indent + `لاجل ${varName} في مدى(${startVal}, ${endVal}):\n`;
+        code += indent + `لكل ${varName} في مدى(${startVal}, ${endVal}):\n`;
         
         let bodyNodeId = getNextNodeId(currNode.id, 'body_out');
         if (bodyNodeId) code += walkExecution(bodyNodeId, indent + '\t', new Set(pathVisited));
