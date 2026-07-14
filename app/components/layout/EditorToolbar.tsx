@@ -41,8 +41,7 @@ export default function EditorToolbar() {
         // Populate visual editor if there's a visual example
         setNodes(visualExamples[val].nodes);
         setEdges(visualExamples[val].edges);
-        // Switch to visual mode to show off the visual graph!
-        setMode('visual');
+        // User stays in their current mode. Both modes are updated.
       } else {
         // Fallback to code mode for advanced examples
         if (activeMode !== 'code') {
