@@ -555,16 +555,6 @@ export const visualExamples: Record<string, VisualExample> = {
         position: { x: -300, y: 200 }, 
         data: { ...nodeDefinitions['بيانات/إدخال مستخدم'], originalType: 'بيانات/إدخال مستخدم' } 
       },
-      { 
-        id: 'prompt_text', 
-        type: 'dynamic', 
-        position: { x: -600, y: 200 }, 
-        data: { 
-          ...nodeDefinitions['بيانات/نص'], 
-          originalType: 'بيانات/نص',
-          controls: [{ id: 'value', type: 'text', label: 'النص', value: 'ما هو اسمك؟ ' }] 
-        } 
-      },
       { id: 'print', type: 'dynamic', position: { x: 50, y: 350 }, data: { ...nodeDefinitions['أوامر/اطبع'], originalType: 'أوامر/اطبع' } },
       { 
         id: 'read_input', 
@@ -580,7 +570,7 @@ export const visualExamples: Record<string, VisualExample> = {
     edges: [
       { id: 'e1', type: 'deletable', source: 'start', target: 'assign_input', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
       { id: 'e2', type: 'deletable', source: 'user_input', target: 'assign_input', sourceHandle: 'res_out', targetHandle: 'val_in' },
-      { id: 'e3', type: 'deletable', source: 'prompt_text', target: 'user_input', sourceHandle: 'val_out', targetHandle: 'prompt_in' },
+      
       { id: 'e4', type: 'deletable', source: 'assign_input', target: 'print', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
       { id: 'e5', type: 'deletable', source: 'read_input', target: 'print', sourceHandle: 'val_out', targetHandle: 'val_in' }
     ]

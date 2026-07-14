@@ -22,6 +22,7 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
 
   function resolveValue(node: Node): any {
     if (!node) return 'عدم';
+    visitedNodes.add(node.id);
     const type = (node.data as any).originalType;
     const controls = (node.data as NodeData).controls || [];
     

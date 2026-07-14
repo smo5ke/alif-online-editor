@@ -111,7 +111,17 @@ export default function EditorToolbar() {
         <div className="flex items-center flex-1 min-w-0">
           {/* Toggle Button */}
           <button
-            onClick={() => setMode(activeMode === 'visual' ? 'code' : 'visual')}
+            onClick={() => {
+              if (activeMode === 'visual') {
+                const { nodes, edges } = useEditorStore.getState();
+                import('../../lib/AlifGenerator').then(({ generateAlifCodeFromGraph }) => {
+                  setTextCode(generateAlifCodeFromGraph(nodes, edges));
+                  setMode('code');
+                });
+              } else {
+                setMode('visual');
+              }
+            }}
             className="flex items-center gap-1.5 sm:gap-2 text-emerald-400 font-bold bg-slate-800/50 hover:bg-slate-700/80 px-2.5 sm:px-3 py-1.5 rounded-lg border border-emerald-500/30 text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0"
           >
             <FileText size={16} className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
