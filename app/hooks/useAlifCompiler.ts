@@ -1,12 +1,26 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
+import { create } from 'zustand';
 import { useEditorStore } from '../store/useEditorStore';
 import { generateAlifCodeFromGraph } from '../lib/AlifGenerator';
 
 export type RunState = 'ready' | 'connecting' | 'running' | 'error';
 
+interface CompilerStore {
+  runState: RunState;
+  setRunState: (state: RunState) => void;
+}
+
+const useCompilerStore = create<CompilerStore>((set) => ({
+  runState: 'connecting',
+  setRunState: (state) => set({ runState: state }),
+}));
+
+let globalWs: WebSocket | null = null;
+let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+let isConnecting = false;
+
 export function useAlifCompiler() {
-  const [runState, setRunState] = useState<RunState>('connecting');
-  const ws = useRef<WebSocket | null>(null);
+  const { runState, setRunState } = useCompilerStore();
   
   const { 
     activeMode, 
@@ -15,56 +29,65 @@ export function useAlifCompiler() {
     edges, 
     appendTerminalOutput, 
     clearTerminal,
-    setMode,
     setIsTerminalHidden
   } = useEditorStore();
 
   const connectWebSocket = useCallback(() => {
+    if (globalWs && (globalWs.readyState === WebSocket.OPEN || globalWs.readyState === WebSocket.CONNECTING)) {
+      return; // Already connected or connecting
+    }
+    
+    if (isConnecting) return;
+    isConnecting = true;
+
     try {
       const socket = new WebSocket('wss://alif-playground.onrender.com');
-      ws.current = socket;
+      globalWs = socket;
       
       socket.onopen = () => {
-        setRunState('ready');
-        appendTerminalOutput('--- تم الاتصال بمحرك ألف 5.3 بنجاح ---\n', 'text-green-500 font-bold');
+        isConnecting = false;
+        useCompilerStore.getState().setRunState('ready');
+        useEditorStore.getState().appendTerminalOutput('--- تم الاتصال بمحرك ألف 5.3 بنجاح ---\n', 'text-green-500 font-bold');
       };
       
       socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.type === 'output' || data.type === 'error') {
           const color = data.type === 'error' ? 'text-red-400' : 'text-slate-300';
-          appendTerminalOutput(data.text, color);
+          useEditorStore.getState().appendTerminalOutput(data.text, color);
         } else if (data.type === 'done') {
-          appendTerminalOutput('\n--- انتهى تنفيذ البرنامج ---\n', 'text-slate-500');
-          setRunState('ready');
+          useEditorStore.getState().appendTerminalOutput('\n--- انتهى تنفيذ البرنامج ---\n', 'text-slate-500');
+          useCompilerStore.getState().setRunState('ready');
         }
       };
       
       socket.onclose = () => {
-        setRunState('error');
-        setTimeout(connectWebSocket, 3000);
+        isConnecting = false;
+        useCompilerStore.getState().setRunState('error');
+        if (reconnectTimeout) clearTimeout(reconnectTimeout);
+        reconnectTimeout = setTimeout(connectWebSocket, 3000);
       };
       
       socket.onerror = () => {
         if (socket.readyState !== WebSocket.CLOSED) {
-          appendTerminalOutput('\nحدث خطأ في الاتصال بالسحابة.\n', 'text-red-400');
+          useEditorStore.getState().appendTerminalOutput('\nحدث خطأ في الاتصال بالسحابة.\n', 'text-red-400');
         }
       };
     } catch (error) {
+      isConnecting = false;
       console.error('WS Error:', error);
     }
-  }, [appendTerminalOutput]);
+  }, []);
 
   useEffect(() => {
     connectWebSocket();
-    return () => { ws.current?.close(); };
   }, [connectWebSocket]);
 
   const startRun = () => {
-    if (!ws.current || ws.current.readyState !== WebSocket.OPEN) return;
-    if (runState === 'running') {
-      ws.current.close(); // Force reconnect
-      appendTerminalOutput('\n⚠️ تم إيقاف التنفيذ يدوياً.\n', 'text-amber-400 font-bold');
+    if (!globalWs || globalWs.readyState !== WebSocket.OPEN) return;
+    if (useCompilerStore.getState().runState === 'running') {
+      globalWs.close(); // Force reconnect
+      useEditorStore.getState().appendTerminalOutput('\n⚠️ تم إيقاف التنفيذ يدوياً.\n', 'text-amber-400 font-bold');
       return;
     }
 
@@ -76,7 +99,6 @@ export function useAlifCompiler() {
 
     let codeToRun = '';
     
-    // Execution logic based on current Mutually Exclusive Workspace
     if (activeMode === 'visual') {
       const generated = generateAlifCodeFromGraph(nodes, edges);
       codeToRun = generated.replace(/\u00A0/g, " ");
@@ -84,13 +106,13 @@ export function useAlifCompiler() {
       codeToRun = textCode.replace(/\u00A0/g, " ");
     }
 
-    ws.current.send(JSON.stringify({ type: 'run', code: codeToRun }));
+    globalWs.send(JSON.stringify({ type: 'run', code: codeToRun }));
   };
 
   const sendInput = (text: string) => {
-    if (!ws.current || ws.current.readyState !== WebSocket.OPEN) return;
+    if (!globalWs || globalWs.readyState !== WebSocket.OPEN) return;
     appendTerminalOutput(text + '\n', 'text-green-400');
-    ws.current.send(JSON.stringify({ type: 'input', text: text + '\n' }));
+    globalWs.send(JSON.stringify({ type: 'input', text: text + '\n' }));
   };
 
   return { runState, startRun, sendInput };
