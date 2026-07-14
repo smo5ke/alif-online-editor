@@ -416,7 +416,7 @@ export const visualExamples: Record<string, VisualExample> = {
         data: { 
           ...nodeDefinitions['دوال/تعريف دالة'], 
           originalType: 'دوال/تعريف دالة',
-          controls: [{ id: 'func_name', type: 'text', label: 'الاسم', value: 'حساب_المربع' }, { id: 'params', type: 'text', label: 'المعاملات', value: 'العدد' }] 
+          controls: [{ id: 'func_name', type: 'text', label: 'الاسم', value: 'حساب_المربع' }, { id: 'arg', type: 'text', label: 'المعامل', value: 'العدد' }] 
         } 
       },
       { 
@@ -485,7 +485,7 @@ export const visualExamples: Record<string, VisualExample> = {
       { id: 'e5', type: 'deletable', source: 'read_param2', target: 'math_op', sourceHandle: 'val_out', targetHandle: 'b_in' },
       { id: 'e6', type: 'deletable', source: 'func_def', target: 'print', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
       { id: 'e7', type: 'deletable', source: 'call_func', target: 'print', sourceHandle: 'res_out', targetHandle: 'val_in' },
-      { id: 'e8', type: 'deletable', source: 'arg_val', target: 'call_func', sourceHandle: 'val_out', targetHandle: 'args_in' }
+      { id: 'e8', type: 'deletable', source: 'arg_val', target: 'call_func', sourceHandle: 'val_out', targetHandle: 'arg_in' }
     ]
   },
   trycatch: {

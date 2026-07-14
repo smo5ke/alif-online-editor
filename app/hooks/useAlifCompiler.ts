@@ -90,7 +90,7 @@ export function useAlifCompiler() {
   const sendInput = (text: string) => {
     if (!ws.current || ws.current.readyState !== WebSocket.OPEN) return;
     appendTerminalOutput(text + '\n', 'text-green-400');
-    ws.current.send(JSON.stringify({ type: 'input', text }));
+    ws.current.send(JSON.stringify({ type: 'input', text: text + '\n' }));
   };
 
   return { runState, startRun, sendInput };
