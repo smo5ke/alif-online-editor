@@ -27,6 +27,8 @@ interface EditorState {
   onEdgesChange: (changes: EdgeChange[]) => void;
   appendTerminalOutput: (text: string, color: string) => void;
   clearTerminal: () => void;
+  addDynamicInput: (nodeId: string) => void;
+  updateNodeControl: (nodeId: string, controlId: string, value: any) => void;
 }
 
 export const codeExamples: Record<string, string> = {
@@ -79,4 +81,36 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   })),
   
   clearTerminal: () => set({ terminalOutput: [] }),
+
+  addDynamicInput: (nodeId: string) => set((state) => ({
+    nodes: state.nodes.map((node) => {
+      if (node.id === nodeId) {
+        const currentInputs = (node.data.inputs as any[]) || [];
+        const nextIndex = currentInputs.length;
+        const newInput = {
+          id: `item_${nextIndex}`,
+          label: `عنصر ${nextIndex + 1}`,
+          type: 'data'
+        };
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            inputs: [...currentInputs, newInput]
+          }
+        };
+      }
+      return node;
+    })
+  })),
+
+  updateNodeControl: (nodeId: string, controlId: string, value: any) => set((state) => ({
+    nodes: state.nodes.map((node) => {
+      if (node.id === nodeId) {
+        const newControls = (node.data.controls as any[])?.map(c => c.id === controlId ? { ...c, value } : c);
+        return { ...node, data: { ...node.data, controls: newControls } };
+      }
+      return node;
+    })
+  })),
 }));

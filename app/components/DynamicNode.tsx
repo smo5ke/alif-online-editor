@@ -1,6 +1,7 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import * as LucideIcons from 'lucide-react';
+import { useEditorStore } from '../store/useEditorStore';
 
 export type NodeControl = {
   id: string;
@@ -19,10 +20,13 @@ export type NodeData = {
   inputs?: { id: string; label: string; type: 'event' | 'data' }[];
   outputs?: { id: string; label: string; type: 'event' | 'data' }[];
   controls?: NodeControl[];
+  allowDynamicInputs?: boolean;
   onControlChange?: (controlId: string, value: any) => void;
+  onAddDynamicInput?: (nodeId: string) => void;
 };
 
-export default function DynamicNode({ data }: { data: NodeData }) {
+export default function DynamicNode({ data, id }: { data: NodeData; id: string }) {
+  const { updateNodeControl, addDynamicInput } = useEditorStore();
   const IconComponent = data.iconName ? LucideIcons[data.iconName] as React.ElementType : LucideIcons.Code;
   
   // Use a vibrant color for the header, defaulting to a nice pink/purple if none provided
@@ -39,22 +43,31 @@ export default function DynamicNode({ data }: { data: NodeData }) {
     >
       {/* Header */}
       <div 
-        className="flex items-center justify-between px-4 py-3 rounded-t-2xl relative"
-        style={{ backgroundColor: headerColor }}
+        className="flex items-center gap-3 px-4 py-3 rounded-t-2xl relative overflow-hidden"
+        style={{ backgroundColor: `${headerColor}25` }} // 25 opacity hex
       >
-        <div className="flex items-center gap-2.5">
-          <IconComponent size={18} className="text-white opacity-90 drop-shadow-sm" strokeWidth={2.5} />
-          <span className="text-white font-extrabold text-[15px] tracking-wide drop-shadow-sm">
-            {data.label}
-          </span>
+        <div 
+          className="absolute inset-0 opacity-20"
+          style={{ background: `linear-gradient(to right, transparent, ${headerColor})` }}
+        />
+        <div 
+          className="flex items-center justify-center w-8 h-8 rounded-lg z-10"
+          style={{ backgroundColor: `${headerColor}30`, color: headerColor }}
+        >
+          <IconComponent size={18} />
         </div>
-        <LucideIcons.HelpCircle size={15} className="text-white/60 hover:text-white cursor-help transition-colors" />
+        <div className="flex flex-col z-10 min-w-0 flex-1">
+          <span className="text-sm font-bold text-slate-100 truncate">{data.label}</span>
+          {data.subtitle && (
+            <span className="text-[10px] text-slate-400 font-medium truncate">{data.subtitle}</span>
+          )}
+        </div>
       </div>
 
       {/* Body */}
-      <div className="flex flex-col p-1">
+      <div className="flex flex-col flex-grow relative">
         
-        {/* Controls Section */}
+        {/* Controls Section (Text Inputs, Selects, etc) */}
         {data.controls && data.controls.length > 0 && (
           <div className="flex flex-col gap-4 px-3 py-4">
             {data.controls.map((control) => (
@@ -66,7 +79,10 @@ export default function DynamicNode({ data }: { data: NodeData }) {
                       className="w-full bg-[#27272a] border border-white/10 text-slate-200 text-xs rounded-xl px-3 py-2.5 outline-none focus:ring-2 transition-all nodrag appearance-none font-medium cursor-pointer"
                       style={{ '--tw-ring-color': headerColor } as React.CSSProperties}
                       value={control.value}
-                      onChange={(e) => data.onControlChange?.(control.id, e.target.value)}
+                      onChange={(e) => {
+                        updateNodeControl(id, control.id, e.target.value);
+                        data.onControlChange?.(control.id, e.target.value);
+                      }}
                     >
                       {control.options?.map((opt) => (
                         <option key={opt} value={opt} className="bg-[#27272a] text-slate-200">
@@ -82,7 +98,10 @@ export default function DynamicNode({ data }: { data: NodeData }) {
                     className="w-full bg-[#27272a] border border-white/10 text-slate-200 text-xs rounded-xl px-3 py-2.5 outline-none focus:ring-2 transition-all nodrag font-medium"
                     style={{ '--tw-ring-color': headerColor } as React.CSSProperties}
                     value={control.value}
-                    onChange={(e) => data.onControlChange?.(control.id, e.target.value)}
+                    onChange={(e) => {
+                      updateNodeControl(id, control.id, e.target.value);
+                      data.onControlChange?.(control.id, e.target.value);
+                    }}
                   />
                 )}
               </div>
@@ -96,7 +115,7 @@ export default function DynamicNode({ data }: { data: NodeData }) {
         )}
 
         {/* Ports (Inputs / Outputs) Section */}
-        {(allInputs.length > 0 || allOutputs.length > 0) && (
+        {(allInputs.length > 0 || allOutputs.length > 0 || data.allowDynamicInputs) && (
           <div className="flex flex-col gap-2 py-4">
             {/* Inputs (Right side) */}
             {allInputs.map((input) => (
@@ -113,6 +132,21 @@ export default function DynamicNode({ data }: { data: NodeData }) {
                 <span className="text-sm font-bold text-slate-300 mr-2">{input.label}</span>
               </div>
             ))}
+            
+            {data.allowDynamicInputs && (
+              <div className="flex justify-start px-4 mt-1">
+                <button
+                  onClick={() => {
+                    addDynamicInput(id);
+                    data.onAddDynamicInput?.(id);
+                  }}
+                  className="flex items-center justify-center w-6 h-6 rounded-md bg-slate-800 hover:bg-emerald-600/80 text-slate-400 hover:text-white border border-slate-700 hover:border-emerald-500 transition-all cursor-pointer shadow-sm nodrag"
+                  title="إضافة عنصر"
+                >
+                  <LucideIcons.Plus size={14} />
+                </button>
+              </div>
+            )}
 
             {/* Outputs (Left side) */}
             {allOutputs.map((output) => (

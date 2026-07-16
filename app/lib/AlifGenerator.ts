@@ -85,7 +85,11 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
       let b = resolveInput(node.id, 'b_in') || '""';
       return `(${a} + ${b})`;
     }
-    if (type === 'مصفوفات/جديدة') return `[]`;
+    if (type === 'مصفوفات/جديدة') {
+      const inputs = (node.data as NodeData).inputs || [];
+      const elements = inputs.map(input => resolveInput(node.id, input.id) || 'عدم');
+      return `[${elements.join(', ')}]`;
+    }
     if (type === 'مصفوفات/قراءة') {
       let arrName = resolveInput(node.id, 'arr_in') || 'مصفوفة';
       let idx = resolveInput(node.id, 'idx_in') || 0;

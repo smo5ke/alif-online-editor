@@ -388,6 +388,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     subtitle: 'فارغة',
     iconName: 'ListPlus',
     color: '#06b6d4', // Cyan
+    allowDynamicInputs: true,
     outputs: [{ id: 'arr_out', label: 'مصفوفة', type: 'data' }],
   },
   'مصفوفات/إضافة': {
