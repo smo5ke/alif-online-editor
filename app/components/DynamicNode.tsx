@@ -20,7 +20,7 @@ export type NodeData = {
   inputs?: { id: string; label: string; type: 'event' | 'data' }[];
   outputs?: { id: string; label: string; type: 'event' | 'data' }[];
   controls?: NodeControl[];
-  allowDynamicInputs?: boolean;
+  allowDynamicInputs?: boolean | 'pair';
   onControlChange?: (controlId: string, value: any) => void;
   onAddDynamicInput?: (nodeId: string) => void;
 };

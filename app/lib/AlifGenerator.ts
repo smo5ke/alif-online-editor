@@ -115,7 +115,18 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
       let str = resolveInput(node.id, 'str_in') || '""';
       return `${str}.صغير()`;
     }
-    if (type === 'فهارس/جديد') return `{}`;
+    if (type === 'فهارس/جديد') {
+      const inputs = (node.data as NodeData).inputs || [];
+      const pairs = [];
+      for (let i = 0; i < inputs.length; i += 2) {
+        if (inputs[i] && inputs[i+1]) {
+          const key = resolveInput(node.id, inputs[i].id) || '""';
+          const val = resolveInput(node.id, inputs[i+1].id) || 'عدم';
+          pairs.push(`${key}: ${val}`);
+        }
+      }
+      return `{${pairs.join(', ')}}`;
+    }
     if (type === 'فهارس/قراءة') {
       let dictName = resolveInput(node.id, 'dict_in') || 'فهرس';
       let key = resolveInput(node.id, 'key_in') || '""';

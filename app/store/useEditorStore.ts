@@ -86,19 +86,42 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     nodes: state.nodes.map((node) => {
       if (node.id === nodeId) {
         const currentInputs = (node.data.inputs as any[]) || [];
-        const nextIndex = currentInputs.length;
-        const newInput = {
-          id: `item_${nextIndex}`,
-          label: `عنصر ${nextIndex + 1}`,
-          type: 'data'
-        };
-        return {
-          ...node,
-          data: {
-            ...node.data,
-            inputs: [...currentInputs, newInput]
-          }
-        };
+        const isPair = node.data.allowDynamicInputs === 'pair';
+        
+        if (isPair) {
+          const nextIndex = currentInputs.length / 2;
+          const newKeyInput = {
+            id: `key_${nextIndex}`,
+            label: `مفتاح ${nextIndex + 1}`,
+            type: 'data'
+          };
+          const newValInput = {
+            id: `val_${nextIndex}`,
+            label: `قيمة ${nextIndex + 1}`,
+            type: 'data'
+          };
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              inputs: [...currentInputs, newKeyInput, newValInput]
+            }
+          };
+        } else {
+          const nextIndex = currentInputs.length;
+          const newInput = {
+            id: `item_${nextIndex}`,
+            label: `عنصر ${nextIndex + 1}`,
+            type: 'data'
+          };
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              inputs: [...currentInputs, newInput]
+            }
+          };
+        }
       }
       return node;
     })

@@ -432,6 +432,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     subtitle: 'قاموس فارغ',
     iconName: 'Library',
     color: '#a855f7', // Purple
+    allowDynamicInputs: 'pair',
     outputs: [{ id: 'dict_out', label: 'فهرس', type: 'data' }],
   },
   'فهارس/إضافة': {
