@@ -14,6 +14,14 @@ export interface MacroData {
   edges: Edge[];
 }
 
+export type GraphSnapshot = {
+  nodes: Node[];
+  edges: Edge[];
+  mainGraph: { nodes: Node[]; edges: Edge[] };
+  macros: Record<string, MacroData>;
+  currentGraphId: string;
+};
+
 interface EditorState {
   // State
   activeMode: EditorMode;
@@ -27,7 +35,13 @@ interface EditorState {
   mainGraph: { nodes: Node[]; edges: Edge[] };
   macros: Record<string, MacroData>;
 
+  past: GraphSnapshot[];
+  future: GraphSnapshot[];
+
   // Actions
+  commitHistory: () => void;
+  undo: () => void;
+  redo: () => void;
   setMode: (mode: EditorMode) => void;
   setIsTerminalHidden: (hidden: boolean) => void;
   setTextCode: (code: string) => void;
@@ -71,6 +85,79 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   currentGraphId: 'main',
   mainGraph: { nodes: [], edges: [] },
   macros: {},
+  past: [],
+  future: [],
+
+  commitHistory: () => set((state) => {
+    // Avoid storing history if past is full or whatever, but let's just keep max 50 states
+    const snapshot: GraphSnapshot = {
+      nodes: state.nodes,
+      edges: state.edges,
+      mainGraph: state.mainGraph,
+      macros: state.macros,
+      currentGraphId: state.currentGraphId
+    };
+    
+    // Only commit if there are actually some changes? React Flow handles objects nicely.
+    // For simplicity, we just push the snapshot.
+    const newPast = [...state.past, snapshot];
+    if (newPast.length > 50) newPast.shift(); // Keep last 50 states
+    
+    return {
+      past: newPast,
+      future: [] // Any new action invalidates the redo future
+    };
+  }),
+
+  undo: () => set((state) => {
+    if (state.past.length === 0) return {};
+    
+    const previous = state.past[state.past.length - 1];
+    const newPast = state.past.slice(0, -1);
+    
+    const currentSnapshot: GraphSnapshot = {
+      nodes: state.nodes,
+      edges: state.edges,
+      mainGraph: state.mainGraph,
+      macros: state.macros,
+      currentGraphId: state.currentGraphId
+    };
+    
+    return {
+      past: newPast,
+      future: [currentSnapshot, ...state.future],
+      nodes: previous.nodes,
+      edges: previous.edges,
+      mainGraph: previous.mainGraph,
+      macros: previous.macros,
+      currentGraphId: previous.currentGraphId
+    };
+  }),
+
+  redo: () => set((state) => {
+    if (state.future.length === 0) return {};
+    
+    const next = state.future[0];
+    const newFuture = state.future.slice(1);
+    
+    const currentSnapshot: GraphSnapshot = {
+      nodes: state.nodes,
+      edges: state.edges,
+      mainGraph: state.mainGraph,
+      macros: state.macros,
+      currentGraphId: state.currentGraphId
+    };
+    
+    return {
+      past: [...state.past, currentSnapshot],
+      future: newFuture,
+      nodes: next.nodes,
+      edges: next.edges,
+      mainGraph: next.mainGraph,
+      macros: next.macros,
+      currentGraphId: next.currentGraphId
+    };
+  }),
 
   setMode: (mode) => set({ activeMode: mode }),
   
@@ -86,13 +173,19 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     edges: typeof edges === 'function' ? edges(state.edges) : edges 
   })),
   
-  onNodesChange: (changes) => set((state) => ({ 
-    nodes: applyNodeChanges(changes, state.nodes) 
-  })),
+  onNodesChange: (changes) => set((state) => {
+    if (changes.some(c => c.type === 'remove' || c.type === 'add')) {
+      state.commitHistory();
+    }
+    return { nodes: applyNodeChanges(changes, state.nodes) };
+  }),
   
-  onEdgesChange: (changes) => set((state) => ({ 
-    edges: applyEdgeChanges(changes, state.edges) 
-  })),
+  onEdgesChange: (changes) => set((state) => {
+    if (changes.some(c => c.type === 'remove' || c.type === 'add')) {
+      state.commitHistory();
+    }
+    return { edges: applyEdgeChanges(changes, state.edges) };
+  }),
   
   appendTerminalOutput: (text, color) => set((state) => ({ 
     terminalOutput: [...state.terminalOutput, { text, color }] 
@@ -100,8 +193,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   
   clearTerminal: () => set({ terminalOutput: [] }),
 
-  addDynamicInput: (nodeId: string) => set((state) => ({
-    nodes: state.nodes.map((node) => {
+  addDynamicInput: (nodeId: string) => set((state) => {
+    state.commitHistory();
+    return {
+      nodes: state.nodes.map((node) => {
       if (node.id === nodeId) {
         const currentInputs = (node.data.inputs as any[]) || [];
         const isPair = node.data.allowDynamicInputs === 'pair';
@@ -143,20 +238,26 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       }
       return node;
     })
-  })),
+    };
+  }),
 
-  updateNodeControl: (nodeId: string, controlId: string, value: any) => set((state) => ({
-    nodes: state.nodes.map((node) => {
+  updateNodeControl: (nodeId: string, controlId: string, value: any) => set((state) => {
+    state.commitHistory();
+    return {
+      nodes: state.nodes.map((node) => {
       if (node.id === nodeId) {
         const newControls = (node.data.controls as any[])?.map(c => c.id === controlId ? { ...c, value } : c);
         return { ...node, data: { ...node.data, controls: newControls } };
       }
       return node;
-    })
-  })),
+      })
+    };
+  }),
 
-  addDynamicOutput: (nodeId: string) => set((state) => ({
-    nodes: state.nodes.map((node) => {
+  addDynamicOutput: (nodeId: string) => set((state) => {
+    state.commitHistory();
+    return {
+      nodes: state.nodes.map((node) => {
       if (node.id === nodeId) {
         const currentOutputs = (node.data.outputs as any[]) || [];
         const nextIndex = currentOutputs.length;
@@ -174,10 +275,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         };
       }
       return node;
-    })
-  })),
+      })
+    };
+  }),
 
   createMacro: (name: string) => set((state) => {
+    state.commitHistory();
     const macroId = `macro_${Date.now()}`;
     return {
       macros: {
@@ -193,6 +296,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   switchGraph: (targetId: string) => set((state) => {
     if (state.currentGraphId === targetId) return {};
+
+    state.commitHistory();
 
     // 1. Save current active nodes/edges to their storage
     let newMainGraph = state.mainGraph;

@@ -20,7 +20,7 @@ const edgeTypes = {
 };
 
 export default function VisualEditor() {
-  const { activeMode, nodes, edges, setNodes, setEdges, onNodesChange, onEdgesChange, currentGraphId, macros, createMacro, switchGraph } = useEditorStore();
+  const { activeMode, nodes, edges, setNodes, setEdges, onNodesChange, onEdgesChange, currentGraphId, macros, createMacro, switchGraph, commitHistory, undo, redo } = useEditorStore();
   
   const [menuPos, setMenuPos] = useState<{ x: number; y: number; showAll?: boolean } | null>(null);
   const [editMenuPos, setEditMenuPos] = useState<{ x: number; y: number; nodeId: string } | null>(null);
@@ -30,6 +30,27 @@ export default function VisualEditor() {
   
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input field
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
+      
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
 
   // Combine static node definitions with dynamic macro definitions
   const combinedNodeDefinitions = React.useMemo(() => {
@@ -69,6 +90,7 @@ export default function VisualEditor() {
   }, [nodes, edges, setNodes, setEdges]);
 
   const onConnect = useCallback((params: Connection) => {
+    commitHistory();
     const sourceNode = nodes.find(n => n.id === params.source);
     const targetNode = nodes.find(n => n.id === params.target);
     
@@ -237,6 +259,7 @@ export default function VisualEditor() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onNodeDragStart={() => commitHistory()}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         onInit={setReactFlowInstance}

@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useEditorStore, codeExamples } from '../../store/useEditorStore';
 import { visualExamples } from '../../store/visualExamples';
-import { FileText, Copy, Share2, Download, Save, RotateCcw, Maximize, ChevronDown, Code } from 'lucide-react';
+import { FileText, Copy, Share2, Download, Save, RotateCcw, Maximize, ChevronDown, Code, Undo2, Redo2 } from 'lucide-react';
 
 export default function EditorToolbar() {
-  const { activeMode, setMode, setTextCode, textCode, isTerminalHidden, setIsTerminalHidden, setNodes, setEdges } = useEditorStore();
+  const { activeMode, setMode, setTextCode, textCode, isTerminalHidden, setIsTerminalHidden, setNodes, setEdges, undo, redo, past, future } = useEditorStore();
   
   const [isExamplesOpen, setIsExamplesOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -129,12 +129,36 @@ export default function EditorToolbar() {
             <button onClick={handleDownload} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="تنزيل">
               <Download size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
             </button>
-            <button onClick={handleSave} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="حفظ">
+            <button onClick={handleSave} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="حفظ محلي">
               <Save size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
             </button>
-            <button onClick={handleRestore} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="استعادة (تراجع)">
+            <button onClick={handleRestore} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="استعادة آخر حفظ">
               <RotateCcw size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
             </button>
+
+            {activeMode === 'visual' && (
+              <>
+                <div className="w-px h-4 bg-slate-600/50 mx-1 sm:mx-2 self-center" />
+                <button 
+                  onClick={undo} 
+                  disabled={past.length === 0}
+                  className={`p-1.5 rounded-md transition-colors shrink-0 ${past.length === 0 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`} 
+                  title="تراجع (Ctrl+Z)"
+                >
+                  <Undo2 size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
+                </button>
+                <button 
+                  onClick={redo} 
+                  disabled={future.length === 0}
+                  className={`p-1.5 rounded-md transition-colors shrink-0 ${future.length === 0 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`} 
+                  title="إعادة (Ctrl+Y)"
+                >
+                  <Redo2 size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
+                </button>
+              </>
+            )}
+
+            <div className="w-px h-4 bg-slate-600/50 mx-1 sm:mx-2 self-center" />
             <button onClick={handleFullscreen} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="ملء الشاشة">
               <Maximize size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
             </button>
