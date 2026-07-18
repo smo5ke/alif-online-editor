@@ -35,6 +35,9 @@ interface EditorState {
   mainGraph: { nodes: Node[]; edges: Edge[] };
   macros: Record<string, MacroData>;
 
+  errorNodeId: string | null;
+  lastRunCode: string;
+
   past: GraphSnapshot[];
   future: GraphSnapshot[];
 
@@ -57,6 +60,8 @@ interface EditorState {
 
   createMacro: (name: string) => void;
   switchGraph: (targetId: string) => void;
+  setErrorNode: (nodeId: string | null) => void;
+  setLastRunCode: (code: string) => void;
 }
 
 export const codeExamples: Record<string, string> = {
@@ -85,6 +90,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   currentGraphId: 'main',
   mainGraph: { nodes: [], edges: [] },
   macros: {},
+  errorNodeId: null,
+  lastRunCode: '',
   past: [],
   future: [],
 
@@ -177,21 +184,24 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     if (changes.some(c => c.type === 'remove' || c.type === 'add')) {
       state.commitHistory();
     }
-    return { nodes: applyNodeChanges(changes, state.nodes) };
+    return { nodes: applyNodeChanges(changes, state.nodes), errorNodeId: null };
   }),
   
   onEdgesChange: (changes) => set((state) => {
     if (changes.some(c => c.type === 'remove' || c.type === 'add')) {
       state.commitHistory();
     }
-    return { edges: applyEdgeChanges(changes, state.edges) };
+    return { edges: applyEdgeChanges(changes, state.edges), errorNodeId: null };
   }),
   
   appendTerminalOutput: (text, color) => set((state) => ({ 
     terminalOutput: [...state.terminalOutput, { text, color }] 
   })),
   
-  clearTerminal: () => set({ terminalOutput: [] }),
+  clearTerminal: () => set({ terminalOutput: [], errorNodeId: null }),
+  
+  setErrorNode: (nodeId) => set({ errorNodeId: nodeId }),
+  setLastRunCode: (code) => set({ lastRunCode: code }),
 
   addDynamicInput: (nodeId: string) => set((state) => {
     state.commitHistory();

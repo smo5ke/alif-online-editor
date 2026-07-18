@@ -44,7 +44,8 @@ export const getTypeColor = (type?: DataType) => {
 };
 
 export default function DynamicNode({ data, id }: { data: NodeData; id: string }) {
-  const { updateNodeControl, addDynamicInput } = useEditorStore();
+  const { updateNodeControl, addDynamicInput, errorNodeId } = useEditorStore();
+  const isError = errorNodeId === id;
   const IconComponent = data.iconName ? LucideIcons[data.iconName] as React.ElementType : LucideIcons.Code;
   
   // Use a vibrant color for the header, defaulting to a nice pink/purple if none provided
@@ -55,7 +56,9 @@ export default function DynamicNode({ data, id }: { data: NodeData; id: string }
 
   return (
     <div
-      className="flex flex-col w-[260px] rounded-2xl shadow-2xl transition-all border border-white/5"
+      className={`flex flex-col w-[260px] rounded-2xl shadow-2xl transition-all border ${
+        isError ? 'border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.6)] animate-pulse' : 'border-white/5'
+      }`}
       style={{ backgroundColor: '#18181b' }} // Very dark, sleek background
       dir="rtl"
     >

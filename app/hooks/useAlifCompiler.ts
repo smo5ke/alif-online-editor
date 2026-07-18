@@ -54,6 +54,23 @@ export function useAlifCompiler() {
         const data = JSON.parse(event.data);
         if (data.type === 'output' || data.type === 'error') {
           const color = data.type === 'error' ? 'text-red-400' : 'text-slate-300';
+          
+          if (data.type === 'error') {
+             const match = data.text.match(/السطر\s+(\d+)/);
+             if (match) {
+                 const lineNum = parseInt(match[1]);
+                 const state = useEditorStore.getState();
+                 const codeLines = state.lastRunCode.split('\n');
+                 if (lineNum > 0 && lineNum <= codeLines.length) {
+                     const lineText = codeLines[lineNum - 1];
+                     const nodeMatch = lineText.match(/# @node:([a-zA-Z0-9-]+)/);
+                     if (nodeMatch) {
+                         state.setErrorNode(nodeMatch[1]);
+                     }
+                 }
+             }
+          }
+          
           useEditorStore.getState().appendTerminalOutput(data.text, color);
         } else if (data.type === 'done') {
           useEditorStore.getState().appendTerminalOutput('\n--- انتهى تنفيذ البرنامج ---\n', 'text-slate-500');
@@ -119,6 +136,7 @@ export function useAlifCompiler() {
 
       const generated = generateAlifCodeFromGraph(finalMainNodes, finalMainEdges, finalMacros);
       codeToRun = generated.replace(/\u00A0/g, " ");
+      useEditorStore.getState().setLastRunCode(codeToRun);
     } else {
       codeToRun = textCode.replace(/\u00A0/g, " ");
     }

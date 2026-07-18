@@ -212,9 +212,9 @@ export function generateAlifCodeFromGraph(
           const mOutputs = (data.outputs || []).filter((o: any) => o.type !== 'event');
           if (mOutputs.length > 0) {
              const outVars = mOutputs.map((out: any) => `var_${currNode.id.replace(/-/g, '_')}_${out.id}`);
-             code += indent + `${outVars.join(', ')} = ${mName}(${resolvedArgs.join(', ')})\n`;
+             code += indent + `${outVars.join(', ')} = ${mName}(${resolvedArgs.join(', ')}) # @node:${currNode.id}\n`;
           } else {
-             code += indent + `${mName}(${resolvedArgs.join(', ')})\n`;
+             code += indent + `${mName}(${resolvedArgs.join(', ')}) # @node:${currNode.id}\n`;
           }
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
           continue;
@@ -224,89 +224,89 @@ export function generateAlifCodeFromGraph(
           const mInputs = (data.inputs || []).filter((i: any) => i.type !== 'event');
           const resolvedReturns = mInputs.map((inp: any) => resolveInput(currNode.id, inp.id) || 'عدم');
           if (resolvedReturns.length > 0) {
-             code += indent + `ارجع ${resolvedReturns.join(', ')}\n`;
+             code += indent + `ارجع ${resolvedReturns.join(', ')} # @node:${currNode.id}\n`;
           } else {
-             code += indent + `ارجع\n`;
+             code += indent + `ارجع # @node:${currNode.id}\n`;
           }
           break; // Stop execution flow when hitting output
         }
         
         if (type === 'أوامر/اطبع') {
           let printVal = resolveInput(currNode.id, 'val_in') || '""';
-          code += indent + `اطبع(${printVal})\n`;
+          code += indent + `اطبع(${printVal}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'متغيرات/إسناد') {
           let varName = getControlValue('var_name');
           let val = resolveInput(currNode.id, 'val_in') || 'عدم';
-          code += indent + `${varName} = ${val}\n`;
+          code += indent + `${varName} = ${val} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'متغيرات/إسناد رجعي') {
           let varName = getControlValue('var_name');
           let op = getControlValue('op');
           let val = resolveInput(currNode.id, 'val_in') || 'عدم';
-          code += indent + `${varName} ${op} ${val}\n`;
+          code += indent + `${varName} ${op} ${val} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'متغيرات/إسناد شرطي') {
           let varName = getControlValue('var_name');
           let cond = resolveInput(currNode.id, 'cond_in') || 'خطأ';
           let trueVal = resolveInput(currNode.id, 'true_in') || 'عدم';
           let falseVal = resolveInput(currNode.id, 'false_in') || 'عدم';
-          code += indent + `${varName} = ${trueVal} اذا ${cond} والا ${falseVal}\n`;
+          code += indent + `${varName} = ${trueVal} اذا ${cond} والا ${falseVal} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'متغيرات/حذف') {
           let varName = getControlValue('var_name');
-          code += indent + `احذف ${varName}\n`;
+          code += indent + `احذف ${varName} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'مصفوفات/إضافة') {
           let arrName = resolveInput(currNode.id, 'arr_in') || 'مصفوفة';
           let val = resolveInput(currNode.id, 'val_in') || 'عدم';
-          code += indent + `${arrName}.اضف(${val})\n`;
+          code += indent + `${arrName}.اضف(${val}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'مصفوفات/إزالة') {
           let arrName = resolveInput(currNode.id, 'arr_in') || 'مصفوفة';
           let val = resolveInput(currNode.id, 'val_in') || 'عدم';
-          code += indent + `${arrName}.امسح(${val})\n`;
+          code += indent + `${arrName}.امسح(${val}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'مصفوفات/إدراج') {
           let arrName = resolveInput(currNode.id, 'arr_in') || 'مصفوفة';
           let idx = resolveInput(currNode.id, 'idx_in') || 0;
           let val = resolveInput(currNode.id, 'val_in') || 'عدم';
-          code += indent + `${arrName}.ادرج(${idx}, ${val})\n`;
+          code += indent + `${arrName}.ادرج(${idx}, ${val}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'مصفوفات/ترتيب') {
           let arrName = resolveInput(currNode.id, 'arr_in') || 'مصفوفة';
-          code += indent + `${arrName}.رتب()\n`;
+          code += indent + `${arrName}.رتب() # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'فهارس/إضافة') {
           let dictName = resolveInput(currNode.id, 'dict_in') || 'فهرس';
           let key = resolveInput(currNode.id, 'key_in') || '""';
           let val = resolveInput(currNode.id, 'val_in') || 'عدم';
-          code += indent + `${dictName}[${key}] = ${val}\n`;
+          code += indent + `${dictName}[${key}] = ${val} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'دوال/استدعاء') {
           let arg = resolveInput(currNode.id, 'arg_in') || 'عدم';
-          code += indent + `${getControlValue('func_name')}(${arg})\n`;
+          code += indent + `${getControlValue('func_name')}(${arg}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'ملفات/إغلاق') {
           let file = resolveInput(currNode.id, 'file_in') || 'س';
-          code += indent + `${file}.اغلق()\n`;
+          code += indent + `${file}.اغلق() # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'كائنات/تعيين_خاصية') {
           let prop = getControlValue('prop_name');
           let val = resolveInput(currNode.id, 'val_in') || 'عدم';
-          code += indent + `هذا.${prop} = ${val}\n`;
+          code += indent + `هذا.${prop} = ${val} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'حزم/استيراد') {
           let pkg = getControlValue('pkg_name') || 'مكتبة';
-          code += indent + `استورد ${pkg}\n`;
+          code += indent + `استورد ${pkg} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'أوامر/انتظر') {
           let ms = resolveInput(currNode.id, 'ms_in') || 3;
-          code += indent + `الوقت.غفوة(${ms})\n`;
+          code += indent + `الوقت.غفوة(${ms}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'دوال/إرجاع') {
           let retVal = resolveInput(currNode.id, 'val_in') || 'عدم';
-          code += indent + `ارجع ${retVal}\n`;
+          code += indent + `ارجع ${retVal} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'شروط/اذا') {
           let cond = resolveInput(currNode.id, 'cond_in') || 'خطأ';
@@ -342,10 +342,10 @@ export function generateAlifCodeFromGraph(
           
           currNodeId = getNextNodeId(currNode.id, 'done_out');
         } else if (type === 'حلقات/توقف') {
-          code += indent + `توقف\n`;
+          code += indent + `توقف # @node:${currNode.id}\n`;
           break;
         } else if (type === 'أوامر/مسح الشاشة') {
-          code += indent + `مسح()\n`;
+          code += indent + `مسح() # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'أخطاء/محاولة') {
           code += indent + `حاول:\n`;
