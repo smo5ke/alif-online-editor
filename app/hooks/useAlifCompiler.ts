@@ -100,7 +100,24 @@ export function useAlifCompiler() {
     let codeToRun = '';
     
     if (activeMode === 'visual') {
-      const generated = generateAlifCodeFromGraph(nodes, edges);
+      const state = useEditorStore.getState();
+      let finalMainNodes = state.nodes;
+      let finalMainEdges = state.edges;
+      let finalMacros = { ...state.macros };
+
+      if (state.currentGraphId !== 'main') {
+        finalMainNodes = state.mainGraph.nodes;
+        finalMainEdges = state.mainGraph.edges;
+        if (finalMacros[state.currentGraphId]) {
+          finalMacros[state.currentGraphId] = {
+            ...finalMacros[state.currentGraphId],
+            nodes: state.nodes,
+            edges: state.edges
+          };
+        }
+      }
+
+      const generated = generateAlifCodeFromGraph(finalMainNodes, finalMainEdges, finalMacros);
       codeToRun = generated.replace(/\u00A0/g, " ");
     } else {
       codeToRun = textCode.replace(/\u00A0/g, " ");

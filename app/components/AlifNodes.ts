@@ -1,6 +1,22 @@
 import { NodeData } from './DynamicNode';
 
 export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> = {
+  'ماكرو/مدخلات': {
+    label: 'مدخلات الماكرو',
+    subtitle: 'استقبال البيانات للتنفيذ',
+    iconName: 'ArrowRightToLine',
+    color: '#8b5cf6', // Purple
+    outputs: [{ id: 'seq_out', label: 'بدء', type: 'event' }],
+    allowDynamicOutputs: true,
+  },
+  'ماكرو/مخرجات': {
+    label: 'مخرجات الماكرو',
+    subtitle: 'إرسال النتائج للخارج',
+    iconName: 'ArrowRightFromLine',
+    color: '#8b5cf6', // Purple
+    inputs: [{ id: 'seq_in', label: 'إنهاء', type: 'event' }],
+    allowDynamicInputs: true,
+  },
   'أوامر/بداية البرنامج': {
     label: 'بداية البرنامج',
     subtitle: 'نقطة الانطلاق',

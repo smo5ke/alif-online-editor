@@ -20,9 +20,9 @@ const edgeTypes = {
 };
 
 export default function VisualEditor() {
-  const { activeMode, nodes, edges, setNodes, setEdges, onNodesChange, onEdgesChange } = useEditorStore();
+  const { activeMode, nodes, edges, setNodes, setEdges, onNodesChange, onEdgesChange, currentGraphId, macros, createMacro, switchGraph } = useEditorStore();
   
-  const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const [menuPos, setMenuPos] = useState<{ x: number; y: number; showAll?: boolean } | null>(null);
   const [editMenuPos, setEditMenuPos] = useState<{ x: number; y: number; nodeId: string } | null>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -30,6 +30,33 @@ export default function VisualEditor() {
   
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
+
+  // Combine static node definitions with dynamic macro definitions
+  const combinedNodeDefinitions = React.useMemo(() => {
+    const combined: Record<string, any> = { ...nodeDefinitions };
+    
+    Object.entries(macros || {}).forEach(([id, macro]) => {
+      const inputsNode = macro.nodes.find(n => n.data.originalType === 'ماكرو/مدخلات');
+      const outputsNode = macro.nodes.find(n => n.data.originalType === 'ماكرو/مخرجات');
+      
+      // The outputs of the Macro Inputs node become the INPUTS of the macro call node.
+      const macroCallInputs = inputsNode?.data?.outputs || [];
+      // The inputs of the Macro Outputs node become the OUTPUTS of the macro call node.
+      const macroCallOutputs = outputsNode?.data?.inputs || [];
+
+      combined[`macro:${id}`] = {
+        label: macro.name,
+        subtitle: 'استدعاء ماكرو',
+        iconName: 'Box',
+        color: '#a855f7',
+        inputs: macroCallInputs,
+        outputs: macroCallOutputs,
+        isMacro: true,
+        macroId: id,
+      };
+    });
+    return combined;
+  }, [macros]);
 
   const onLayout = useCallback(() => {
     const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
@@ -106,7 +133,7 @@ export default function VisualEditor() {
   }, [setNodes]);
 
   const addNode = (typeKey: string) => {
-    const template = nodeDefinitions[typeKey];
+    const template = combinedNodeDefinitions[typeKey];
     if (!template) return;
     
     let screenX = window.innerWidth / 2;
@@ -152,6 +179,58 @@ export default function VisualEditor() {
 
   return (
     <div ref={wrapperRef} className={`absolute inset-0 transition-opacity duration-200 ${activeMode === 'visual' ? 'z-10 opacity-100' : 'z-0 opacity-0 pointer-events-none'}`}>
+      
+      {/* Macro Top Bar */}
+      <div className="absolute top-4 right-4 left-4 z-40 flex items-center justify-between pointer-events-none">
+        {/* Left side: Back to main (if in macro) */}
+        <div className="pointer-events-auto">
+          {currentGraphId !== 'main' && (
+            <button
+              onClick={() => switchGraph('main')}
+              className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 font-bold transition-colors"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+              العودة للرئيسية
+            </button>
+          )}
+        </div>
+
+        {/* Right side: Macros Navigation */}
+        <div className="pointer-events-auto flex items-center gap-2 bg-slate-800/90 backdrop-blur border border-slate-600 rounded-xl p-2 shadow-lg" dir="rtl">
+          <span className="text-slate-300 font-bold text-sm ml-2">المخططات:</span>
+          
+          <button
+            onClick={() => switchGraph('main')}
+            className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${currentGraphId === 'main' ? 'bg-blue-600 text-white' : 'hover:bg-slate-700 text-slate-400'}`}
+          >
+            الرئيسية
+          </button>
+          
+          <div className="w-px h-6 bg-slate-600 mx-1"></div>
+          
+          {Object.entries(macros || {}).map(([id, macro]) => (
+            <button
+              key={id}
+              onClick={() => switchGraph(id)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${currentGraphId === id ? 'bg-purple-600 text-white' : 'hover:bg-slate-700 text-slate-400'}`}
+            >
+              {macro.name}
+            </button>
+          ))}
+
+          <button
+            onClick={() => {
+              const name = prompt('أدخل اسم الماكرو الجديد:');
+              if (name) createMacro(name);
+            }}
+            className="px-3 py-1.5 rounded-lg text-sm font-bold bg-slate-700 hover:bg-emerald-600 text-emerald-400 hover:text-white transition-colors border border-emerald-500/30 flex items-center gap-1"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            جديد
+          </button>
+        </div>
+      </div>
+
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -178,7 +257,7 @@ export default function VisualEditor() {
       <div className="absolute bottom-6 md:bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-3 z-30">
         <button
           onClick={() => {
-            setGeneratedCode(generateAlifCodeFromGraph(nodes, edges));
+            setGeneratedCode(generateAlifCodeFromGraph(nodes, edges, macros));
             setShowCodeModal(true);
           }}
           className="bg-slate-700 hover:bg-slate-600 text-white rounded-full shadow-2xl w-12 h-12 flex items-center justify-center transition-colors border border-slate-600/50"
@@ -198,9 +277,9 @@ export default function VisualEditor() {
             e.stopPropagation(); 
             if (wrapperRef.current) {
               const rect = wrapperRef.current.getBoundingClientRect();
-              setMenuPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+              setMenuPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, showAll: true });
             } else {
-              setMenuPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 }); 
+              setMenuPos({ x: window.innerWidth / 2, y: window.innerHeight / 2, showAll: true }); 
             }
           }}
           className="bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-2xl px-6 py-3.5 font-bold"
@@ -244,11 +323,15 @@ export default function VisualEditor() {
             <div className="overflow-y-auto custom-menu-scroll pb-6 md:pb-0 flex-1">
               {(() => {
                 const search = searchQuery.trim().toLowerCase();
-                if (!search) {
+                if (!search && !menuPos.showAll) {
                   return <div className="p-8 text-center text-slate-400 text-sm">ابحث عن اسم الأمر أو العقدة المطلوبة...</div>;
                 }
 
-                const filteredEntries = Object.entries(nodeDefinitions).filter(([key, def]) => {
+                const filteredEntries = Object.entries(combinedNodeDefinitions).filter(([key, def]) => {
+                  if (currentGraphId === 'main' && (key === 'ماكرو/مدخلات' || key === 'ماكرو/مخرجات')) return false;
+                  if (currentGraphId !== 'main' && key === 'أوامر/بداية البرنامج') return false;
+                  
+                  if (!search && menuPos.showAll) return true;
                   return def.label.toLowerCase().includes(search) || 
                          (def.subtitle && def.subtitle.toLowerCase().includes(search)) ||
                          key.toLowerCase().includes(search);

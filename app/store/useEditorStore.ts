@@ -8,6 +8,12 @@ export interface TerminalLine {
   color: string;
 }
 
+export interface MacroData {
+  name: string;
+  nodes: Node[];
+  edges: Edge[];
+}
+
 interface EditorState {
   // State
   activeMode: EditorMode;
@@ -16,6 +22,10 @@ interface EditorState {
   nodes: Node[];
   edges: Edge[];
   terminalOutput: TerminalLine[];
+  
+  currentGraphId: string;
+  mainGraph: { nodes: Node[]; edges: Edge[] };
+  macros: Record<string, MacroData>;
 
   // Actions
   setMode: (mode: EditorMode) => void;
@@ -28,7 +38,11 @@ interface EditorState {
   appendTerminalOutput: (text: string, color: string) => void;
   clearTerminal: () => void;
   addDynamicInput: (nodeId: string) => void;
+  addDynamicOutput: (nodeId: string) => void;
   updateNodeControl: (nodeId: string, controlId: string, value: any) => void;
+
+  createMacro: (name: string) => void;
+  switchGraph: (targetId: string) => void;
 }
 
 export const codeExamples: Record<string, string> = {
@@ -53,6 +67,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   nodes: [],
   edges: [],
   terminalOutput: [],
+  
+  currentGraphId: 'main',
+  mainGraph: { nodes: [], edges: [] },
+  macros: {},
 
   setMode: (mode) => set({ activeMode: mode }),
   
@@ -136,4 +154,76 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       return node;
     })
   })),
+
+  addDynamicOutput: (nodeId: string) => set((state) => ({
+    nodes: state.nodes.map((node) => {
+      if (node.id === nodeId) {
+        const currentOutputs = (node.data.outputs as any[]) || [];
+        const nextIndex = currentOutputs.length;
+        const newOutput = {
+          id: `out_${nextIndex}`,
+          label: `مخرج ${nextIndex + 1}`,
+          type: 'data'
+        };
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            outputs: [...currentOutputs, newOutput]
+          }
+        };
+      }
+      return node;
+    })
+  })),
+
+  createMacro: (name: string) => set((state) => {
+    const macroId = `macro_${Date.now()}`;
+    return {
+      macros: {
+        ...state.macros,
+        [macroId]: {
+          name,
+          nodes: [],
+          edges: []
+        }
+      }
+    };
+  }),
+
+  switchGraph: (targetId: string) => set((state) => {
+    if (state.currentGraphId === targetId) return {};
+
+    // 1. Save current active nodes/edges to their storage
+    let newMainGraph = state.mainGraph;
+    let newMacros = { ...state.macros };
+    if (state.currentGraphId === 'main') {
+      newMainGraph = { nodes: state.nodes, edges: state.edges };
+    } else if (newMacros[state.currentGraphId]) {
+      newMacros[state.currentGraphId] = { 
+        ...newMacros[state.currentGraphId], 
+        nodes: state.nodes, 
+        edges: state.edges 
+      };
+    }
+
+    // 2. Load target graph
+    let targetNodes: Node[] = [];
+    let targetEdges: Edge[] = [];
+    if (targetId === 'main') {
+      targetNodes = newMainGraph.nodes;
+      targetEdges = newMainGraph.edges;
+    } else if (newMacros[targetId]) {
+      targetNodes = newMacros[targetId].nodes;
+      targetEdges = newMacros[targetId].edges;
+    }
+
+    return {
+      currentGraphId: targetId,
+      mainGraph: newMainGraph,
+      macros: newMacros,
+      nodes: targetNodes,
+      edges: targetEdges
+    };
+  }),
 }));
