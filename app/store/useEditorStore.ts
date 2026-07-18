@@ -56,6 +56,9 @@ interface EditorState {
   clearTerminal: () => void;
   addDynamicInput: (nodeId: string) => void;
   addDynamicOutput: (nodeId: string) => void;
+  removeDynamicInput: (nodeId: string, portId: string) => void;
+  removeDynamicOutput: (nodeId: string, portId: string) => void;
+  syncMacroInstances: (macroId: string) => void;
   updateNodeControl: (nodeId: string, controlId: string, value: any) => void;
 
   createMacro: (name: string) => void;
@@ -205,50 +208,30 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   addDynamicInput: (nodeId: string) => set((state) => {
     state.commitHistory();
-    return {
-      nodes: state.nodes.map((node) => {
+    const newNodes = state.nodes.map((node) => {
       if (node.id === nodeId) {
         const currentInputs = (node.data.inputs as any[]) || [];
         const isPair = node.data.allowDynamicInputs === 'pair';
         
         if (isPair) {
           const nextIndex = currentInputs.length / 2;
-          const newKeyInput = {
-            id: `key_${nextIndex}`,
-            label: `مفتاح ${nextIndex + 1}`,
-            type: 'data'
-          };
-          const newValInput = {
-            id: `val_${nextIndex}`,
-            label: `قيمة ${nextIndex + 1}`,
-            type: 'data'
-          };
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              inputs: [...currentInputs, newKeyInput, newValInput]
-            }
-          };
+          const newKeyInput = { id: `key_${nextIndex}_${Date.now()}`, label: `مفتاح ${nextIndex + 1}`, type: 'data' };
+          const newValInput = { id: `val_${nextIndex}_${Date.now()}`, label: `قيمة ${nextIndex + 1}`, type: 'data' };
+          return { ...node, data: { ...node.data, inputs: [...currentInputs, newKeyInput, newValInput] } };
         } else {
           const nextIndex = currentInputs.length;
-          const newInput = {
-            id: `item_${nextIndex}`,
-            label: `عنصر ${nextIndex + 1}`,
-            type: 'data'
-          };
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              inputs: [...currentInputs, newInput]
-            }
-          };
+          const newInput = { id: `item_${nextIndex}_${Date.now()}`, label: `عنصر ${nextIndex + 1}`, type: 'data' };
+          return { ...node, data: { ...node.data, inputs: [...currentInputs, newInput] } };
         }
       }
       return node;
-    })
-    };
+    });
+
+    if (state.currentGraphId !== 'main') {
+      setTimeout(() => useEditorStore.getState().syncMacroInstances(state.currentGraphId), 0);
+    }
+    
+    return { nodes: newNodes };
   }),
 
   updateNodeControl: (nodeId: string, controlId: string, value: any) => set((state) => {
@@ -266,27 +249,150 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   addDynamicOutput: (nodeId: string) => set((state) => {
     state.commitHistory();
-    return {
-      nodes: state.nodes.map((node) => {
+    const newNodes = state.nodes.map((node) => {
       if (node.id === nodeId) {
         const currentOutputs = (node.data.outputs as any[]) || [];
         const nextIndex = currentOutputs.length;
-        const newOutput = {
-          id: `out_${nextIndex}`,
-          label: `مخرج ${nextIndex + 1}`,
-          type: 'data'
-        };
+        const newOutput = { id: `out_${nextIndex}_${Date.now()}`, label: `مخرج ${nextIndex + 1}`, type: 'data' };
+        return { ...node, data: { ...node.data, outputs: [...currentOutputs, newOutput] } };
+      }
+      return node;
+    });
+
+    if (state.currentGraphId !== 'main') {
+      setTimeout(() => useEditorStore.getState().syncMacroInstances(state.currentGraphId), 0);
+    }
+
+    return { nodes: newNodes };
+  }),
+
+  removeDynamicInput: (nodeId: string, portId: string) => set((state) => {
+    state.commitHistory();
+    const newNodes = state.nodes.map((node) => {
+      if (node.id === nodeId) {
+        const currentInputs = (node.data.inputs as any[]) || [];
         return {
           ...node,
           data: {
             ...node.data,
-            outputs: [...currentOutputs, newOutput]
+            inputs: currentInputs.filter(i => i.id !== portId)
           }
         };
       }
       return node;
-      })
-    };
+    });
+    
+    // Cleanup edges connected to this port
+    const newEdges = state.edges.filter(e => !(e.target === nodeId && e.targetHandle === portId));
+
+    if (state.currentGraphId !== 'main') {
+      setTimeout(() => useEditorStore.getState().syncMacroInstances(state.currentGraphId), 0);
+    }
+
+    return { nodes: newNodes, edges: newEdges };
+  }),
+
+  removeDynamicOutput: (nodeId: string, portId: string) => set((state) => {
+    state.commitHistory();
+    const newNodes = state.nodes.map((node) => {
+      if (node.id === nodeId) {
+        const currentOutputs = (node.data.outputs as any[]) || [];
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            outputs: currentOutputs.filter(o => o.id !== portId)
+          }
+        };
+      }
+      return node;
+    });
+
+    // Cleanup edges connected to this port
+    const newEdges = state.edges.filter(e => !(e.source === nodeId && e.sourceHandle === portId));
+
+    if (state.currentGraphId !== 'main') {
+      setTimeout(() => useEditorStore.getState().syncMacroInstances(state.currentGraphId), 0);
+    }
+
+    return { nodes: newNodes, edges: newEdges };
+  }),
+
+  syncMacroInstances: (macroId: string) => set((state) => {
+    // Determine where the macro's latest definition is
+    const macroNodes = state.currentGraphId === macroId ? state.nodes : state.macros[macroId]?.nodes || [];
+    
+    const inputsNode = macroNodes.find(n => (n.data as any).originalType === 'ماكرو/مدخلات');
+    const outputsNode = macroNodes.find(n => (n.data as any).originalType === 'ماكرو/مخرجات');
+    
+    const macroCallInputs = (inputsNode?.data as any)?.outputs || [];
+    const macroCallOutputs = (outputsNode?.data as any)?.inputs || [];
+
+    const updateNodes = (nodes: Node[]) => nodes.map(n => {
+      if ((n.data as any).isMacro && (n.data as any).macroId === macroId) {
+        return {
+          ...n,
+          data: {
+            ...n.data,
+            inputs: macroCallInputs,
+            outputs: macroCallOutputs
+          }
+        };
+      }
+      return n;
+    });
+
+    const cleanEdges = (edges: Edge[], nodes: Node[]) => edges.filter(e => {
+      const sourceNode = nodes.find(n => n.id === e.source);
+      const targetNode = nodes.find(n => n.id === e.target);
+      if (!sourceNode || !targetNode) return false;
+      
+      const sourceHasOutput = (sourceNode.data as any).outputs?.some((o: any) => o.id === e.sourceHandle);
+      const targetHasInput = (targetNode.data as any).inputs?.some((i: any) => i.id === e.targetHandle);
+      
+      if ((sourceNode.data as any).isMacro && !sourceHasOutput) return false;
+      if ((targetNode.data as any).isMacro && !targetHasInput) return false;
+      return true;
+    });
+
+    const newState: Partial<EditorState> = {};
+    
+    if (state.currentGraphId === 'main') {
+      newState.nodes = updateNodes(state.nodes);
+      newState.edges = cleanEdges(state.edges, newState.nodes);
+      
+      const newMacros = { ...state.macros };
+      Object.keys(newMacros).forEach(key => {
+        newMacros[key] = {
+          ...newMacros[key],
+          nodes: updateNodes(newMacros[key].nodes),
+          edges: cleanEdges(newMacros[key].edges, updateNodes(newMacros[key].nodes))
+        };
+      });
+      newState.macros = newMacros;
+    } else {
+      newState.nodes = updateNodes(state.nodes);
+      newState.edges = cleanEdges(state.edges, newState.nodes);
+      
+      newState.mainGraph = {
+        nodes: updateNodes(state.mainGraph.nodes),
+        edges: cleanEdges(state.mainGraph.edges, updateNodes(state.mainGraph.nodes))
+      };
+      
+      const newMacros = { ...state.macros };
+      Object.keys(newMacros).forEach(key => {
+        if (key !== state.currentGraphId) {
+          newMacros[key] = {
+            ...newMacros[key],
+            nodes: updateNodes(newMacros[key].nodes),
+            edges: cleanEdges(newMacros[key].edges, updateNodes(newMacros[key].nodes))
+          };
+        }
+      });
+      newState.macros = newMacros;
+    }
+
+    return newState;
   }),
 
   createMacro: (name: string) => set((state) => {

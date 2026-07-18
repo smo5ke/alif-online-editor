@@ -156,6 +156,18 @@ export default function DynamicNode({ data, id }: { data: NodeData; id: string }
                     />
                   </Handle>
                   <span className="text-sm font-bold text-slate-300 mr-2">{input.label}</span>
+                  {data.allowDynamicInputs && input.id !== 'seq_in' && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        useEditorStore.getState().removeDynamicInput(id, input.id);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 mr-2 text-slate-500 hover:text-red-500 transition-opacity nodrag"
+                      title="حذف"
+                    >
+                      <LucideIcons.Minus size={14} />
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -180,6 +192,18 @@ export default function DynamicNode({ data, id }: { data: NodeData; id: string }
               const pinColor = getTypeColor(output.type);
               return (
                 <div key={`out-${output.id}`} className="relative flex items-center justify-end h-8 px-4 group">
+                  {data.allowDynamicOutputs && output.id !== 'seq_out' && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        useEditorStore.getState().removeDynamicOutput(id, output.id);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 ml-2 text-slate-500 hover:text-red-500 transition-opacity nodrag"
+                      title="حذف"
+                    >
+                      <LucideIcons.Minus size={14} />
+                    </button>
+                  )}
                   <span className="text-sm font-bold text-slate-300 ml-2">{output.label}</span>
                   <Handle
                     type="source"
