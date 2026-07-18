@@ -57,81 +57,81 @@ export function generateAlifCodeFromGraph(
       if (type === 'بيانات/إدخال مستخدم') return `ادخل("${getControlValue('prompt')}")`;
       if (type === 'متغيرات/قراءة') return getControlValue('var_name');
       if (type === 'بيانات/طول') {
-        let val = resolveInput(node.id, 'val_in') || '""';
+        let val = resolveInput(node.id, 'val_in') ?? '""';
         return `طول(${val})`;
       }
       if (type === 'بيانات/تحويل لنص') {
-        let val = resolveInput(node.id, 'val_in') || 'عدم';
+        let val = resolveInput(node.id, 'val_in') ?? 'عدم';
         return `نص(${val})`;
       }
       if (type === 'بيانات/تحويل لرقم') {
-        let val = resolveInput(node.id, 'val_in') || 'عدم';
+        let val = resolveInput(node.id, 'val_in') ?? 'عدم';
         return `عشري(${val})`;
       }
       if (type === 'بيانات/نوع') {
-        let val = resolveInput(node.id, 'val_in') || 'عدم';
+        let val = resolveInput(node.id, 'val_in') ?? 'عدم';
         return `نوع(${val})`;
       }
       if (type === 'بيانات/عشوائي') {
-        let a = resolveInput(node.id, 'min_in') || 1;
-        let b = resolveInput(node.id, 'max_in') || 100;
+        let a = resolveInput(node.id, 'min_in') ?? 1;
+        let b = resolveInput(node.id, 'max_in') ?? 100;
         return `عشوائي(${a}, ${b})`;
       }
       if (type === 'بيانات/تقريب') {
-        let val = resolveInput(node.id, 'val_in') || 0;
+        let val = resolveInput(node.id, 'val_in') ?? 0;
         return `قرب(${val})`;
       }
       if (type === 'دوال/استدعاء') {
-        let arg = resolveInput(node.id, 'arg_in') || 'عدم';
+        let arg = resolveInput(node.id, 'arg_in') ?? 'عدم';
         return `${getControlValue('func_name')}(${arg})`;
       }
       if (type === 'شروط/ليس') {
-        let val = resolveInput(node.id, 'val_in') || 'خطأ';
+        let val = resolveInput(node.id, 'val_in') ?? 'خطأ';
         return `(ليس ${val})`;
       }
       if (type === 'بيانات/حساب' || type === 'شروط/مقارنة' || type === 'شروط/عملية منطقية') {
-        let a = resolveInput(node.id, 'a_in') || 0;
-        let b = resolveInput(node.id, 'b_in') || 0;
+        let a = resolveInput(node.id, 'a_in') ?? 0;
+        let b = resolveInput(node.id, 'b_in') ?? 0;
         return `(${a} ${getControlValue('op')} ${b})`;
       }
       if (type === 'رياضيات/باقي القسمة') {
-        let a = resolveInput(node.id, 'a_in') || 0;
-        let b = resolveInput(node.id, 'b_in') || 1;
+        let a = resolveInput(node.id, 'a_in') ?? 0;
+        let b = resolveInput(node.id, 'b_in') ?? 1;
         return `(${a} % ${b})`;
       }
       if (type === 'بيانات/دمج نصوص') {
-        let a = resolveInput(node.id, 'a_in') || '""';
-        let b = resolveInput(node.id, 'b_in') || '""';
+        let a = resolveInput(node.id, 'a_in') ?? '""';
+        let b = resolveInput(node.id, 'b_in') ?? '""';
         return `(${a} + ${b})`;
       }
       if (type === 'مصفوفات/جديدة') {
         const inputs = data.inputs || [];
-        const elements = inputs.map((input: any) => resolveInput(node.id, input.id) || 'عدم');
+        const elements = inputs.map((input: any) => resolveInput(node.id, input.id) ?? 'عدم');
         return `[${elements.join(', ')}]`;
       }
       if (type === 'مصفوفات/قراءة') {
-        let arrName = resolveInput(node.id, 'arr_in') || 'مصفوفة';
-        let idx = resolveInput(node.id, 'idx_in') || 0;
+        let arrName = resolveInput(node.id, 'arr_in') ?? 'مصفوفة';
+        let idx = resolveInput(node.id, 'idx_in') ?? 0;
         return `${arrName}[${idx}]`;
       }
       if (type === 'نصوص/قص') {
-        let str = resolveInput(node.id, 'str_in') || '""';
-        let start = resolveInput(node.id, 'start_in') || 0;
-        let end = resolveInput(node.id, 'end_in') || 0;
+        let str = resolveInput(node.id, 'str_in') ?? '""';
+        let start = resolveInput(node.id, 'start_in') ?? 0;
+        let end = resolveInput(node.id, 'end_in') ?? 0;
         return `${str}[${start}:${end}]`;
       }
       if (type === 'نصوص/استبدال') {
-        let str = resolveInput(node.id, 'str_in') || '""';
-        let oldStr = resolveInput(node.id, 'old_in') || '""';
-        let newStr = resolveInput(node.id, 'new_in') || '""';
+        let str = resolveInput(node.id, 'str_in') ?? '""';
+        let oldStr = resolveInput(node.id, 'old_in') ?? '""';
+        let newStr = resolveInput(node.id, 'new_in') ?? '""';
         return `${str}.استبدل(${oldStr}, ${newStr})`;
       }
       if (type === 'نصوص/تكبير') {
-        let str = resolveInput(node.id, 'str_in') || '""';
+        let str = resolveInput(node.id, 'str_in') ?? '""';
         return `${str}.كبير()`;
       }
       if (type === 'نصوص/تصغير') {
-        let str = resolveInput(node.id, 'str_in') || '""';
+        let str = resolveInput(node.id, 'str_in') ?? '""';
         return `${str}.صغير()`;
       }
       if (type === 'فهارس/جديد') {
@@ -139,46 +139,46 @@ export function generateAlifCodeFromGraph(
         const pairs = [];
         for (let i = 0; i < inputs.length; i += 2) {
           if (inputs[i] && inputs[i+1]) {
-            const key = resolveInput(node.id, inputs[i].id) || '""';
-            const val = resolveInput(node.id, inputs[i+1].id) || 'عدم';
+            const key = resolveInput(node.id, inputs[i].id) ?? '""';
+            const val = resolveInput(node.id, inputs[i+1].id) ?? 'عدم';
             pairs.push(`${key}: ${val}`);
           }
         }
         return `{${pairs.join(', ')}}`;
       }
       if (type === 'فهارس/قراءة') {
-        let dictName = resolveInput(node.id, 'dict_in') || 'فهرس';
-        let key = resolveInput(node.id, 'key_in') || '""';
+        let dictName = resolveInput(node.id, 'dict_in') ?? 'فهرس';
+        let key = resolveInput(node.id, 'key_in') ?? '""';
         return `${dictName}[${key}]`;
       }
       if (type === 'ملفات/فتح') {
-        let path = resolveInput(node.id, 'path_in') || '""';
+        let path = resolveInput(node.id, 'path_in') ?? '""';
         return `افتح(${path}, "${getControlValue('mode')}")`;
       }
       if (type === 'ملفات/قراءة') {
-        let file = resolveInput(node.id, 'file_in') || 'س';
+        let file = resolveInput(node.id, 'file_in') ?? 'س';
         return getControlValue('type') === 'سطر' ? `${file}.اقرا_سطر()` : `${file}.اقرا()`;
       }
       if (type === 'وقت/الآن') return `الوقت.الان()`;
       if (type === 'وقت/منسق') return `الوقت.منسق()`;
       if (type === 'رياضيات/دوال') {
-        let val = resolveInput(node.id, 'val_in') || 0;
+        let val = resolveInput(node.id, 'val_in') ?? 0;
         return `الرياضيات.${getControlValue('func')}(${val})`;
       }
       if (type === 'فهارس/مفاتيح_وقيم') {
-        let dict = resolveInput(node.id, 'dict_in') || 'فهرس';
+        let dict = resolveInput(node.id, 'dict_in') ?? 'فهرس';
         return `${dict}.${getControlValue('type')}()`;
       }
       if (type === 'شروط/انتماء') {
-        let val = resolveInput(node.id, 'val_in') || '""';
-        let list = resolveInput(node.id, 'list_in') || '[]';
+        let val = resolveInput(node.id, 'val_in') ?? '""';
+        let list = resolveInput(node.id, 'list_in') ?? '[]';
         return `(${val} ${getControlValue('op')} ${list})`;
       }
       if (type === 'كائنات/هذا') {
         return `هذا.${getControlValue('prop_name')}`;
       }
       if (type === 'كائنات/إنشاء') {
-        let arg = resolveInput(node.id, 'arg_in') || '';
+        let arg = resolveInput(node.id, 'arg_in') ?? '';
         return `${getControlValue('class_name')}(${arg})`;
       }
       return 'عدم';
@@ -207,7 +207,7 @@ export function generateAlifCodeFromGraph(
         if (data.isMacro) {
           const mName = (data.macroId || 'م_مجهول').replace('macro_', 'م_');
           const mInputs = (data.inputs || []).filter((i: any) => i.type !== 'event');
-          const resolvedArgs = mInputs.map((inp: any) => resolveInput(currNode.id, inp.id) || 'عدم');
+          const resolvedArgs = mInputs.map((inp: any) => resolveInput(currNode.id, inp.id) ?? 'عدم');
           
           const mOutputs = (data.outputs || []).filter((o: any) => o.type !== 'event');
           if (mOutputs.length > 0) {
@@ -222,7 +222,7 @@ export function generateAlifCodeFromGraph(
 
         if (type === 'ماكرو/مخرجات') {
           const mInputs = (data.inputs || []).filter((i: any) => i.type !== 'event');
-          const resolvedReturns = mInputs.map((inp: any) => resolveInput(currNode.id, inp.id) || 'عدم');
+          const resolvedReturns = mInputs.map((inp: any) => resolveInput(currNode.id, inp.id) ?? 'عدم');
           if (resolvedReturns.length > 0) {
              code += indent + `ارجع ${resolvedReturns.join(', ')} # @node:${currNode.id}\n`;
           } else {
@@ -232,25 +232,25 @@ export function generateAlifCodeFromGraph(
         }
         
         if (type === 'أوامر/اطبع') {
-          let printVal = resolveInput(currNode.id, 'val_in') || '""';
+          let printVal = resolveInput(currNode.id, 'val_in') ?? '""';
           code += indent + `اطبع(${printVal}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'متغيرات/إسناد') {
           let varName = getControlValue('var_name');
-          let val = resolveInput(currNode.id, 'val_in') || 'عدم';
+          let val = resolveInput(currNode.id, 'val_in') ?? 'عدم';
           code += indent + `${varName} = ${val} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'متغيرات/إسناد رجعي') {
           let varName = getControlValue('var_name');
           let op = getControlValue('op');
-          let val = resolveInput(currNode.id, 'val_in') || 'عدم';
+          let val = resolveInput(currNode.id, 'val_in') ?? 'عدم';
           code += indent + `${varName} ${op} ${val} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'متغيرات/إسناد شرطي') {
           let varName = getControlValue('var_name');
-          let cond = resolveInput(currNode.id, 'cond_in') || 'خطأ';
-          let trueVal = resolveInput(currNode.id, 'true_in') || 'عدم';
-          let falseVal = resolveInput(currNode.id, 'false_in') || 'عدم';
+          let cond = resolveInput(currNode.id, 'cond_in') ?? 'خطأ';
+          let trueVal = resolveInput(currNode.id, 'true_in') ?? 'عدم';
+          let falseVal = resolveInput(currNode.id, 'false_in') ?? 'عدم';
           code += indent + `${varName} = ${trueVal} اذا ${cond} والا ${falseVal} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'متغيرات/حذف') {
@@ -258,42 +258,42 @@ export function generateAlifCodeFromGraph(
           code += indent + `احذف ${varName} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'مصفوفات/إضافة') {
-          let arrName = resolveInput(currNode.id, 'arr_in') || 'مصفوفة';
-          let val = resolveInput(currNode.id, 'val_in') || 'عدم';
+          let arrName = resolveInput(currNode.id, 'arr_in') ?? 'مصفوفة';
+          let val = resolveInput(currNode.id, 'val_in') ?? 'عدم';
           code += indent + `${arrName}.اضف(${val}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'مصفوفات/إزالة') {
-          let arrName = resolveInput(currNode.id, 'arr_in') || 'مصفوفة';
-          let val = resolveInput(currNode.id, 'val_in') || 'عدم';
+          let arrName = resolveInput(currNode.id, 'arr_in') ?? 'مصفوفة';
+          let val = resolveInput(currNode.id, 'val_in') ?? 'عدم';
           code += indent + `${arrName}.امسح(${val}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'مصفوفات/إدراج') {
-          let arrName = resolveInput(currNode.id, 'arr_in') || 'مصفوفة';
-          let idx = resolveInput(currNode.id, 'idx_in') || 0;
-          let val = resolveInput(currNode.id, 'val_in') || 'عدم';
+          let arrName = resolveInput(currNode.id, 'arr_in') ?? 'مصفوفة';
+          let idx = resolveInput(currNode.id, 'idx_in') ?? 0;
+          let val = resolveInput(currNode.id, 'val_in') ?? 'عدم';
           code += indent + `${arrName}.ادرج(${idx}, ${val}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'مصفوفات/ترتيب') {
-          let arrName = resolveInput(currNode.id, 'arr_in') || 'مصفوفة';
+          let arrName = resolveInput(currNode.id, 'arr_in') ?? 'مصفوفة';
           code += indent + `${arrName}.رتب() # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'فهارس/إضافة') {
-          let dictName = resolveInput(currNode.id, 'dict_in') || 'فهرس';
-          let key = resolveInput(currNode.id, 'key_in') || '""';
-          let val = resolveInput(currNode.id, 'val_in') || 'عدم';
+          let dictName = resolveInput(currNode.id, 'dict_in') ?? 'فهرس';
+          let key = resolveInput(currNode.id, 'key_in') ?? '""';
+          let val = resolveInput(currNode.id, 'val_in') ?? 'عدم';
           code += indent + `${dictName}[${key}] = ${val} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'دوال/استدعاء') {
-          let arg = resolveInput(currNode.id, 'arg_in') || 'عدم';
+          let arg = resolveInput(currNode.id, 'arg_in') ?? 'عدم';
           code += indent + `${getControlValue('func_name')}(${arg}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'ملفات/إغلاق') {
-          let file = resolveInput(currNode.id, 'file_in') || 'س';
+          let file = resolveInput(currNode.id, 'file_in') ?? 'س';
           code += indent + `${file}.اغلق() # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'كائنات/تعيين_خاصية') {
           let prop = getControlValue('prop_name');
-          let val = resolveInput(currNode.id, 'val_in') || 'عدم';
+          let val = resolveInput(currNode.id, 'val_in') ?? 'عدم';
           code += indent + `هذا.${prop} = ${val} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'حزم/استيراد') {
@@ -301,15 +301,15 @@ export function generateAlifCodeFromGraph(
           code += indent + `استورد ${pkg} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'أوامر/انتظر') {
-          let ms = resolveInput(currNode.id, 'ms_in') || 3;
+          let ms = resolveInput(currNode.id, 'ms_in') ?? 3;
           code += indent + `الوقت.غفوة(${ms}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'دوال/إرجاع') {
-          let retVal = resolveInput(currNode.id, 'val_in') || 'عدم';
+          let retVal = resolveInput(currNode.id, 'val_in') ?? 'عدم';
           code += indent + `ارجع ${retVal} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'شروط/اذا') {
-          let cond = resolveInput(currNode.id, 'cond_in') || 'خطأ';
+          let cond = resolveInput(currNode.id, 'cond_in') ?? 'خطأ';
           code += indent + `اذا ${cond}:\n`;
           let trueNodeId = getNextNodeId(currNode.id, 'true_out');
           if (trueNodeId) code += walkExecution(trueNodeId, indent + '\t', new Set(pathVisited));
@@ -322,8 +322,8 @@ export function generateAlifCodeFromGraph(
           }
           break; // Branches are fully evaluated recursively
         } else if (type === 'حلقات/لكل') {
-          let startVal = resolveInput(currNode.id, 'start_in') || 1;
-          let endVal = resolveInput(currNode.id, 'end_in') || 10;
+          let startVal = resolveInput(currNode.id, 'start_in') ?? 1;
+          let endVal = resolveInput(currNode.id, 'end_in') ?? 10;
           let varName = getControlValue('var_name') || 'س';
           code += indent + `لكل ${varName} في مدى(${startVal}, ${endVal}):\n`;
           
@@ -333,7 +333,7 @@ export function generateAlifCodeFromGraph(
           
           currNodeId = getNextNodeId(currNode.id, 'done_out');
         } else if (type === 'حلقات/بينما') {
-          let cond = resolveInput(currNode.id, 'cond_in') || 'خطأ';
+          let cond = resolveInput(currNode.id, 'cond_in') ?? 'خطأ';
           code += indent + `بينما ${cond}:\n`;
           
           let bodyNodeId = getNextNodeId(currNode.id, 'body_out');
