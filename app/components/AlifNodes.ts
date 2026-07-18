@@ -8,20 +8,6 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     color: '#ec4899', // Pink
     outputs: [{ id: 'seq_out', label: 'تسلسل', type: 'event' }],
   },
-  'شبكة/جلب': {
-    label: 'جلب بيانات',
-    subtitle: 'API Request',
-    iconName: 'Globe',
-    color: '#10b981', // Emerald
-    inputs: [
-      { id: 'seq_in', label: 'تسلسل', type: 'event' },
-      { id: 'url_in', label: 'الرابط', type: 'data' },
-    ],
-    outputs: [
-      { id: 'seq_out', label: 'التالي', type: 'event' },
-      { id: 'data_out', label: 'البيانات', type: 'data' }
-    ],
-  },
   'متغيرات/إسناد رجعي': {
     label: 'إسناد رجعي', subtitle: '+=, -=, ...', iconName: 'ArrowRightLeft', color: '#f97316',
     inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }, { id: 'val_in', label: 'القيمة', type: 'data' }],

@@ -239,10 +239,6 @@ export function generateAlifCodeFromGraph(nodes: Node[], edges: Edge[]): string 
         let arg = resolveInput(currNode.id, 'arg_in') || 'عدم';
         code += indent + `${getControlValue('func_name')}(${arg})\n`;
         currNodeId = getNextNodeId(currNode.id, 'seq_out');
-      } else if (type === 'شبكة/جلب') {
-        let url = resolveInput(currNode.id, 'url_in') || '""';
-        code += indent + `جلب(${url})\n`;
-        currNodeId = getNextNodeId(currNode.id, 'seq_out');
       } else if (type === 'ملفات/إغلاق') {
         let file = resolveInput(currNode.id, 'file_in') || 'س';
         code += indent + `${file}.اغلق()\n`;
