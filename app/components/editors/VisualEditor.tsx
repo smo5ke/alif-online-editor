@@ -25,6 +25,7 @@ export default function VisualEditor() {
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [editMenuPos, setEditMenuPos] = useState<{ x: number; y: number; nodeId: string } | null>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const wrapperRef = useRef<HTMLDivElement>(null);
   
   const [showCodeModal, setShowCodeModal] = useState(false);
@@ -41,18 +42,56 @@ export default function VisualEditor() {
   }, [nodes, edges, setNodes, setEdges]);
 
   const onConnect = useCallback((params: Connection) => {
-    setEdges((eds) => [
-      ...eds,
-      {
-        ...params,
-        id: `e-${params.source}-${params.target}-${uuidv4()}`,
-        type: 'deletable',
-        data: {
-          onDelete: (id: string) => setEdges((edges) => edges.filter((e) => e.id !== id))
+    const sourceNode = nodes.find(n => n.id === params.source);
+    const targetNode = nodes.find(n => n.id === params.target);
+    
+    if (sourceNode && targetNode) {
+      const sourceData = sourceNode.data as NodeData;
+      const targetData = targetNode.data as NodeData;
+      
+      const outputPort = sourceData.outputs?.find(o => o.id === params.sourceHandle);
+      
+      // We look up the target port in inputs. For dynamic pins, they might not be in the static template, 
+      // but they are stored in node.data.inputs, so this works for them too!
+      const inputPort = targetData.inputs?.find(i => i.id === params.targetHandle);
+      
+      // If we found both ports, validate their types
+      if (outputPort && inputPort) {
+        if (outputPort.type !== inputPort.type) {
+          alert('⚠️ غير مسموح: لا يمكن توصيل "تسلسل أوامر" مع "نقطة بيانات". يرجى توصيل الألوان المتشابهة.');
+          return; // Prevent connection
         }
       }
-    ]);
-  }, [setEdges]);
+      
+      // Styling the wire
+      let strokeColor = '#fff';
+      let animated = false;
+      let strokeWidth = 2;
+      
+      if (outputPort?.type === 'event' || (!outputPort && params.sourceHandle === 'seq_out')) {
+        strokeColor = '#ec4899'; // Pink for sequence/events
+        animated = true;
+        strokeWidth = 3;
+      } else {
+        strokeColor = '#10b981'; // Emerald for data
+        animated = false;
+      }
+      
+      setEdges((eds) => [
+        ...eds,
+        {
+          ...params,
+          id: `e-${params.source}-${params.target}-${uuidv4()}`,
+          type: 'deletable',
+          animated,
+          style: { stroke: strokeColor, strokeWidth },
+          data: {
+            onDelete: (id: string) => setEdges((edges) => edges.filter((e) => e.id !== id))
+          }
+        }
+      ]);
+    }
+  }, [nodes, setEdges]);
 
   const onControlChange = useCallback((nodeId: string, controlId: string, value: any) => {
     setNodes((nds) =>
@@ -134,6 +173,14 @@ export default function VisualEditor() {
       >
         <Background color="#334155" gap={25} size={1.5} />
         <Controls className="!bottom-20 md:!bottom-4" />
+        <MiniMap 
+          className="!bg-slate-800/80 !border !border-slate-600/50 !rounded-xl !overflow-hidden !bottom-24 md:!bottom-6 md:!left-6 !shadow-2xl" 
+          nodeColor={(n) => {
+            const def = nodeDefinitions[n.type || ''];
+            return def?.color || '#475569';
+          }}
+          maskColor="rgba(0, 0, 0, 0.4)"
+        />
       </ReactFlow>
 
       <div className="absolute bottom-6 md:bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-3 z-30">
@@ -187,11 +234,35 @@ export default function VisualEditor() {
           >
             <div className="bg-slate-700/80 px-4 py-3 md:py-2 flex justify-between items-center shrink-0 border-b border-slate-600">
               <span className="text-sm md:text-xs font-bold text-emerald-300">🚀 إضافة أوامر</span>
-              <button onClick={() => setMenuPos(null)} className="text-slate-300 hover:text-white text-sm md:text-xs px-2 py-1 bg-slate-600/50 hover:bg-slate-500 rounded transition-colors">✕</button>
+              <button onClick={() => { setMenuPos(null); setSearchQuery(''); }} className="text-slate-300 hover:text-white text-sm md:text-xs px-2 py-1 bg-slate-600/50 hover:bg-slate-500 rounded transition-colors">✕</button>
             </div>
+            
+            <div className="px-3 py-2 bg-slate-800 border-b border-slate-600 shrink-0">
+              <input
+                type="text"
+                autoFocus
+                placeholder="ابحث عن أمر..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-600 rounded p-1.5 text-right text-sm text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                dir="rtl"
+              />
+            </div>
+
             <div className="overflow-y-auto custom-menu-scroll pb-6 md:pb-0 flex-1">
               {(() => {
-                const grouped = Object.entries(nodeDefinitions).reduce((acc, [key, def]) => {
+                const filteredEntries = Object.entries(nodeDefinitions).filter(([key, def]) => {
+                  const search = searchQuery.toLowerCase();
+                  return def.label.toLowerCase().includes(search) || 
+                         (def.subtitle && def.subtitle.toLowerCase().includes(search)) ||
+                         key.toLowerCase().includes(search);
+                });
+
+                if (filteredEntries.length === 0) {
+                  return <div className="p-4 text-center text-slate-400 text-sm">لم يتم العثور على نتائج</div>;
+                }
+
+                const grouped = filteredEntries.reduce((acc, [key, def]) => {
                   const category = key.split('/')[0] || 'أخرى';
                   if (!acc[category]) acc[category] = [];
                   acc[category].push({ key, def });
