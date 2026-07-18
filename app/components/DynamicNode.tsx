@@ -162,7 +162,7 @@ export default function DynamicNode({ data, id }: { data: NodeData; id: string }
                         e.stopPropagation();
                         useEditorStore.getState().removeDynamicInput(id, input.id);
                       }}
-                      className="opacity-0 group-hover:opacity-100 mr-2 text-slate-500 hover:text-red-500 transition-opacity nodrag"
+                      className="opacity-100 md:opacity-0 md:group-hover:opacity-100 mr-2 text-slate-500 hover:text-red-500 transition-opacity nodrag"
                       title="حذف"
                     >
                       <LucideIcons.Minus size={14} />
@@ -198,7 +198,7 @@ export default function DynamicNode({ data, id }: { data: NodeData; id: string }
                         e.stopPropagation();
                         useEditorStore.getState().removeDynamicOutput(id, output.id);
                       }}
-                      className="opacity-0 group-hover:opacity-100 ml-2 text-slate-500 hover:text-red-500 transition-opacity nodrag"
+                      className="opacity-100 md:opacity-0 md:group-hover:opacity-100 ml-2 text-slate-500 hover:text-red-500 transition-opacity nodrag"
                       title="حذف"
                     >
                       <LucideIcons.Minus size={14} />
