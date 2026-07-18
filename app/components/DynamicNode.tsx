@@ -11,20 +11,36 @@ export type NodeControl = {
   options?: string[];
 };
 
+export type DataType = 'event' | 'text' | 'number' | 'boolean' | 'array' | 'dictionary' | 'any' | 'data';
+
 export type NodeData = {
   label: string;
   subtitle?: string;
   color?: string;
   iconName?: keyof typeof LucideIcons;
   iconColor?: string;
-  inputs?: { id: string; label: string; type: 'event' | 'data' }[];
-  outputs?: { id: string; label: string; type: 'event' | 'data' }[];
+  inputs?: { id: string; label: string; type: DataType }[];
+  outputs?: { id: string; label: string; type: DataType }[];
   controls?: NodeControl[];
   allowDynamicInputs?: boolean | 'pair';
   allowDynamicOutputs?: boolean;
   onControlChange?: (controlId: string, value: any) => void;
   onAddDynamicInput?: (nodeId: string) => void;
   onAddDynamicOutput?: (nodeId: string) => void;
+};
+
+export const getTypeColor = (type?: DataType) => {
+  switch(type) {
+    case 'event': return '#10b981'; // emerald-500
+    case 'text': return '#a855f7'; // purple-500
+    case 'number': return '#22c55e'; // green-500
+    case 'boolean': return '#ef4444'; // red-500
+    case 'array': return '#eab308'; // yellow-500
+    case 'dictionary': return '#3b82f6'; // blue-500
+    case 'any':
+    case 'data':
+    default: return '#60a5fa'; // blue-400
+  }
 };
 
 export default function DynamicNode({ data, id }: { data: NodeData; id: string }) {
@@ -120,20 +136,26 @@ export default function DynamicNode({ data, id }: { data: NodeData; id: string }
         {(allInputs.length > 0 || allOutputs.length > 0 || data.allowDynamicInputs) && (
           <div className="flex flex-col gap-2 py-4">
             {/* Inputs (Right side) */}
-            {allInputs.map((input) => (
-              <div key={`in-${input.id}`} className="relative flex items-center justify-start h-8 px-4 group">
-                <Handle
-                  type="target"
-                  position={Position.Right}
-                  id={input.id}
-                  className="flex items-center justify-center w-10 h-10 bg-transparent border-none z-10 cursor-crosshair -right-5"
-                >
-                  {/* Large Circular Visual Handle */}
-                  <div className="w-[18px] h-[18px] rounded-full bg-[#18181b] border-[3px] border-slate-500 shadow-md transition-all duration-200 group-hover:scale-125 group-hover:border-emerald-400 group-hover:bg-emerald-950 pointer-events-none" />
-                </Handle>
-                <span className="text-sm font-bold text-slate-300 mr-2">{input.label}</span>
-              </div>
-            ))}
+            {allInputs.map((input) => {
+              const pinColor = getTypeColor(input.type);
+              return (
+                <div key={`in-${input.id}`} className="relative flex items-center justify-start h-8 px-4 group">
+                  <Handle
+                    type="target"
+                    position={Position.Right}
+                    id={input.id}
+                    className="flex items-center justify-center w-10 h-10 bg-transparent border-none z-10 cursor-crosshair -right-5"
+                  >
+                    {/* Large Circular Visual Handle */}
+                    <div 
+                      className="w-[18px] h-[18px] rounded-full bg-[#18181b] border-[3px] shadow-md transition-all duration-200 group-hover:scale-125 pointer-events-none"
+                      style={{ borderColor: pinColor, boxShadow: `0 0 10px ${pinColor}40` }}
+                    />
+                  </Handle>
+                  <span className="text-sm font-bold text-slate-300 mr-2">{input.label}</span>
+                </div>
+              );
+            })}
             
             {data.allowDynamicInputs && (
               <div className="flex justify-start px-4 mt-1">
@@ -151,20 +173,26 @@ export default function DynamicNode({ data, id }: { data: NodeData; id: string }
             )}
 
             {/* Outputs (Left side) */}
-            {allOutputs.map((output) => (
-              <div key={`out-${output.id}`} className="relative flex items-center justify-end h-8 px-4 group">
-                <span className="text-sm font-bold text-slate-300 ml-2">{output.label}</span>
-                <Handle
-                  type="source"
-                  position={Position.Left}
-                  id={output.id}
-                  className="flex items-center justify-center w-10 h-10 bg-transparent border-none z-10 cursor-crosshair -left-5"
-                >
-                  {/* Large Circular Visual Handle */}
-                  <div className="w-[18px] h-[18px] rounded-full bg-[#18181b] border-[3px] border-slate-500 shadow-md transition-all duration-200 group-hover:scale-125 group-hover:border-emerald-400 group-hover:bg-emerald-950 pointer-events-none" />
-                </Handle>
-              </div>
-            ))}
+            {allOutputs.map((output) => {
+              const pinColor = getTypeColor(output.type);
+              return (
+                <div key={`out-${output.id}`} className="relative flex items-center justify-end h-8 px-4 group">
+                  <span className="text-sm font-bold text-slate-300 ml-2">{output.label}</span>
+                  <Handle
+                    type="source"
+                    position={Position.Left}
+                    id={output.id}
+                    className="flex items-center justify-center w-10 h-10 bg-transparent border-none z-10 cursor-crosshair -left-5"
+                  >
+                    {/* Large Circular Visual Handle */}
+                    <div 
+                      className="w-[18px] h-[18px] rounded-full bg-[#18181b] border-[3px] shadow-md transition-all duration-200 group-hover:scale-125 pointer-events-none"
+                      style={{ borderColor: pinColor, boxShadow: `0 0 10px ${pinColor}40` }}
+                    />
+                  </Handle>
+                </div>
+              );
+            })}
           </div>
         )}
 

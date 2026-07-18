@@ -1,19 +1,26 @@
 import React from 'react';
-import { BaseEdge, EdgeLabelRenderer, getBezierPath, EdgeProps } from '@xyflow/react';
+import { BaseEdge, EdgeLabelRenderer, getBezierPath, EdgeProps, useReactFlow } from '@xyflow/react';
+import { getTypeColor } from './DynamicNode';
 
-export default function DeletableEdge({
-  id,
-  sourceX,
-  sourceY,
-  targetX,
-  targetY,
-  sourcePosition,
-  targetPosition,
-  style = {},
-  markerEnd,
-  data,
-  selected,
-}: EdgeProps) {
+export default function DeletableEdge(props: EdgeProps) {
+  const {
+    id,
+    source,
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+    sourceHandleId,
+    style = {},
+    markerEnd,
+    data,
+    selected,
+  } = props;
+  
+  const { getNode } = useReactFlow();
+
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -23,9 +30,21 @@ export default function DeletableEdge({
     targetPosition,
   });
 
+  const sourceNode = getNode(source);
+  const outputPort = (sourceNode?.data?.outputs as any[])?.find(o => o.id === sourceHandleId);
+  const sourceType = outputPort?.type || 'data';
+  const edgeColor = getTypeColor(sourceType);
+
+  const edgeStyle = {
+    ...style,
+    strokeWidth: selected ? 4 : 2,
+    stroke: selected ? '#ffffff' : edgeColor,
+    filter: `drop-shadow(0 0 5px ${edgeColor}60)`
+  };
+
   return (
     <>
-      <BaseEdge path={edgePath} markerEnd={markerEnd} style={{ ...style, strokeWidth: selected ? 3 : 1.5 }} />
+      <BaseEdge path={edgePath} markerEnd={markerEnd} style={edgeStyle} />
       
       {selected && (
         <EdgeLabelRenderer>

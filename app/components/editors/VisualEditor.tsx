@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { ReactFlow, MiniMap, Controls, Background, Connection, ReactFlowInstance } from '@xyflow/react';
+import { ReactFlow, MiniMap, Controls, Background, Connection, Edge, ReactFlowInstance } from '@xyflow/react';
 import { v4 as uuidv4 } from 'uuid';
 import { useEditorStore } from '../../store/useEditorStore';
 import DynamicNode, { NodeData } from '../DynamicNode';
@@ -99,32 +99,28 @@ export default function VisualEditor() {
       const targetData = targetNode.data as NodeData;
       
       const outputPort = sourceData.outputs?.find(o => o.id === params.sourceHandle);
-      
-      // We look up the target port in inputs. For dynamic pins, they might not be in the static template, 
-      // but they are stored in node.data.inputs, so this works for them too!
       const inputPort = targetData.inputs?.find(i => i.id === params.targetHandle);
       
-      // If we found both ports, validate their types
       if (outputPort && inputPort) {
-        if (outputPort.type !== inputPort.type) {
-          alert('⚠️ غير مسموح: لا يمكن توصيل "تسلسل أوامر" مع "نقطة بيانات". يرجى توصيل الألوان المتشابهة.');
-          return; // Prevent connection
+        const sourceType = outputPort.type;
+        const targetType = inputPort.type;
+        
+        let isValid = false;
+        if (sourceType === 'event' || targetType === 'event') {
+          isValid = sourceType === targetType;
+        } else if (sourceType === 'data' || sourceType === 'any' || targetType === 'data' || targetType === 'any') {
+          isValid = true;
+        } else {
+          isValid = sourceType === targetType;
+        }
+
+        if (!isValid) {
+          alert('⚠️ نوع البيانات غير متطابق. تأكد من توافق أنواع المخرجات والمدخلات (النص مع النص، الرقم مع الرقم، إلخ).');
+          return;
         }
       }
       
-      // Styling the wire
-      let strokeColor = '#fff';
-      let animated = false;
-      let strokeWidth = 2;
-      
-      if (outputPort?.type === 'event' || (!outputPort && params.sourceHandle === 'seq_out')) {
-        strokeColor = '#ec4899'; // Pink for sequence/events
-        animated = true;
-        strokeWidth = 3;
-      } else {
-        strokeColor = '#10b981'; // Emerald for data
-        animated = false;
-      }
+      const animated = outputPort?.type === 'event' || (!outputPort && params.sourceHandle === 'seq_out');
       
       setEdges((eds) => [
         ...eds,
@@ -133,14 +129,36 @@ export default function VisualEditor() {
           id: `e-${params.source}-${params.target}-${uuidv4()}`,
           type: 'deletable',
           animated,
-          style: { stroke: strokeColor, strokeWidth },
           data: {
-            onDelete: (id: string) => setEdges((edges) => edges.filter((e) => e.id !== id))
+            onDelete: (id: string) => {
+              commitHistory(); // Record deletion
+              setEdges((edges) => edges.filter((e) => e.id !== id));
+            }
           }
         }
       ]);
     }
-  }, [nodes, setEdges]);
+  }, [nodes, setEdges, commitHistory]);
+
+  const isValidConnection = useCallback((connection: Connection | Edge) => {
+    const sourceNode = nodes.find(n => n.id === connection.source);
+    const targetNode = nodes.find(n => n.id === connection.target);
+    if (!sourceNode || !targetNode) return false;
+
+    const sourceData = sourceNode.data as NodeData;
+    const targetData = targetNode.data as NodeData;
+
+    const sourceType = sourceData.outputs?.find(o => o.id === connection.sourceHandle)?.type || 'data';
+    const targetType = targetData.inputs?.find(i => i.id === connection.targetHandle)?.type || 'data';
+
+    if (sourceType === 'event' || targetType === 'event') {
+      return sourceType === targetType;
+    }
+    if (sourceType === 'data' || sourceType === 'any' || targetType === 'data' || targetType === 'any') {
+      return true;
+    }
+    return sourceType === targetType;
+  }, [nodes]);
 
   const onControlChange = useCallback((nodeId: string, controlId: string, value: any) => {
     setNodes((nds) =>
@@ -259,6 +277,7 @@ export default function VisualEditor() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        isValidConnection={isValidConnection}
         onNodeDragStart={() => commitHistory()}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}

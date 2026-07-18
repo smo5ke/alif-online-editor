@@ -65,7 +65,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
   },
   'رياضيات/دوال': {
     label: 'دالة رياضية', subtitle: 'الرياضيات', iconName: 'Sigma', color: '#3b82f6',
-    inputs: [{ id: 'val_in', label: 'القيمة', type: 'data' }], outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
+    inputs: [{ id: 'val_in', label: 'القيمة', type: 'number' }], outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
     controls: [{ id: 'func', type: 'select', label: 'الدالة', value: 'جيب', options: ['جيب', 'تجيب', 'ظل', 'قيمة_مطلقة', 'المضروب', 'قم_اكبر', 'قم_اصغر', 'حد_اعلى', 'حد_ادنى', 'لوغ', 'راديان', 'درجة'] }],
   },
   'مصفوفات/إدراج': {
@@ -274,7 +274,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     subtitle: 'قيمة رقمية',
     iconName: 'Hash',
     color: '#3b82f6',
-    outputs: [{ id: 'val_out', label: 'رقم', type: 'data' }],
+    outputs: [{ id: 'val_out', label: 'رقم', type: 'number' }],
     controls: [{ id: 'value', type: 'number', label: 'الرقم', value: 0 }],
   },
   'بيانات/نص': {
@@ -282,7 +282,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     subtitle: 'سلسلة نصية',
     iconName: 'Type',
     color: '#eab308', // Yellow
-    outputs: [{ id: 'val_out', label: 'نص', type: 'data' }],
+    outputs: [{ id: 'val_out', label: 'نص', type: 'text' }],
     controls: [{ id: 'value', type: 'text', label: 'النص', value: 'مرحباً' }],
   },
   'بيانات/تحويل لنص': {
@@ -325,7 +325,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     subtitle: 'قيمة منطقية',
     iconName: 'ToggleRight',
     color: '#3b82f6',
-    outputs: [{ id: 'val_out', label: 'قيمة', type: 'data' }],
+    outputs: [{ id: 'val_out', label: 'قيمة', type: 'boolean' }],
     controls: [{ id: 'value', type: 'select', label: 'منطق', value: 'صح', options: ['صح', 'خطأ'] }],
   },
   'نصوص/قص': {
@@ -391,7 +391,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     iconName: 'ListPlus',
     color: '#06b6d4', // Cyan
     allowDynamicInputs: true,
-    outputs: [{ id: 'arr_out', label: 'مصفوفة', type: 'data' }],
+    outputs: [{ id: 'arr_out', label: 'مصفوفة', type: 'array' }],
   },
   'مصفوفات/إضافة': {
     label: 'إضافة للمصفوفة',
@@ -435,7 +435,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     iconName: 'Library',
     color: '#a855f7', // Purple
     allowDynamicInputs: 'pair',
-    outputs: [{ id: 'dict_out', label: 'فهرس', type: 'data' }],
+    outputs: [{ id: 'dict_out', label: 'فهرس', type: 'dictionary' }],
   },
   'فهارس/إضافة': {
     label: 'إضافة للفهرس',
