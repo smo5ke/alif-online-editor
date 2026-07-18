@@ -20,7 +20,7 @@ export function generateAlifCodeFromGraph(
       if (edge) {
         const sourceNode = nodes.find((n) => n.id === edge.source);
         if (sourceNode) {
-          return resolveValue(sourceNode, edge.sourceHandle);
+          return resolveValue(sourceNode, edge.sourceHandle || undefined);
         }
       }
       return null;

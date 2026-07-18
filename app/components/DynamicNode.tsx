@@ -21,8 +21,10 @@ export type NodeData = {
   outputs?: { id: string; label: string; type: 'event' | 'data' }[];
   controls?: NodeControl[];
   allowDynamicInputs?: boolean | 'pair';
+  allowDynamicOutputs?: boolean;
   onControlChange?: (controlId: string, value: any) => void;
   onAddDynamicInput?: (nodeId: string) => void;
+  onAddDynamicOutput?: (nodeId: string) => void;
 };
 
 export default function DynamicNode({ data, id }: { data: NodeData; id: string }) {
