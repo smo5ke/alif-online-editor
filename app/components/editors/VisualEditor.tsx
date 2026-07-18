@@ -173,14 +173,6 @@ export default function VisualEditor() {
       >
         <Background color="#334155" gap={25} size={1.5} />
         <Controls className="!bottom-20 md:!bottom-4" />
-        <MiniMap 
-          className="!bg-slate-800/80 !border !border-slate-600/50 !rounded-xl !overflow-hidden !bottom-24 md:!bottom-6 md:!left-6 !shadow-2xl" 
-          nodeColor={(n) => {
-            const def = nodeDefinitions[n.type || ''];
-            return def?.color || '#475569';
-          }}
-          maskColor="rgba(0, 0, 0, 0.4)"
-        />
       </ReactFlow>
 
       <div className="absolute bottom-6 md:bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-3 z-30">
@@ -251,8 +243,12 @@ export default function VisualEditor() {
 
             <div className="overflow-y-auto custom-menu-scroll pb-6 md:pb-0 flex-1">
               {(() => {
+                const search = searchQuery.trim().toLowerCase();
+                if (!search) {
+                  return <div className="p-8 text-center text-slate-400 text-sm">ابحث عن اسم الأمر أو العقدة المطلوبة...</div>;
+                }
+
                 const filteredEntries = Object.entries(nodeDefinitions).filter(([key, def]) => {
-                  const search = searchQuery.toLowerCase();
                   return def.label.toLowerCase().includes(search) || 
                          (def.subtitle && def.subtitle.toLowerCase().includes(search)) ||
                          key.toLowerCase().includes(search);
