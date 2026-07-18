@@ -196,6 +196,21 @@ export default function DynamicNode({ data, id }: { data: NodeData; id: string }
                 </div>
               );
             })}
+
+            {data.allowDynamicOutputs && (
+              <div className="flex justify-end px-4 mt-1">
+                <button
+                  onClick={() => {
+                    useEditorStore.getState().addDynamicOutput(id);
+                    data.onAddDynamicOutput?.(id);
+                  }}
+                  className="flex items-center justify-center w-6 h-6 rounded-md bg-slate-800 hover:bg-emerald-600/80 text-slate-400 hover:text-white border border-slate-700 hover:border-emerald-500 transition-all cursor-pointer shadow-sm nodrag"
+                  title="إضافة مخرج"
+                >
+                  <LucideIcons.Plus size={14} />
+                </button>
+              </div>
+            )}
           </div>
         )}
 
