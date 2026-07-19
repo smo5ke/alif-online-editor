@@ -220,7 +220,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           return { ...node, data: { ...node.data, inputs: [...currentInputs, newKeyInput, newValInput] } };
         } else {
           const nextIndex = currentInputs.length;
-          const newInput = { id: `item_${nextIndex}_${Date.now()}`, label: `عنصر ${nextIndex + 1}`, type: 'data' };
+          const labelPrefix = (node.data as any).dynamicInputLabel || 'عنصر';
+          const newInput = { id: `item_${nextIndex}_${Date.now()}`, label: `${labelPrefix} ${nextIndex + 1}`, type: 'data' };
           return { ...node, data: { ...node.data, inputs: [...currentInputs, newInput] } };
         }
       }

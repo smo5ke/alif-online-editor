@@ -244,8 +244,8 @@ export function generateAlifCodeFromGraph(
           const end = getControlValue('end');
           const flush = getControlValue('flush');
           
-          if (sep !== undefined && sep !== ' ') kwargs.push(`الفاصل="${sep.replace(/"/g, '\\"')}"`);
-          if (end !== undefined && end !== '\\س') kwargs.push(`النهاية="${end.replace(/"/g, '\\"')}"`);
+          if (sep !== undefined) kwargs.push(`الفاصل="${sep.replace(/"/g, '\\"')}"`);
+          if (end !== undefined) kwargs.push(`النهاية="${end.replace(/"/g, '\\"')}"`);
           if (flush === 'صح') kwargs.push(`مباشر=صح`);
           
           if (kwargs.length > 0) {

@@ -27,6 +27,7 @@ export type NodeData = {
   onControlChange?: (controlId: string, value: any) => void;
   onAddDynamicInput?: (nodeId: string) => void;
   onAddDynamicOutput?: (nodeId: string) => void;
+  dynamicInputLabel?: string;
 };
 
 export const getTypeColor = (type?: DataType) => {

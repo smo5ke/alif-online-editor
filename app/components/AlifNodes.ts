@@ -115,6 +115,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     iconName: 'Printer',
     color: '#ec4899', 
     allowDynamicInputs: true,
+    dynamicInputLabel: 'قيمة',
     inputs: [
       { id: 'seq_in', label: 'تسلسل', type: 'event' },
       { id: 'val_in', label: 'القيمة', type: 'data' },
