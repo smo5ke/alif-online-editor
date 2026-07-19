@@ -287,6 +287,8 @@ export default function VisualEditor() {
         fitView
         minZoom={0.1}
         maxZoom={2}
+        elevateNodesOnSelect={false}
+        onlyRenderVisibleElements={true}
         connectionRadius={40}
         connectionLineStyle={{ stroke: '#fff', strokeWidth: 2, strokeDasharray: '3 3' }}
         defaultEdgeOptions={{
