@@ -285,6 +285,8 @@ export default function VisualEditor() {
         onPaneContextMenu={(e) => { e.preventDefault(); setMenuPos({ x: e.clientX, y: e.clientY }); }}
         onNodeContextMenu={(e, node) => { e.preventDefault(); setEditMenuPos({ x: e.clientX, y: e.clientY, nodeId: node.id }); }}
         fitView
+        minZoom={0.1}
+        maxZoom={2}
         connectionRadius={40}
         connectionLineStyle={{ stroke: '#fff', strokeWidth: 2, strokeDasharray: '3 3' }}
         defaultEdgeOptions={{
