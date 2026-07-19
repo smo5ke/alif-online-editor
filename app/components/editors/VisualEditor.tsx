@@ -19,15 +19,8 @@ const edgeTypes = {
   deletable: DeletableEdge,
 };
 
-import { useShallow } from 'zustand/react/shallow';
-
 export default function VisualEditor() {
-  const { activeMode, nodes, edges, setNodes, setEdges, onNodesChange, onEdgesChange, currentGraphId, macros, createMacro, switchGraph, commitHistory, undo, redo } = useEditorStore(useShallow((state) => ({
-    activeMode: state.activeMode, nodes: state.nodes, edges: state.edges, setNodes: state.setNodes, setEdges: state.setEdges,
-    onNodesChange: state.onNodesChange, onEdgesChange: state.onEdgesChange, currentGraphId: state.currentGraphId,
-    macros: state.macros, createMacro: state.createMacro, switchGraph: state.switchGraph, commitHistory: state.commitHistory,
-    undo: state.undo, redo: state.redo
-  })));
+  const { activeMode, nodes, edges, setNodes, setEdges, onNodesChange, onEdgesChange, currentGraphId, macros, createMacro, switchGraph, commitHistory, undo, redo } = useEditorStore();
   
   const [menuPos, setMenuPos] = useState<{ x: number; y: number; showAll?: boolean } | null>(null);
   const [editMenuPos, setEditMenuPos] = useState<{ x: number; y: number; nodeId: string } | null>(null);
