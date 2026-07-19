@@ -47,7 +47,7 @@ export function useAlifCompiler() {
       socket.onopen = () => {
         isConnecting = false;
         useCompilerStore.getState().setRunState('ready');
-        useEditorStore.getState().appendTerminalOutput('--- تم الاتصال بمحرك ألف 5.3 بنجاح ---\n', 'text-green-500 font-bold');
+        useEditorStore.getState().appendTerminalOutput('--- تم الاتصال بمفسر ألف 5.3 بنجاح ---\n', 'text-green-500 font-bold');
       };
       
       socket.onmessage = (event) => {

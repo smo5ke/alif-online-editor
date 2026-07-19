@@ -324,7 +324,7 @@ export default function VisualEditor() {
               setMenuPos({ x: window.innerWidth / 2, y: window.innerHeight / 2, showAll: true }); 
             }
           }}
-          className="bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-2xl px-6 py-3.5 font-bold"
+          className="w-35 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-2xl px-6 py-3.5 font-bold"
         >
           إضافة عقدة
         </button>

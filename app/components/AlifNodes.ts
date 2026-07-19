@@ -114,11 +114,17 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     subtitle: 'مخرجات الشاشة',
     iconName: 'Printer',
     color: '#ec4899', 
+    allowDynamicInputs: true,
     inputs: [
       { id: 'seq_in', label: 'تسلسل', type: 'event' },
       { id: 'val_in', label: 'القيمة', type: 'data' },
     ],
     outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+    controls: [
+      { id: 'sep', type: 'text', label: 'الفاصل', value: ' ' },
+      { id: 'end', type: 'text', label: 'النهاية', value: '\\س' },
+      { id: 'flush', type: 'select', label: 'مباشر', value: 'خطأ', options: ['صح', 'خطأ'] }
+    ]
   },
   'أوامر/مسح الشاشة': {
     label: 'مسح الشاشة',

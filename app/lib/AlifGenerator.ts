@@ -232,8 +232,27 @@ export function generateAlifCodeFromGraph(
         }
         
         if (type === 'أوامر/اطبع') {
-          let printVal = resolveInput(currNode.id, 'val_in') ?? '""';
-          code += indent + `اطبع(${printVal}) # @node:${currNode.id}\n`;
+          const mInputs = data.inputs as any[] || [];
+          const printVals = mInputs
+            .filter((inp: any) => inp.type === 'data')
+            .map((inp: any) => resolveInput(currNode.id, inp.id) ?? '""');
+            
+          let argsStr = printVals.join(', ');
+          
+          let kwargs = [];
+          const sep = getControlValue('sep');
+          const end = getControlValue('end');
+          const flush = getControlValue('flush');
+          
+          if (sep !== undefined && sep !== ' ') kwargs.push(`الفاصل="${sep.replace(/"/g, '\\"')}"`);
+          if (end !== undefined && end !== '\\س') kwargs.push(`النهاية="${end.replace(/"/g, '\\"')}"`);
+          if (flush === 'صح') kwargs.push(`مباشر=صح`);
+          
+          if (kwargs.length > 0) {
+              argsStr += (argsStr ? ', ' : '') + kwargs.join(', ');
+          }
+          
+          code += indent + `اطبع(${argsStr}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'متغيرات/إسناد') {
           let varName = getControlValue('var_name');
