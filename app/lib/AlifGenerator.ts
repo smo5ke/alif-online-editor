@@ -319,7 +319,7 @@ export function generateAlifCodeFromGraph(
           let pkg = getControlValue('pkg_name') || 'مكتبة';
           code += indent + `استورد ${pkg} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
-        } else if (type === 'أوامر/انتظر') {
+        } else if (type === 'وقت/انتظر') {
           let ms = resolveInput(currNode.id, 'ms_in') ?? 3;
           code += indent + `الوقت.غفوة(${ms}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
@@ -469,7 +469,7 @@ export function generateAlifCodeFromGraph(
     ...(macros ? Object.values(macros).flatMap(m => m.nodes) : [])
   ];
 
-  const usesTime = allNodes.some(n => (n.data as any).originalType === 'أوامر/انتظر' || (n.data as any).originalType === 'وقت/الآن' || (n.data as any).originalType === 'وقت/منسق');
+  const usesTime = allNodes.some(n => (n.data as any).originalType === 'وقت/انتظر' || (n.data as any).originalType === 'وقت/الآن' || (n.data as any).originalType === 'وقت/منسق');
   if (usesTime) {
     finalCode += 'استورد الوقت\n\n';
   }

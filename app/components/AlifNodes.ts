@@ -128,16 +128,16 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     ]
   },
 
-  'أوامر/انتظر': {
+  'وقت/انتظر': {
     label: 'انتظر (تأخير)',
     subtitle: 'إيقاف مؤقت',
-    iconName: 'Hourglass',
-    color: '#ec4899',
+    iconName: 'Clock',
+    color: '#06b6d4',
     inputs: [
       { id: 'seq_in', label: 'تسلسل', type: 'event' },
-      { id: 'ms_in', label: 'ثواني', type: 'data' },
+      { id: 'ms_in', label: 'ثواني', type: 'number' }
     ],
-    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+    outputs: [{ id: 'seq_out', label: 'بعد الانتظار', type: 'event' }],
   },
   
   'شروط/اذا': {
