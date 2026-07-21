@@ -127,14 +127,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
       { id: 'flush', type: 'select', label: 'مباشر', value: 'خطأ', options: ['صح', 'خطأ'] }
     ]
   },
-  'أوامر/مسح الشاشة': {
-    label: 'مسح الشاشة',
-    subtitle: 'إفراغ المخرجات',
-    iconName: 'Eraser',
-    color: '#ec4899',
-    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }],
-    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
-  },
+
   'أوامر/انتظر': {
     label: 'انتظر (تأخير)',
     subtitle: 'إيقاف مؤقت',

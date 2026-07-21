@@ -363,9 +363,7 @@ export function generateAlifCodeFromGraph(
         } else if (type === 'حلقات/توقف') {
           code += indent + `توقف # @node:${currNode.id}\n`;
           break;
-        } else if (type === 'أوامر/مسح الشاشة') {
-          code += indent + `مسح() # @node:${currNode.id}\n`;
-          currNodeId = getNextNodeId(currNode.id, 'seq_out');
+
         } else if (type === 'أخطاء/محاولة') {
           code += indent + `حاول:\n`;
           let tryNodeId = getNextNodeId(currNode.id, 'try_out');
