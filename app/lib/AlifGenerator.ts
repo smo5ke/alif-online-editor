@@ -151,14 +151,7 @@ export function generateAlifCodeFromGraph(
         let key = resolveInput(node.id, 'key_in') ?? '""';
         return `${dictName}[${key}]`;
       }
-      if (type === 'ملفات/فتح') {
-        let path = resolveInput(node.id, 'path_in') ?? '""';
-        return `افتح(${path}, "${getControlValue('mode')}")`;
-      }
-      if (type === 'ملفات/قراءة') {
-        let file = resolveInput(node.id, 'file_in') ?? 'س';
-        return getControlValue('type') === 'سطر' ? `${file}.اقرا_سطر()` : `${file}.اقرا()`;
-      }
+
       if (type === 'وقت/الآن') return `الوقت.الان()`;
       if (type === 'وقت/منسق') return `الوقت.منسق()`;
       if (type === 'رياضيات/دوال') {
@@ -306,10 +299,7 @@ export function generateAlifCodeFromGraph(
           let arg = resolveInput(currNode.id, 'arg_in') ?? 'عدم';
           code += indent + `${getControlValue('func_name')}(${arg}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
-        } else if (type === 'ملفات/إغلاق') {
-          let file = resolveInput(currNode.id, 'file_in') ?? 'س';
-          code += indent + `${file}.اغلق() # @node:${currNode.id}\n`;
-          currNodeId = getNextNodeId(currNode.id, 'seq_out');
+
         } else if (type === 'كائنات/تعيين_خاصية') {
           let prop = getControlValue('prop_name');
           let val = resolveInput(currNode.id, 'val_in') ?? 'عدم';

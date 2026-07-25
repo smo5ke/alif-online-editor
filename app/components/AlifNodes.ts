@@ -41,20 +41,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }], outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
     controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'س' }],
   },
-  'ملفات/فتح': {
-    label: 'فتح ملف', subtitle: 'افتح', iconName: 'FileText', color: '#64748b',
-    inputs: [{ id: 'path_in', label: 'المسار', type: 'data' }], outputs: [{ id: 'file_out', label: 'الملف', type: 'data' }],
-    controls: [{ id: 'mode', type: 'select', label: 'الوضع', value: 'ق', options: ['ق', 'ك', 'ا'] }],
-  },
-  'ملفات/قراءة': {
-    label: 'قراءة ملف', subtitle: 'اقرا', iconName: 'BookOpen', color: '#64748b',
-    inputs: [{ id: 'file_in', label: 'الملف', type: 'data' }], outputs: [{ id: 'res_out', label: 'المحتوى', type: 'data' }],
-    controls: [{ id: 'type', type: 'select', label: 'قراءة', value: 'الكل', options: ['الكل', 'سطر'] }],
-  },
-  'ملفات/إغلاق': {
-    label: 'إغلاق ملف', subtitle: 'اغلق', iconName: 'XSquare', color: '#64748b',
-    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }, { id: 'file_in', label: 'الملف', type: 'data' }], outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
-  },
+
   'وقت/الآن': {
     label: 'الوقت الحالي', subtitle: 'الان()', iconName: 'Clock', color: '#0ea5e9',
     outputs: [{ id: 'res_out', label: 'الوقت', type: 'data' }],
