@@ -53,10 +53,10 @@ export function generateAlifCodeFromGraph(
         if (!Number.isInteger(val)) val = parseFloat(val.toFixed(4));
         return val;
       }
-      if (type === 'بيانات/منطق') return getControlValue('value');
-      if (type === 'بيانات/إدخال مستخدم') return `ادخل("${getControlValue('prompt')}")`;
+      if (type === 'شروط/منطق') return getControlValue('value');
+      if (type === 'أوامر/إدخال مستخدم') return `ادخل("${getControlValue('prompt')}")`;
       if (type === 'متغيرات/قراءة') return getControlValue('var_name');
-      if (type === 'بيانات/طول') {
+      if (type === 'دوال/طول') {
         let val = resolveInput(node.id, 'val_in') ?? '""';
         return `طول(${val})`;
       }

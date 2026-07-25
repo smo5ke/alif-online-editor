@@ -355,20 +355,28 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     inputs: [{ id: 'str_in', label: 'النص', type: 'data' }],
     outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
   },
-  'بيانات/إدخال مستخدم': {
+  'شروط/منطق': {
+    label: 'صح / خطأ',
+    subtitle: 'قيمة منطقية',
+    iconName: 'ToggleRight',
+    color: '#3b82f6',
+    outputs: [{ id: 'res_out', label: 'القيمة', type: 'data' }],
+    controls: [{ id: 'value', type: 'select', label: 'منطق', value: 'صح', options: ['صح', 'خطأ'] }],
+  },
+  'أوامر/إدخال مستخدم': {
     label: 'إدخال مستخدم',
     subtitle: 'طلب إدخال',
     iconName: 'Keyboard',
-    color: '#ec4899',
+    color: '#8b5cf6',
     outputs: [{ id: 'res_out', label: 'إدخال', type: 'data' }],
-    controls: [{ id: 'prompt', type: 'text', label: 'الرسالة', value: 'أدخل القيمة: ' }],
+    controls: [{ id: 'prompt', type: 'text', label: 'الرسالة', value: 'أدخل قيمة:' }],
   },
-  'بيانات/طول': {
+  'دوال/طول': {
     label: 'طول',
-    subtitle: 'نص أو مصفوفة',
+    subtitle: 'طول(س)',
     iconName: 'Ruler',
-    color: '#3b82f6',
-    inputs: [{ id: 'val_in', label: 'القيمة', type: 'data' }],
+    color: '#06b6d4',
+    inputs: [{ id: 'val_in', label: 'عنصر', type: 'data' }],
     outputs: [{ id: 'res_out', label: 'الطول', type: 'data' }],
   },
 
