@@ -94,11 +94,6 @@ export function generateAlifCodeFromGraph(
         let b = resolveInput(node.id, 'b_in') ?? 0;
         return `(${a} ${getControlValue('op')} ${b})`;
       }
-      if (type === 'رياضيات/باقي القسمة') {
-        let a = resolveInput(node.id, 'a_in') ?? 0;
-        let b = resolveInput(node.id, 'b_in') ?? 1;
-        return `(${a} % ${b})`;
-      }
       if (type === 'بيانات/دمج نصوص') {
         let a = resolveInput(node.id, 'a_in') ?? '""';
         let b = resolveInput(node.id, 'b_in') ?? '""';
@@ -305,9 +300,10 @@ export function generateAlifCodeFromGraph(
           let val = resolveInput(currNode.id, 'val_in') ?? 'عدم';
           code += indent + `هذا.${prop} = ${val} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
-        } else if (type === 'حزم/استيراد') {
-          let pkg = getControlValue('pkg_name') || 'مكتبة';
-          code += indent + `استورد ${pkg} # @node:${currNode.id}\n`;
+
+        } else if (type === 'استيراد/مكتبة') {
+          let lib = getControlValue('lib') || 'الوقت';
+          code += indent + `استورد ${lib} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'وقت/انتظر') {
           let ms = resolveInput(currNode.id, 'ms_in') ?? 3;
@@ -464,11 +460,6 @@ export function generateAlifCodeFromGraph(
     finalCode += 'استورد الوقت\n\n';
   }
   
-  const usesMath = allNodes.some(n => (n.data as any).originalType === 'رياضيات/دوال');
-  if (usesMath) {
-    finalCode += 'استورد الرياضيات\n\n';
-  }
-
   // Pre-compile macros as functions
   if (macros) {
     Object.entries(macros).forEach(([id, macro]) => {

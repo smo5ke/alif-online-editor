@@ -373,9 +373,18 @@ export default function VisualEditor() {
                   return <div className="p-8 text-center text-slate-400 text-sm">ابحث عن اسم الأمر أو العقدة المطلوبة...</div>;
                 }
 
+                const importedLibraries = nodes
+                  .filter(n => n.data.originalType === 'استيراد/مكتبة')
+                  .map(n => n.data.controls?.find((c: any) => c.id === 'lib')?.value);
+                const hasMathImport = importedLibraries.includes('الرياضيات');
+                const hasTimeImport = importedLibraries.includes('الوقت');
+
                 const filteredEntries = Object.entries(combinedNodeDefinitions).filter(([key, def]) => {
                   if (currentGraphId === 'main' && (key === 'ماكرو/مدخلات' || key === 'ماكرو/مخرجات')) return false;
                   if (currentGraphId !== 'main' && key === 'أوامر/بداية البرنامج') return false;
+                  
+                  if (key.startsWith('رياضيات/') && !hasMathImport) return false;
+                  if (key.startsWith('وقت/') && !hasTimeImport) return false;
                   
                   if (!search && menuPos.showAll) return true;
                   return def.label.toLowerCase().includes(search) || 

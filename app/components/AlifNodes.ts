@@ -55,6 +55,12 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     inputs: [{ id: 'val_in', label: 'القيمة', type: 'number' }], outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
     controls: [{ id: 'func', type: 'select', label: 'الدالة', value: 'جيب', options: ['جيب', 'تجيب', 'ظل', 'قيمة_مطلقة', 'المضروب', 'قم_اكبر', 'قم_اصغر', 'حد_اعلى', 'حد_ادنى', 'لوغ', 'راديان', 'درجة'] }],
   },
+  'استيراد/مكتبة': {
+    label: 'استيراد', subtitle: 'استيراد مكتبة', iconName: 'Package', color: '#14b8a6',
+    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }],
+    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+    controls: [{ id: 'lib', type: 'select', label: 'المكتبة', value: 'الوقت', options: ['الوقت', 'الرياضيات'] }],
+  },
   'مصفوفات/إدراج': {
     label: 'إدراج عنصر', subtitle: 'ادرج', iconName: 'ListPlus', color: '#06b6d4',
     inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }, { id: 'arr_in', label: 'المصفوفة', type: 'data' }, { id: 'idx_in', label: 'الفهرس', type: 'data' }, { id: 'val_in', label: 'القيمة', type: 'data' }],
@@ -91,11 +97,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     inputs: [{ id: 'arg_in', label: 'المعطيات', type: 'data' }], outputs: [{ id: 'obj_out', label: 'الكائن', type: 'data' }],
     controls: [{ id: 'class_name', type: 'text', label: 'اسم الصنف', value: 'شخص' }],
   },
-  'حزم/استيراد': {
-    label: 'استيراد حزمة', subtitle: 'استورد', iconName: 'Package', color: '#14b8a6',
-    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }], outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
-    controls: [{ id: 'pkg_name', type: 'text', label: 'الحزمة', value: 'مكتبة' }],
-  },
+
   'أوامر/اطبع': {
     label: 'اطبع',
     subtitle: 'مخرجات الشاشة',
@@ -245,17 +247,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
     controls: [{ id: 'op', type: 'select', label: 'عملية', value: '+', options: ['+', '-', '*', '\\'] }],
   },
-  'رياضيات/باقي القسمة': {
-    label: 'باقي القسمة',
-    subtitle: 'موديولو (%)',
-    iconName: 'Percent',
-    color: '#3b82f6',
-    inputs: [
-      { id: 'a_in', label: 'الرقم', type: 'data' },
-      { id: 'b_in', label: 'القاسم', type: 'data' },
-    ],
-    outputs: [{ id: 'res_out', label: 'الباقي', type: 'data' }],
-  },
+
   'بيانات/رقم': {
     label: 'رقم',
     subtitle: 'قيمة رقمية',
