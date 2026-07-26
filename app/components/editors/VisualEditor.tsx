@@ -375,7 +375,7 @@ export default function VisualEditor() {
 
                 const importedLibraries = nodes
                   .filter(n => n.data.originalType === 'استيراد/مكتبة')
-                  .map(n => n.data.controls?.find((c: any) => c.id === 'lib')?.value);
+                  .map(n => (n.data as any).controls?.find((c: any) => c.id === 'lib')?.value);
                 const hasMathImport = importedLibraries.includes('الرياضيات');
                 const hasTimeImport = importedLibraries.includes('الوقت');
 
