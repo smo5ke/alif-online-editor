@@ -52,8 +52,12 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
   },
   'رياضيات/دوال': {
     label: 'دالة رياضية', subtitle: 'الرياضيات', iconName: 'Sigma', color: '#3b82f6',
-    inputs: [{ id: 'val_in', label: 'القيمة', type: 'number' }], outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
+    inputs: [{ id: 'val_in', label: 'القيمة', type: 'data' }], outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
     controls: [{ id: 'func', type: 'select', label: 'الدالة', value: 'جيب', options: ['جيب', 'تجيب', 'ظل', 'قيمة_مطلقة', 'المضروب', 'قم_اكبر', 'قم_اصغر', 'حد_اعلى', 'حد_ادنى', 'لوغ', 'راديان', 'درجة'] }],
+  },
+  'رياضيات/مسافة': {
+    label: 'حساب المسافة', subtitle: 'مسافة()', iconName: 'Ruler', color: '#3b82f6',
+    inputs: [{ id: 'p1_in', label: 'النقطة 1', type: 'data' }, { id: 'p2_in', label: 'النقطة 2', type: 'data' }], outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
   },
   'استيراد/مكتبة': {
     label: 'استيراد', subtitle: 'استيراد مكتبة', iconName: 'Package', color: '#14b8a6',

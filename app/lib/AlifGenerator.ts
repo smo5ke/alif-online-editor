@@ -153,6 +153,11 @@ export function generateAlifCodeFromGraph(
         let val = resolveInput(node.id, 'val_in') ?? 0;
         return `الرياضيات.${getControlValue('func')}(${val})`;
       }
+      if (type === 'رياضيات/مسافة') {
+        let p1 = resolveInput(node.id, 'p1_in') ?? '[0, 0]';
+        let p2 = resolveInput(node.id, 'p2_in') ?? '[0, 0]';
+        return `الرياضيات.مسافة(${p1}, ${p2})`;
+      }
       if (type === 'فهارس/مفاتيح_وقيم') {
         let dict = resolveInput(node.id, 'dict_in') ?? 'فهرس';
         return `${dict}.${getControlValue('type')}()`;
