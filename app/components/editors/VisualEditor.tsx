@@ -378,6 +378,7 @@ export default function VisualEditor() {
                   .map(n => (n.data as any).controls?.find((c: any) => c.id === 'lib')?.value);
                 const hasMathImport = importedLibraries.includes('الرياضيات');
                 const hasTimeImport = importedLibraries.includes('الوقت');
+                const hasRandomImport = importedLibraries.includes('العشوائي');
 
                 const filteredEntries = Object.entries(combinedNodeDefinitions).filter(([key, def]) => {
                   if (currentGraphId === 'main' && (key === 'ماكرو/مدخلات' || key === 'ماكرو/مخرجات')) return false;
@@ -385,6 +386,7 @@ export default function VisualEditor() {
                   
                   if (key.startsWith('رياضيات/') && !hasMathImport) return false;
                   if (key.startsWith('وقت/') && !hasTimeImport) return false;
+                  if (key.startsWith('عشوائي/') && !hasRandomImport) return false;
                   
                   if (!search && menuPos.showAll) return true;
                   return def.label.toLowerCase().includes(search) || 

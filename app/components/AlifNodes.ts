@@ -63,7 +63,21 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     label: 'استيراد', subtitle: 'استيراد مكتبة', iconName: 'Package', color: '#14b8a6',
     inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }],
     outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
-    controls: [{ id: 'lib', type: 'select', label: 'المكتبة', value: 'الوقت', options: ['الوقت', 'الرياضيات'] }],
+    controls: [{ id: 'lib', type: 'select', label: 'المكتبة', value: 'الوقت', options: ['الوقت', 'الرياضيات', 'العشوائي'] }],
+  },
+  'عشوائي/بذرة': {
+    label: 'تعيين البذرة', subtitle: 'البذرة()', iconName: 'Dices', color: '#8b5cf6',
+    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }, { id: 'val_in', label: 'القيمة', type: 'data' }],
+    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+  },
+  'عشوائي/رقم': {
+    label: 'توليد عشوائي', subtitle: 'عشوائي()', iconName: 'Dices', color: '#8b5cf6',
+    outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
+  },
+  'عشوائي/منتظم': {
+    label: 'توليد منتظم', subtitle: 'منتظم()', iconName: 'Dices', color: '#8b5cf6',
+    inputs: [{ id: 'min_in', label: 'الأدنى', type: 'data' }, { id: 'max_in', label: 'الأعلى', type: 'data' }],
+    outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
   },
   'مصفوفات/إدراج': {
     label: 'إدراج عنصر', subtitle: 'ادرج', iconName: 'ListPlus', color: '#06b6d4',

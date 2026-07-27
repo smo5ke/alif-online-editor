@@ -158,6 +158,14 @@ export function generateAlifCodeFromGraph(
         let p2 = resolveInput(node.id, 'p2_in') ?? '[0, 0]';
         return `الرياضيات.مسافة(${p1}, ${p2})`;
       }
+      if (type === 'عشوائي/رقم') {
+        return `العشوائي.عشوائي()`;
+      }
+      if (type === 'عشوائي/منتظم') {
+        let min = resolveInput(node.id, 'min_in') ?? 0;
+        let max = resolveInput(node.id, 'max_in') ?? 1;
+        return `العشوائي.منتظم(${min}, ${max})`;
+      }
       if (type === 'فهارس/مفاتيح_وقيم') {
         let dict = resolveInput(node.id, 'dict_in') ?? 'فهرس';
         return `${dict}.${getControlValue('type')}()`;
@@ -309,6 +317,10 @@ export function generateAlifCodeFromGraph(
         } else if (type === 'استيراد/مكتبة') {
           let lib = getControlValue('lib') || 'الوقت';
           code += indent + `استورد ${lib} # @node:${currNode.id}\n`;
+          currNodeId = getNextNodeId(currNode.id, 'seq_out');
+        } else if (type === 'عشوائي/بذرة') {
+          let val = resolveInput(currNode.id, 'val_in') ?? 0;
+          code += indent + `العشوائي.البذرة(${val}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'وقت/انتظر') {
           let ms = resolveInput(currNode.id, 'ms_in') ?? 3;
