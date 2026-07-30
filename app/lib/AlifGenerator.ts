@@ -199,6 +199,9 @@ export function generateAlifCodeFromGraph(
         visitedNodes.add(currNodeId);
         const currNode = nodes.find((n) => n.id === currNodeId);
         if (!currNode) break;
+
+        // Inject trace code for highlighting
+        code += indent + `اطبع("___TRACE___:${currNode.id}")\n`;
   
         const data = currNode.data as any;
         const type = data.originalType;

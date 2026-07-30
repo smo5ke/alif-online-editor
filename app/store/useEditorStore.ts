@@ -36,6 +36,7 @@ interface EditorState {
   macros: Record<string, MacroData>;
 
   errorNodeId: string | null;
+  activeNodeId: string | null;
   lastRunCode: string;
 
   past: GraphSnapshot[];
@@ -60,10 +61,12 @@ interface EditorState {
   removeDynamicOutput: (nodeId: string, portId: string) => void;
   syncMacroInstances: (macroId: string) => void;
   updateNodeControl: (nodeId: string, controlId: string, value: any) => void;
-
+  enterMacro: (macroId: string) => void;
+  leaveMacro: () => void;
   createMacro: (name: string) => void;
-  switchGraph: (targetId: string) => void;
+  deleteMacro: (macroId: string) => void;
   setErrorNode: (nodeId: string | null) => void;
+  setActiveNodeId: (nodeId: string | null) => void;
   setLastRunCode: (code: string) => void;
 }
 
@@ -94,12 +97,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   mainGraph: { nodes: [], edges: [] },
   macros: {},
   errorNodeId: null,
+  activeNodeId: null,
   lastRunCode: '',
   past: [],
   future: [],
 
   commitHistory: () => set((state) => {
-    // Avoid storing history if past is full or whatever, but let's just keep max 50 states
     const snapshot: GraphSnapshot = {
       nodes: state.nodes,
       edges: state.edges,
@@ -108,14 +111,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       currentGraphId: state.currentGraphId
     };
     
-    // Only commit if there are actually some changes? React Flow handles objects nicely.
-    // For simplicity, we just push the snapshot.
     const newPast = [...state.past, snapshot];
-    if (newPast.length > 50) newPast.shift(); // Keep last 50 states
+    if (newPast.length > 50) newPast.shift(); 
     
     return {
       past: newPast,
-      future: [] // Any new action invalidates the redo future
+      future: [] 
     };
   }),
 
@@ -201,7 +202,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     terminalOutput: [...state.terminalOutput, { text, color }] 
   })),
   
-  clearTerminal: () => set({ terminalOutput: [], errorNodeId: null }),
+  clearTerminal: () => set({ terminalOutput: [], errorNodeId: null, activeNodeId: null }),
+  
+  setActiveNodeId: (nodeId) => set({ activeNodeId: nodeId }),
   
   setErrorNode: (nodeId) => set({ errorNodeId: nodeId }),
   setLastRunCode: (code) => set({ lastRunCode: code }),
