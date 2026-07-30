@@ -63,6 +63,7 @@ interface EditorState {
   enterMacro: (macroId: string) => void;
   leaveMacro: () => void;
   createMacro: (name: string) => void;
+  switchGraph: (targetId: string) => void;
   deleteMacro: (macroId: string) => void;
   setErrorNode: (nodeId: string | null) => void;
   setLastRunCode: (code: string) => void;
