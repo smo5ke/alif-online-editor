@@ -72,13 +72,19 @@ export function useAlifCompiler() {
           }
           
           if (data.text.includes('___TRACE___:')) {
-            const traceMatch = data.text.match(/___TRACE___:([a-zA-Z0-9-]+)/);
-            if (traceMatch) {
-              const nodeId = traceMatch[1];
-              useEditorStore.getState().setActiveNodeId(nodeId);
+            const regex = /___TRACE___:([a-zA-Z0-9-_]+)\r?\n?/g;
+            let match;
+            let lastNodeId = null;
+            while ((match = regex.exec(data.text)) !== null) {
+              lastNodeId = match[1];
             }
-            // If the text contains ONLY the trace (plus newlines), skip appending it
-            const cleanedText = data.text.replace(/___TRACE___:[a-zA-Z0-9-]+\r?\n?/, '');
+            
+            if (lastNodeId) {
+              useEditorStore.getState().setActiveNodeId(lastNodeId);
+            }
+            
+            // Remove all trace prints from the output
+            const cleanedText = data.text.replace(/___TRACE___:[a-zA-Z0-9-_]+\r?\n?/g, '');
             if (cleanedText.trim() !== '') {
               useEditorStore.getState().appendTerminalOutput(cleanedText, color);
             }
