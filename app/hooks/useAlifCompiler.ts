@@ -71,37 +71,16 @@ export function useAlifCompiler() {
              }
           }
           
-          if (data.text.includes('___TRACE___:')) {
-            const regex = /___TRACE___:([a-zA-Z0-9-_]+)\r?\n?/g;
-            let match;
-            let lastNodeId = null;
-            while ((match = regex.exec(data.text)) !== null) {
-              lastNodeId = match[1];
-            }
-            
-            if (lastNodeId) {
-              useEditorStore.getState().setActiveNodeId(lastNodeId);
-            }
-            
-            // Remove all trace prints from the output
-            const cleanedText = data.text.replace(/___TRACE___:[a-zA-Z0-9-_]+\r?\n?/g, '');
-            if (cleanedText.trim() !== '') {
-              useEditorStore.getState().appendTerminalOutput(cleanedText, color);
-            }
-          } else {
-            useEditorStore.getState().appendTerminalOutput(data.text, color);
-          }
+          useEditorStore.getState().appendTerminalOutput(data.text, color);
         } else if (data.type === 'done') {
           useEditorStore.getState().appendTerminalOutput('\n--- انتهى تنفيذ البرنامج ---\n', 'text-slate-500');
           useCompilerStore.getState().setRunState('ready');
-          useEditorStore.getState().setActiveNodeId(null);
         }
       };
       
       socket.onclose = () => {
         isConnecting = false;
         useCompilerStore.getState().setRunState('error');
-        useEditorStore.getState().setActiveNodeId(null);
         if (reconnectTimeout) clearTimeout(reconnectTimeout);
         reconnectTimeout = setTimeout(connectWebSocket, 3000);
       };

@@ -36,7 +36,6 @@ interface EditorState {
   macros: Record<string, MacroData>;
 
   errorNodeId: string | null;
-  activeNodeId: string | null;
   lastRunCode: string;
 
   past: GraphSnapshot[];
@@ -66,7 +65,6 @@ interface EditorState {
   createMacro: (name: string) => void;
   deleteMacro: (macroId: string) => void;
   setErrorNode: (nodeId: string | null) => void;
-  setActiveNodeId: (nodeId: string | null) => void;
   setLastRunCode: (code: string) => void;
 }
 
@@ -96,8 +94,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   currentGraphId: 'main',
   mainGraph: { nodes: [], edges: [] },
   macros: {},
+
   errorNodeId: null,
-  activeNodeId: null,
   lastRunCode: '',
   past: [],
   future: [],
@@ -202,9 +200,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     terminalOutput: [...state.terminalOutput, { text, color }] 
   })),
   
-  clearTerminal: () => set({ terminalOutput: [], errorNodeId: null, activeNodeId: null }),
-  
-  setActiveNodeId: (nodeId) => set({ activeNodeId: nodeId }),
+  clearTerminal: () => set({ terminalOutput: [], errorNodeId: null }),
   
   setErrorNode: (nodeId) => set({ errorNodeId: nodeId }),
   setLastRunCode: (code) => set({ lastRunCode: code }),
