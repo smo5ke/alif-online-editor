@@ -150,13 +150,15 @@ export function generateAlifCodeFromGraph(
       if (type === 'وقت/الآن') return `الوقت.الان()`;
       if (type === 'وقت/منسق') return `الوقت.منسق()`;
       if (type === 'رياضيات/دوال') {
-        let val = resolveInput(node.id, 'val_in') ?? 0;
-        return `الرياضيات.${getControlValue('func')}(${val})`;
-      }
-      if (type === 'رياضيات/مسافة') {
-        let p1 = resolveInput(node.id, 'p1_in') ?? '[0, 0]';
-        let p2 = resolveInput(node.id, 'p2_in') ?? '[0, 0]';
-        return `الرياضيات.مسافة(${p1}, ${p2})`;
+        let func = getControlValue('func');
+        if (func === 'مسافة') {
+          let p1 = resolveInput(node.id, 'p1_in') ?? '[0, 0]';
+          let p2 = resolveInput(node.id, 'p2_in') ?? '[0, 0]';
+          return `الرياضيات.مسافة(${p1}, ${p2})`;
+        } else {
+          let val = resolveInput(node.id, 'val_in') ?? 0;
+          return `الرياضيات.${func}(${val})`;
+        }
       }
       if (type === 'عشوائي/رقم') {
         return `العشوائي.عشوائي()`;

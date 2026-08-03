@@ -238,7 +238,17 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       nodes: state.nodes.map((node) => {
       if (node.id === nodeId) {
         const newControls = (node.data.controls as any[])?.map(c => c.id === controlId ? { ...c, value } : c);
-        return { ...node, data: { ...node.data, controls: newControls } };
+        
+        let newInputs = node.data.inputs;
+        if (node.data.originalType === 'رياضيات/دوال' && controlId === 'func') {
+          if (value === 'مسافة') {
+            newInputs = [{ id: 'p1_in', label: 'النقطة 1', type: 'data' }, { id: 'p2_in', label: 'النقطة 2', type: 'data' }];
+          } else {
+            newInputs = [{ id: 'val_in', label: 'القيمة', type: 'data' }];
+          }
+        }
+        
+        return { ...node, data: { ...node.data, controls: newControls, inputs: newInputs } };
       }
       return node;
       })
