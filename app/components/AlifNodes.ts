@@ -211,7 +211,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'س' }],
   },
   'حلقات/بينما': {
-    label: 'بينما (While)',
+    label: 'بينما',
     subtitle: 'تكرار مشروط',
     iconName: 'RefreshCcw',
     color: '#f97316',
@@ -494,7 +494,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     controls: [{ id: 'func_name', type: 'text', label: 'الاسم', value: 'عملية' }],
   },
   'دوال/إرجاع': {
-    label: 'إرجاع (Return)',
+    label: 'إرجاع',
     subtitle: 'إعادة قيمة',
     iconName: 'CornerDownLeft',
     color: '#10b981',
