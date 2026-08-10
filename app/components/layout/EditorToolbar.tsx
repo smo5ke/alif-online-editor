@@ -34,15 +34,14 @@ export default function EditorToolbar() {
   ];
 
   const handleSelectExample = (val: string) => {
-    if (codeExamples[val]) {
-      setTextCode(codeExamples[val]);
+    if (codeExamples[val] !== undefined) {
+      const code = codeExamples[val];
+      const vNodes = visualExamples[val] ? visualExamples[val].nodes : [];
+      const vEdges = visualExamples[val] ? visualExamples[val].edges : [];
       
-      if (visualExamples[val]) {
-        // Populate visual editor if there's a visual example
-        setNodes(visualExamples[val].nodes);
-        setEdges(visualExamples[val].edges);
-        // User stays in their current mode. Both modes are updated.
-      } else {
+      useEditorStore.getState().loadProject(code, vNodes, vEdges);
+      
+      if (!visualExamples[val] && val !== 'blank') {
         // Fallback to code mode for advanced examples
         if (activeMode !== 'code') {
           setMode('code');

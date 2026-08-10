@@ -62,6 +62,7 @@ interface EditorState {
   updateNodeControl: (nodeId: string, controlId: string, value: any) => void;
   createMacro: (name: string) => void;
   switchGraph: (targetId: string) => void;
+  loadProject: (code: string, visualNodes: Node[], visualEdges: Edge[]) => void;
   setErrorNode: (nodeId: string | null) => void;
   setLastRunCode: (code: string) => void;
 }
@@ -453,6 +454,22 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       macros: newMacros,
       nodes: targetNodes,
       edges: targetEdges
+    };
+  }),
+
+  loadProject: (code: string, visualNodes: Node[], visualEdges: Edge[]) => set((state) => {
+    state.commitHistory();
+    return {
+      textCode: code,
+      nodes: visualNodes,
+      edges: visualEdges,
+      macros: {},
+      currentGraphId: 'main',
+      mainGraph: { nodes: [], edges: [] },
+      past: [],
+      future: [],
+      errorNodeId: null,
+      terminalOutput: []
     };
   }),
 }));
