@@ -337,7 +337,7 @@ export function generateAlifCodeFromGraph(
           code += indent + `اذا ${cond}:\n`;
           let trueNodeId = getNextNodeId(currNode.id, 'true_out');
           if (trueNodeId) code += walkExecution(trueNodeId, indent + '\t', new Set(pathVisited));
-          else code += indent + '\tاستمر\n';
+          else code += indent + '\tتجاوز\n';
           
           let falseNodeId = getNextNodeId(currNode.id, 'false_out');
           if (falseNodeId) {
@@ -353,7 +353,7 @@ export function generateAlifCodeFromGraph(
           
           let bodyNodeId = getNextNodeId(currNode.id, 'body_out');
           if (bodyNodeId) code += walkExecution(bodyNodeId, indent + '\t', new Set(pathVisited));
-          else code += indent + '\tاستمر\n';
+          else code += indent + '\tتجاوز\n';
           
           currNodeId = getNextNodeId(currNode.id, 'done_out');
         } else if (type === 'حلقات/بينما') {
@@ -362,7 +362,7 @@ export function generateAlifCodeFromGraph(
           
           let bodyNodeId = getNextNodeId(currNode.id, 'body_out');
           if (bodyNodeId) code += walkExecution(bodyNodeId, indent + '\t', new Set(pathVisited));
-          else code += indent + '\tاستمر\n';
+          else code += indent + '\tتجاوز\n';
           
           currNodeId = getNextNodeId(currNode.id, 'done_out');
         } else if (type === 'حلقات/توقف') {
@@ -373,7 +373,7 @@ export function generateAlifCodeFromGraph(
           code += indent + `حاول:\n`;
           let tryNodeId = getNextNodeId(currNode.id, 'try_out');
           if (tryNodeId) code += walkExecution(tryNodeId, indent + '\t', new Set(pathVisited));
-          else code += indent + '\tاستمر\n';
+          else code += indent + '\tتجاوز\n';
           
           let catchNodeId = getNextNodeId(currNode.id, 'catch_out');
           if (catchNodeId) {
@@ -397,7 +397,7 @@ export function generateAlifCodeFromGraph(
           
           let bodyNodeId = getNextNodeId(currNode.id, 'body_out');
           if (bodyNodeId) code += walkExecution(bodyNodeId, indent + '\t', new Set(pathVisited));
-          else code += indent + '\tاستمر\n';
+          else code += indent + '\tتجاوز\n';
           
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'أوامر/بداية البرنامج' || type === 'دوال/تعريف دالة' || type === 'ماكرو/مدخلات') {
@@ -418,7 +418,7 @@ export function generateAlifCodeFromGraph(
       localCode += `دالة ${getControlValue('func_name')}(${getControlValue('arg')}):\n`;
       let bodyNodeId = getNextNodeId(node.id, 'body_out');
       if (bodyNodeId) localCode += walkExecution(bodyNodeId, '\t', new Set<string>());
-      else localCode += '\tاستمر\n';
+      else localCode += '\tتجاوز\n';
       localCode += '\n';
     });
   
@@ -436,7 +436,7 @@ export function generateAlifCodeFromGraph(
       if (bodyNodeId) {
         localCode += walkExecution(bodyNodeId, '\t', new Set<string>());
       } else {
-        localCode += '\tاستمر\n';
+        localCode += '\tتجاوز\n';
       }
       localCode += '\n';
     } else {
