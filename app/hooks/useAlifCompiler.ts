@@ -141,6 +141,12 @@ export function useAlifCompiler() {
       codeToRun = textCode.replace(/\u00A0/g, " ");
     }
 
+    if (!codeToRun || codeToRun.trim() === '') {
+      useEditorStore.getState().appendTerminalOutput('❌ لم يتم العثور على أي كود لتشغيله!\n(إذا كنت في المحرر المرئي، تأكد من وجود عقدة "بداية البرنامج")', 'text-amber-400');
+      setRunState('ready');
+      return;
+    }
+
     globalWs.send(JSON.stringify({ type: 'run', code: codeToRun }));
   };
 
