@@ -553,7 +553,11 @@ export const visualExamples: Record<string, VisualExample> = {
         id: 'user_input', 
         type: 'dynamic', 
         position: { x: -300, y: 200 }, 
-        data: { ...nodeDefinitions['بيانات/إدخال مستخدم'], originalType: 'بيانات/إدخال مستخدم' } 
+        data: { 
+          ...nodeDefinitions['أوامر/إدخال مستخدم'], 
+          originalType: 'أوامر/إدخال مستخدم',
+          controls: [{ id: 'prompt', type: 'text', label: 'الرسالة', value: 'أدخل اسمك:' }]
+        } 
       },
       { id: 'print', type: 'dynamic', position: { x: 50, y: 350 }, data: { ...nodeDefinitions['أوامر/اطبع'], originalType: 'أوامر/اطبع' } },
       { 
