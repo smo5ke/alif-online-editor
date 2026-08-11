@@ -38,9 +38,7 @@ export default function EditorToolbar() {
       const code = codeExamples[val];
       const vNodes = visualExamples[val] ? visualExamples[val].nodes : [];
       const vEdges = visualExamples[val] ? visualExamples[val].edges : [];
-      
-      useEditorStore.getState().loadProject(code, vNodes, vEdges);
-      
+      useEditorStore.getState().loadProject(val, code, vNodes, vEdges);
       if (!visualExamples[val] && val !== 'blank') {
         // Fallback to code mode for advanced examples
         if (activeMode !== 'code') {

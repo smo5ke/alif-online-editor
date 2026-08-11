@@ -1,7 +1,10 @@
 import { create } from 'zustand';
 import { Node, Edge, NodeChange, EdgeChange, applyNodeChanges, applyEdgeChanges } from '@xyflow/react';
+import { visualExamples } from './visualExamples';
 
 type EditorMode = 'visual' | 'code' | 'terminal';
+
+// ... other imports ...
 
 export interface TerminalLine {
   text: string;
@@ -22,6 +25,15 @@ export type GraphSnapshot = {
   currentGraphId: string;
 };
 
+export type ProjectState = {
+  textCode: string;
+  nodes: Node[];
+  edges: Edge[];
+  mainGraph: { nodes: Node[]; edges: Edge[] };
+  macros: Record<string, MacroData>;
+  currentGraphId: string;
+};
+
 interface EditorState {
   // State
   activeMode: EditorMode;
@@ -34,6 +46,9 @@ interface EditorState {
   currentGraphId: string;
   mainGraph: { nodes: Node[]; edges: Edge[] };
   macros: Record<string, MacroData>;
+
+  projectCache: Record<string, ProjectState>;
+  currentProjectId: string | null;
 
   errorNodeId: string | null;
   lastRunCode: string;
@@ -62,7 +77,7 @@ interface EditorState {
   updateNodeControl: (nodeId: string, controlId: string, value: any) => void;
   createMacro: (name: string) => void;
   switchGraph: (targetId: string) => void;
-  loadProject: (code: string, visualNodes: Node[], visualEdges: Edge[]) => void;
+  loadProject: (projectId: string, code: string, visualNodes: Node[], visualEdges: Edge[]) => void;
   setErrorNode: (nodeId: string | null) => void;
   setLastRunCode: (code: string) => void;
 }
@@ -86,13 +101,16 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   activeMode: 'visual',
   isTerminalHidden: false,
   textCode: defaultCode,
-  nodes: [],
-  edges: [],
+  nodes: visualExamples['hello'] ? visualExamples['hello'].nodes : [],
+  edges: visualExamples['hello'] ? visualExamples['hello'].edges : [],
   terminalOutput: [],
   
   currentGraphId: 'main',
   mainGraph: { nodes: [], edges: [] },
   macros: {},
+
+  projectCache: {},
+  currentProjectId: 'hello',
 
   errorNodeId: null,
   lastRunCode: '',
@@ -457,9 +475,44 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     };
   }),
 
-  loadProject: (code: string, visualNodes: Node[], visualEdges: Edge[]) => set((state) => {
+  loadProject: (projectId: string, code: string, visualNodes: Node[], visualEdges: Edge[]) => set((state) => {
     state.commitHistory();
+    
+    // Save current state to cache
+    const newCache = { ...state.projectCache };
+    if (state.currentProjectId) {
+      newCache[state.currentProjectId] = {
+        textCode: state.textCode,
+        nodes: state.nodes,
+        edges: state.edges,
+        mainGraph: state.mainGraph,
+        macros: state.macros,
+        currentGraphId: state.currentGraphId
+      };
+    }
+
+    // Load from cache if exists
+    if (newCache[projectId]) {
+      const cached = newCache[projectId];
+      return {
+        projectCache: newCache,
+        currentProjectId: projectId,
+        textCode: cached.textCode,
+        nodes: cached.nodes,
+        edges: cached.edges,
+        mainGraph: cached.mainGraph,
+        macros: cached.macros,
+        currentGraphId: cached.currentGraphId,
+        past: [],
+        future: [],
+        errorNodeId: null,
+        terminalOutput: []
+      };
+    }
+
     return {
+      projectCache: newCache,
+      currentProjectId: projectId,
       textCode: code,
       nodes: visualNodes,
       edges: visualEdges,
