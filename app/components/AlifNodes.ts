@@ -2,7 +2,7 @@ import { NodeData } from './DynamicNode';
 
 export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> = {
   'ماكرو/مدخلات': {
-    label: 'مدخلات الماكرو',
+    label: 'مدخلات الكتلة',
     subtitle: 'استقبال البيانات للتنفيذ',
     iconName: 'ArrowRightToLine',
     color: '#8b5cf6', // Purple
@@ -10,7 +10,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     allowDynamicOutputs: true,
   },
   'ماكرو/مخرجات': {
-    label: 'مخرجات الماكرو',
+    label: 'مخرجات الكتلة',
     subtitle: 'إرسال النتائج للخارج',
     iconName: 'ArrowRightFromLine',
     color: '#8b5cf6', // Purple

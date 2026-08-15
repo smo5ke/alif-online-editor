@@ -67,7 +67,7 @@ export default function VisualEditor() {
 
       combined[`macro:${id}`] = {
         label: macro.name,
-        subtitle: 'استدعاء ماكرو',
+        subtitle: 'استدعاء كتلة',
         iconName: 'Box',
         color: '#a855f7',
         inputs: macroCallInputs,
@@ -260,7 +260,7 @@ export default function VisualEditor() {
 
           <button
             onClick={() => {
-              const name = prompt('أدخل اسم الماكرو الجديد:');
+              const name = prompt('أدخل اسم الكتلة الجديدة:');
               if (name) createMacro(name);
             }}
             className="px-3 py-1.5 rounded-lg text-sm font-bold bg-slate-700 hover:bg-emerald-600 text-emerald-400 hover:text-white transition-colors border border-emerald-500/30 flex items-center gap-1"
@@ -399,7 +399,8 @@ export default function VisualEditor() {
                 }
 
                 const grouped = filteredEntries.reduce((acc, [key, def]) => {
-                  const category = key.split('/')[0] || 'أخرى';
+                  let category = key.split('/')[0] || 'أخرى';
+                  if (category === 'ماكرو' || key.startsWith('macro:')) category = 'كتل';
                   if (!acc[category]) acc[category] = [];
                   acc[category].push({ key, def });
                   return acc;
