@@ -9,7 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@monaco-editor/react": "^4.7.0",
     "@xyflow/react": "^12.11.1",
     "dagre": "^0.8.5",
     "html-to-image": "^1.11.13",

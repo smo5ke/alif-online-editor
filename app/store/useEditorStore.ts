@@ -51,6 +51,7 @@ interface EditorState {
   currentProjectId: string | null;
 
   errorNodeId: string | null;
+  errorLineNumber: number | null;
   lastRunCode: string;
 
   past: GraphSnapshot[];
@@ -81,6 +82,7 @@ interface EditorState {
   loadCustomProject: (project: ProjectState) => void;
   getCurrentProjectSnapshot: () => ProjectState;
   setErrorNode: (nodeId: string | null) => void;
+  setErrorLineNumber: (line: number | null) => void;
   setLastRunCode: (code: string) => void;
 }
 
@@ -115,6 +117,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   currentProjectId: 'hello',
 
   errorNodeId: null,
+  errorLineNumber: null,
   lastRunCode: '',
   past: [],
   future: [],
@@ -219,9 +222,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     terminalOutput: [...state.terminalOutput, { text, color }] 
   })),
   
-  clearTerminal: () => set({ terminalOutput: [], errorNodeId: null }),
+  clearTerminal: () => set({ terminalOutput: [], errorNodeId: null, errorLineNumber: null }),
   
   setErrorNode: (nodeId) => set({ errorNodeId: nodeId }),
+  setErrorLineNumber: (line) => set({ errorLineNumber: line }),
   setLastRunCode: (code) => set({ lastRunCode: code }),
 
   addDynamicInput: (nodeId: string) => set((state) => {

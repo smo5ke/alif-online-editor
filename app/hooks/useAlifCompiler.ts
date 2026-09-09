@@ -60,6 +60,7 @@ export function useAlifCompiler() {
              if (match) {
                  const lineNum = parseInt(match[1]);
                  const state = useEditorStore.getState();
+                 state.setErrorLineNumber(lineNum);
                  const codeLines = state.lastRunCode.split('\n');
                  if (lineNum > 0 && lineNum <= codeLines.length) {
                      const lineText = codeLines[lineNum - 1];
