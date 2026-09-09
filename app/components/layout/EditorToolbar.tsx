@@ -1,12 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useEditorStore, codeExamples } from '../../store/useEditorStore';
 import { visualExamples } from '../../store/visualExamples';
-import { FileText, Copy, Share2, Download, Save, RotateCcw, Maximize, ChevronDown, Code, Undo2, Redo2 } from 'lucide-react';
+import { FileText, Copy, Share2, Download, Save, RotateCcw, Maximize, ChevronDown, Code, Undo2, Redo2, FolderArchive, BookOpen } from 'lucide-react';
+import ProjectManagerModal from '../modals/ProjectManagerModal';
+import CheatsheetModal from '../modals/CheatsheetModal';
 
 export default function EditorToolbar() {
   const { activeMode, setMode, setTextCode, textCode, isTerminalHidden, setIsTerminalHidden, setNodes, setEdges, undo, redo, past, future } = useEditorStore();
   
   const [isExamplesOpen, setIsExamplesOpen] = useState(false);
+  const [isProjectManagerOpen, setIsProjectManagerOpen] = useState(false);
+  const [isCheatsheetOpen, setIsCheatsheetOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -126,11 +130,31 @@ export default function EditorToolbar() {
             <button onClick={handleDownload} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="تنزيل">
               <Download size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
             </button>
-            <button onClick={handleSave} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="حفظ محلي">
+            <button onClick={handleSave} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="حفظ سريع">
               <Save size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
             </button>
-            <button onClick={handleRestore} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="استعادة آخر حفظ">
+            <button onClick={handleRestore} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="استعادة آخر حفظ سريع">
               <RotateCcw size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
+            </button>
+
+            <div className="w-px h-4 bg-slate-600/50 mx-1 sm:mx-2 self-center" />
+
+            {/* Advanced Projects Manager & Cheatsheet */}
+            <button 
+              onClick={() => setIsProjectManagerOpen(true)} 
+              className="text-blue-400 hover:text-blue-300 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0 flex items-center gap-1 font-medium text-xs" 
+              title="مدير المشاريع (حفظ واستيراد وتصدير مشاريع متعددة)"
+            >
+              <FolderArchive size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
+              <span className="hidden lg:inline">مشاريعي</span>
+            </button>
+            <button 
+              onClick={() => setIsCheatsheetOpen(true)} 
+              className="text-purple-400 hover:text-purple-300 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0 flex items-center gap-1 font-medium text-xs" 
+              title="دليل لغة ألف (المرجع السريع للأوامر)"
+            >
+              <BookOpen size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
+              <span className="hidden lg:inline">دليل ألف</span>
             </button>
 
             {activeMode === 'visual' && (
@@ -199,6 +223,17 @@ export default function EditorToolbar() {
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      <ProjectManagerModal
+        isOpen={isProjectManagerOpen}
+        onClose={() => setIsProjectManagerOpen(false)}
+      />
+
+      <CheatsheetModal
+        isOpen={isCheatsheetOpen}
+        onClose={() => setIsCheatsheetOpen(false)}
+      />
     </div>
   );
 }

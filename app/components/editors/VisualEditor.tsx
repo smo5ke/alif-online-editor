@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { ReactFlow, MiniMap, Controls, Background, Connection, Edge, ReactFlowInstance } from '@xyflow/react';
+import { ReactFlow, MiniMap, Controls, Background, Connection, Edge, ReactFlowInstance, getNodesBounds, getViewportForBounds } from '@xyflow/react';
+import { toPng } from 'html-to-image';
 import { v4 as uuidv4 } from 'uuid';
 import { useEditorStore } from '../../store/useEditorStore';
 import DynamicNode, { NodeData } from '../DynamicNode';
@@ -9,7 +10,7 @@ import '@xyflow/react/dist/style.css';
 
 import { getLayoutedElements } from '../../lib/layoutUtils';
 import { generateAlifCodeFromGraph } from '../../lib/AlifGenerator';
-import { LayoutTemplate, Code, X } from 'lucide-react';
+import { LayoutTemplate, Code, X, Camera } from 'lucide-react';
 
 const nodeTypes = {
   dynamic: DynamicNode,
@@ -90,7 +91,7 @@ export default function VisualEditor() {
   }, [nodes, edges, setNodes, setEdges]);
 
   const onConnect = useCallback((params: Connection) => {
-    commitHistory();
+    if (!params.source || !params.target || params.source === params.target) return;
     const sourceNode = nodes.find(n => n.id === params.source);
     const targetNode = nodes.find(n => n.id === params.target);
     
@@ -101,46 +102,56 @@ export default function VisualEditor() {
       const outputPort = sourceData.outputs?.find(o => o.id === params.sourceHandle);
       const inputPort = targetData.inputs?.find(i => i.id === params.targetHandle);
       
-      if (outputPort && inputPort) {
-        const sourceType = outputPort.type;
-        const targetType = inputPort.type;
-        
-        let isValid = false;
-        if (sourceType === 'event' || targetType === 'event') {
-          isValid = sourceType === targetType;
-        } else if (sourceType === 'data' || sourceType === 'any' || targetType === 'data' || targetType === 'any') {
-          isValid = true;
-        } else {
-          isValid = sourceType === targetType;
-        }
+      if (!outputPort || !inputPort) {
+        alert('⚠️ اتجاه التوصيل غير صحيح! تأكد من سحب الخط دائماً من مخرج العقدة (اليسار) إلى مدخل العقدة التالية (اليمين).');
+        return;
+      }
 
-        if (!isValid) {
-          alert('⚠️ نوع البيانات غير متطابق. تأكد من توافق أنواع المخرجات والمدخلات (النص مع النص، الرقم مع الرقم، إلخ).');
-          return;
-        }
+      const sourceType = outputPort.type;
+      const targetType = inputPort.type;
+      
+      let isValid = false;
+      if (sourceType === 'event' || targetType === 'event') {
+        isValid = sourceType === targetType;
+      } else if (sourceType === 'data' || sourceType === 'any' || targetType === 'data' || targetType === 'any') {
+        isValid = true;
+      } else {
+        isValid = sourceType === targetType;
+      }
+
+      if (!isValid) {
+        alert('⚠️ نوع البيانات غير متطابق. تأكد من توافق أنواع المخرجات والمدخلات (النص مع النص، الرقم مع الرقم، إلخ).');
+        return;
       }
       
-      const animated = outputPort?.type === 'event' || (!outputPort && params.sourceHandle === 'seq_out');
+      commitHistory();
+
+      const animated = outputPort.type === 'event' || params.sourceHandle === 'seq_out';
       
-      setEdges((eds) => [
-        ...eds,
-        {
-          ...params,
-          id: `e-${params.source}-${params.target}-${uuidv4()}`,
-          type: 'deletable',
-          animated,
-          data: {
-            onDelete: (id: string) => {
-              commitHistory(); // Record deletion
-              setEdges((edges) => edges.filter((e) => e.id !== id));
+      setEdges((eds) => {
+        // Automatically replace any existing edge to the same target handle to avoid duplicate incoming connections
+        const filtered = eds.filter(e => !(e.target === params.target && e.targetHandle === params.targetHandle));
+        return [
+          ...filtered,
+          {
+            ...params,
+            id: `e-${params.source}-${params.target}-${uuidv4()}`,
+            type: 'deletable',
+            animated,
+            data: {
+              onDelete: (id: string) => {
+                commitHistory(); // Record deletion
+                setEdges((edges) => edges.filter((e) => e.id !== id));
+              }
             }
           }
-        }
-      ]);
+        ];
+      });
     }
   }, [nodes, setEdges, commitHistory]);
 
   const isValidConnection = useCallback((connection: Connection | Edge) => {
+    if (!connection.source || !connection.target || connection.source === connection.target) return false;
     const sourceNode = nodes.find(n => n.id === connection.source);
     const targetNode = nodes.find(n => n.id === connection.target);
     if (!sourceNode || !targetNode) return false;
@@ -148,8 +159,14 @@ export default function VisualEditor() {
     const sourceData = sourceNode.data as NodeData;
     const targetData = targetNode.data as NodeData;
 
-    const sourceType = sourceData.outputs?.find(o => o.id === connection.sourceHandle)?.type || 'data';
-    const targetType = targetData.inputs?.find(i => i.id === connection.targetHandle)?.type || 'data';
+    // Strictly ensure sourceHandle is an OUTPUT and targetHandle is an INPUT
+    const outputPort = sourceData.outputs?.find(o => o.id === connection.sourceHandle);
+    const inputPort = targetData.inputs?.find(i => i.id === connection.targetHandle);
+
+    if (!outputPort || !inputPort) return false;
+
+    const sourceType = outputPort.type;
+    const targetType = inputPort.type;
 
     if (sourceType === 'event' || targetType === 'event') {
       return sourceType === targetType;
@@ -158,6 +175,50 @@ export default function VisualEditor() {
       return true;
     }
     return sourceType === targetType;
+  }, [nodes]);
+
+  const exportAsImage = useCallback(() => {
+    if (nodes.length === 0) {
+      alert('لا توجد عقد في المخطط لتصديرها!');
+      return;
+    }
+
+    const viewportElement = document.querySelector('.react-flow__viewport') as HTMLElement;
+    if (!viewportElement) return;
+
+    const nodesBounds = getNodesBounds(nodes);
+    const padding = 60;
+    const imageWidth = Math.max(nodesBounds.width + padding * 2, 400);
+    const imageHeight = Math.max(nodesBounds.height + padding * 2, 300);
+    const viewport = getViewportForBounds(
+      nodesBounds,
+      imageWidth,
+      imageHeight,
+      0.5,
+      2,
+      padding
+    );
+
+    toPng(viewportElement, {
+      backgroundColor: '#0b1120',
+      width: imageWidth,
+      height: imageHeight,
+      style: {
+        width: `${imageWidth}px`,
+        height: `${imageHeight}px`,
+        transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`,
+      },
+    })
+      .then((dataUrl) => {
+        const link = document.createElement('a');
+        link.download = `مخطط-ألف-${Date.now()}.png`;
+        link.href = dataUrl;
+        link.click();
+      })
+      .catch((err) => {
+        console.error('فشل تصدير الصورة:', err);
+        alert('حدث خطأ أثناء تصدير الصورة.');
+      });
   }, [nodes]);
 
   const onControlChange = useCallback((nodeId: string, controlId: string, value: any) => {
@@ -298,6 +359,12 @@ export default function VisualEditor() {
       >
         <Background color="#334155" gap={25} size={1.5} />
         <Controls className="!bottom-20 md:!bottom-4" />
+        <MiniMap 
+          nodeStrokeColor="#64748b" 
+          nodeColor="#1e293b" 
+          maskColor="rgba(11, 17, 32, 0.7)" 
+          className="!hidden md:!block !bottom-4 !right-4 !bg-slate-900/80 !border !border-slate-700/60 !rounded-xl !shadow-2xl" 
+        />
       </ReactFlow>
 
       <div className="absolute bottom-6 md:bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-3 z-30">
@@ -317,6 +384,13 @@ export default function VisualEditor() {
           title="ترتيب العقد تلقائياً"
         >
           <LayoutTemplate size={20} className="text-emerald-400" />
+        </button>
+        <button
+          onClick={exportAsImage}
+          className="bg-slate-700 hover:bg-slate-600 text-white rounded-full shadow-2xl w-12 h-12 flex items-center justify-center transition-colors border border-slate-600/50"
+          title="تصدير المخطط كصورة (PNG)"
+        >
+          <Camera size={20} className="text-purple-400" />
         </button>
         <button
           onClick={(e) => { 

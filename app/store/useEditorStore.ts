@@ -78,6 +78,8 @@ interface EditorState {
   createMacro: (name: string) => void;
   switchGraph: (targetId: string) => void;
   loadProject: (projectId: string, code: string, visualNodes: Node[], visualEdges: Edge[]) => void;
+  loadCustomProject: (project: ProjectState) => void;
+  getCurrentProjectSnapshot: () => ProjectState;
   setErrorNode: (nodeId: string | null) => void;
   setLastRunCode: (code: string) => void;
 }
@@ -525,4 +527,47 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       terminalOutput: []
     };
   }),
+
+  loadCustomProject: (project: ProjectState) => set((state) => {
+    state.commitHistory();
+    return {
+      textCode: project.textCode || '',
+      nodes: project.nodes || [],
+      edges: project.edges || [],
+      mainGraph: project.mainGraph || { nodes: project.nodes || [], edges: project.edges || [] },
+      macros: project.macros || {},
+      currentGraphId: project.currentGraphId || 'main',
+      currentProjectId: null,
+      errorNodeId: null,
+      terminalOutput: [],
+      past: [],
+      future: []
+    };
+  }),
+
+  getCurrentProjectSnapshot: () => {
+    const state = get();
+    // Ensure active graph nodes are properly reflected
+    let finalMainGraph = state.mainGraph;
+    let finalMacros = { ...state.macros };
+
+    if (state.currentGraphId === 'main') {
+      finalMainGraph = { nodes: state.nodes, edges: state.edges };
+    } else if (finalMacros[state.currentGraphId]) {
+      finalMacros[state.currentGraphId] = {
+        ...finalMacros[state.currentGraphId],
+        nodes: state.nodes,
+        edges: state.edges
+      };
+    }
+
+    return {
+      textCode: state.textCode,
+      nodes: state.nodes,
+      edges: state.edges,
+      mainGraph: finalMainGraph,
+      macros: finalMacros,
+      currentGraphId: state.currentGraphId
+    };
+  }
 }));
