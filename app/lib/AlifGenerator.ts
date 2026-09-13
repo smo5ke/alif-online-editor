@@ -109,6 +109,16 @@ export function generateAlifCodeFromGraph(
         let idx = resolveInput(node.id, 'idx_in') ?? 0;
         return `${arrName}[${idx}]`;
       }
+      if (type === 'مصفوفات/دمج') {
+        let a = resolveInput(node.id, 'a_in') ?? '[]';
+        let b = resolveInput(node.id, 'b_in') ?? '[]';
+        return `(${a} + ${b})`;
+      }
+      if (type === 'مصفوفات/موقع عنصر') {
+        let arr = resolveInput(node.id, 'arr_in') ?? '[]';
+        let val = resolveInput(node.id, 'val_in') ?? 'عدم';
+        return `${arr}.فهرس(${val})`;
+      }
       if (type === 'نصوص/قص') {
         let str = resolveInput(node.id, 'str_in') ?? '""';
         let start = resolveInput(node.id, 'start_in') ?? 0;
@@ -128,6 +138,24 @@ export function generateAlifCodeFromGraph(
       if (type === 'نصوص/تصغير') {
         let str = resolveInput(node.id, 'str_in') ?? '""';
         return `${str}.صغير()`;
+      }
+      if (type === 'نصوص/تقسيم') {
+        let str = resolveInput(node.id, 'str_in') ?? '""';
+        let sepIn = resolveInput(node.id, 'sep_in');
+        let sep = sepIn !== undefined ? sepIn : `"${(getControlValue('sep') || ' ').replace(/"/g, '\\"')}"`;
+        return `${str}.قسم(${sep})`;
+      }
+      if (type === 'نصوص/تنظيف') {
+        let str = resolveInput(node.id, 'str_in') ?? '""';
+        return `${str}.جرد()`;
+      }
+      if (type === 'نصوص/فحص') {
+        let str = resolveInput(node.id, 'str_in') ?? '""';
+        let target = resolveInput(node.id, 'target_in') ?? '""';
+        let checkType = getControlValue('check_type') || 'يحتوي';
+        if (checkType === 'يبدأ_بـ') return `${str}.يبدأ_بـ(${target})`;
+        if (checkType === 'ينتهي_بـ') return `${str}.ينتهي_بـ(${target})`;
+        return `(${target} في ${str})`;
       }
       if (type === 'فهارس/جديد') {
         const inputs = data.inputs || [];
@@ -257,6 +285,9 @@ export function generateAlifCodeFromGraph(
           
           code += indent + `اطبع(${argsStr}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
+        } else if (type === 'أوامر/مسح الطرفية') {
+          code += indent + `امسح() # @node:${currNode.id}\n`;
+          currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'متغيرات/إسناد') {
           let varName = getControlValue('var_name');
           let val = resolveInput(currNode.id, 'val_in') ?? 'عدم';
@@ -298,6 +329,10 @@ export function generateAlifCodeFromGraph(
         } else if (type === 'مصفوفات/ترتيب') {
           let arrName = resolveInput(currNode.id, 'arr_in') ?? 'مصفوفة';
           code += indent + `${arrName}.رتب() # @node:${currNode.id}\n`;
+          currNodeId = getNextNodeId(currNode.id, 'seq_out');
+        } else if (type === 'مصفوفات/عكس') {
+          let arrName = resolveInput(currNode.id, 'arr_in') ?? 'مصفوفة';
+          code += indent + `${arrName}.اعكس() # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'فهارس/إضافة') {
           let dictName = resolveInput(currNode.id, 'dict_in') ?? 'فهرس';
@@ -368,6 +403,19 @@ export function generateAlifCodeFromGraph(
         } else if (type === 'حلقات/توقف') {
           code += indent + `توقف # @node:${currNode.id}\n`;
           break;
+        } else if (type === 'حلقات/استمر') {
+          code += indent + `استمر # @node:${currNode.id}\n`;
+          break;
+        } else if (type === 'حلقات/لكل في مصفوفة') {
+          let arr = resolveInput(currNode.id, 'arr_in') ?? '[]';
+          let varName = getControlValue('var_name') || 'عنصر';
+          code += indent + `لكل ${varName} في ${arr}:\n`;
+          
+          let bodyNodeId = getNextNodeId(currNode.id, 'body_out');
+          if (bodyNodeId) code += walkExecution(bodyNodeId, indent + '\t', new Set(pathVisited));
+          else code += indent + '\tتجاوز\n';
+          
+          currNodeId = getNextNodeId(currNode.id, 'done_out');
 
         } else if (type === 'أخطاء/محاولة') {
           code += indent + `حاول:\n`;

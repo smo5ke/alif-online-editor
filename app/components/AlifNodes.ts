@@ -512,4 +512,107 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
       { id: 'finally_out', label: 'في النهاية', type: 'event' },
     ],
   },
+
+  // --- حزمة التحكم والتكرار ---
+  'حلقات/لكل في مصفوفة': {
+    label: 'لكل في مصفوفة',
+    subtitle: 'تكرار العناصر',
+    iconName: 'ListOrdered',
+    color: '#f97316',
+    inputs: [
+      { id: 'seq_in', label: 'تسلسل', type: 'event' },
+      { id: 'arr_in', label: 'المصفوفة', type: 'data' },
+    ],
+    outputs: [
+      { id: 'body_out', label: 'جسم الحلقة', type: 'event' },
+      { id: 'done_out', label: 'انتهى', type: 'event' },
+    ],
+    controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'عنصر' }],
+  },
+  'حلقات/استمر': {
+    label: 'استمر (تخطي)',
+    subtitle: 'للدورة التالية',
+    iconName: 'FastForward',
+    color: '#f97316',
+    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }],
+  },
+
+  // --- حزمة النصوص ---
+  'نصوص/تقسيم': {
+    label: 'تقسيم نص',
+    subtitle: 'قسم()',
+    iconName: 'Split',
+    color: '#eab308',
+    inputs: [
+      { id: 'str_in', label: 'النص', type: 'data' },
+      { id: 'sep_in', label: 'الفاصل', type: 'data' },
+    ],
+    outputs: [{ id: 'res_out', label: 'المصفوفة', type: 'data' }],
+    controls: [{ id: 'sep', type: 'text', label: 'الفاصل الافتراضي', value: ' ' }],
+  },
+  'نصوص/تنظيف': {
+    label: 'تنظيف النص',
+    subtitle: 'جرد()',
+    iconName: 'Eraser',
+    color: '#eab308',
+    inputs: [{ id: 'str_in', label: 'النص', type: 'data' }],
+    outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
+  },
+  'نصوص/فحص': {
+    label: 'فحص النص',
+    subtitle: 'يبدأ / ينتهي / يحتوي',
+    iconName: 'SearchCode',
+    color: '#eab308',
+    inputs: [
+      { id: 'str_in', label: 'النص', type: 'data' },
+      { id: 'target_in', label: 'المستهدف', type: 'data' },
+    ],
+    outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
+    controls: [{ id: 'check_type', type: 'select', label: 'نوع الفحص', value: 'يحتوي', options: ['يحتوي', 'يبدأ_بـ', 'ينتهي_بـ'] }],
+  },
+
+  // --- حزمة المصفوفات ---
+  'مصفوفات/عكس': {
+    label: 'عكس المصفوفة',
+    subtitle: 'اعكس()',
+    iconName: 'ArrowLeftRight',
+    color: '#06b6d4',
+    inputs: [
+      { id: 'seq_in', label: 'تسلسل', type: 'event' },
+      { id: 'arr_in', label: 'المصفوفة', type: 'data' },
+    ],
+    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+  },
+  'مصفوفات/دمج': {
+    label: 'دمج مصفوفتين',
+    subtitle: 'أ + ب',
+    iconName: 'Combine',
+    color: '#06b6d4',
+    inputs: [
+      { id: 'a_in', label: 'مصفوفة أ', type: 'data' },
+      { id: 'b_in', label: 'مصفوفة ب', type: 'data' },
+    ],
+    outputs: [{ id: 'res_out', label: 'المصفوفة', type: 'data' }],
+  },
+  'مصفوفات/موقع عنصر': {
+    label: 'موقع عنصر',
+    subtitle: 'فهرس()',
+    iconName: 'LocateFixed',
+    color: '#06b6d4',
+    inputs: [
+      { id: 'arr_in', label: 'المصفوفة', type: 'data' },
+      { id: 'val_in', label: 'العنصر', type: 'data' },
+    ],
+    outputs: [{ id: 'res_out', label: 'رقم الفهرس', type: 'data' }],
+  },
+
+  // --- حزمة الأوامر والطرفية ---
+  'أوامر/مسح الطرفية': {
+    label: 'مسح الطرفية',
+    subtitle: 'امسح()',
+    iconName: 'Terminal',
+    color: '#ec4899',
+    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }],
+    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+  },
 };
