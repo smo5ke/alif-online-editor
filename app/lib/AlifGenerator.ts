@@ -212,6 +212,36 @@ export function generateAlifCodeFromGraph(
         let arg = resolveInput(node.id, 'arg_in') ?? '';
         return `${getControlValue('class_name')}(${arg})`;
       }
+      if (type === 'كائنات/استدعاء طريقة') {
+        let obj = resolveInput(node.id, 'obj_in') ?? 'كائن';
+        let method = getControlValue('method_name') || 'تشغيل';
+        let arg = resolveInput(node.id, 'arg_in');
+        let argStr = arg !== null && arg !== undefined ? arg : '';
+        return `${obj}.${method}(${argStr})`;
+      }
+      if (type === 'فهارس/احضر') {
+        let dict = resolveInput(node.id, 'dict_in') ?? 'فهرس';
+        let key = resolveInput(node.id, 'key_in') ?? '""';
+        let defVal = resolveInput(node.id, 'default_in') ?? 'عدم';
+        return `${dict}.احضر(${key}, ${defVal})`;
+      }
+      if (type === 'فهارس/فحص مفتاح') {
+        let dict = resolveInput(node.id, 'dict_in') ?? 'فهرس';
+        let key = resolveInput(node.id, 'key_in') ?? '""';
+        return `(${key} في ${dict})`;
+      }
+      if (type === 'بيانات/تعبير مخصص') {
+        let expr = getControlValue('expr') || 'أ + ب';
+        let a = resolveInput(node.id, 'a_in');
+        let b = resolveInput(node.id, 'b_in');
+        if (a !== null && a !== undefined) {
+          expr = expr.replace(/\bأ\b/g, `(${a})`);
+        }
+        if (b !== null && b !== undefined) {
+          expr = expr.replace(/\bب\b/g, `(${b})`);
+        }
+        return `(${expr})`;
+      }
       return 'عدم';
     }
   
@@ -288,6 +318,18 @@ export function generateAlifCodeFromGraph(
         } else if (type === 'أوامر/مسح الطرفية') {
           code += indent + `امسح() # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
+        } else if (type === 'أوامر/سطر مخصص') {
+          let cmd = getControlValue('code') || 'تجاوز';
+          let a = resolveInput(currNode.id, 'a_in');
+          let b = resolveInput(currNode.id, 'b_in');
+          if (a !== null && a !== undefined) {
+            cmd = cmd.replace(/\bأ\b/g, `${a}`);
+          }
+          if (b !== null && b !== undefined) {
+            cmd = cmd.replace(/\bب\b/g, `${b}`);
+          }
+          code += indent + `${cmd} # @node:${currNode.id}\n`;
+          currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'متغيرات/إسناد') {
           let varName = getControlValue('var_name');
           let val = resolveInput(currNode.id, 'val_in') ?? 'عدم';
@@ -334,11 +376,22 @@ export function generateAlifCodeFromGraph(
           let arrName = resolveInput(currNode.id, 'arr_in') ?? 'مصفوفة';
           code += indent + `${arrName}.اعكس() # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
+        } else if (type === 'مصفوفات/تعديل عنصر') {
+          let arr = resolveInput(currNode.id, 'arr_in') ?? 'مصفوفة';
+          let idx = resolveInput(currNode.id, 'idx_in') ?? 0;
+          let val = resolveInput(currNode.id, 'val_in') ?? 'عدم';
+          code += indent + `${arr}[${idx}] = ${val} # @node:${currNode.id}\n`;
+          currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'فهارس/إضافة') {
           let dictName = resolveInput(currNode.id, 'dict_in') ?? 'فهرس';
           let key = resolveInput(currNode.id, 'key_in') ?? '""';
           let val = resolveInput(currNode.id, 'val_in') ?? 'عدم';
           code += indent + `${dictName}[${key}] = ${val} # @node:${currNode.id}\n`;
+          currNodeId = getNextNodeId(currNode.id, 'seq_out');
+        } else if (type === 'فهارس/حذف مفتاح') {
+          let dictName = resolveInput(currNode.id, 'dict_in') ?? 'فهرس';
+          let key = resolveInput(currNode.id, 'key_in') ?? '""';
+          code += indent + `احذف ${dictName}[${key}] # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'دوال/استدعاء') {
           let arg = resolveInput(currNode.id, 'arg_in') ?? 'عدم';
@@ -349,6 +402,13 @@ export function generateAlifCodeFromGraph(
           let prop = getControlValue('prop_name');
           let val = resolveInput(currNode.id, 'val_in') ?? 'عدم';
           code += indent + `هذا.${prop} = ${val} # @node:${currNode.id}\n`;
+          currNodeId = getNextNodeId(currNode.id, 'seq_out');
+        } else if (type === 'كائنات/استدعاء طريقة') {
+          let obj = resolveInput(currNode.id, 'obj_in') ?? 'كائن';
+          let method = getControlValue('method_name') || 'تشغيل';
+          let arg = resolveInput(currNode.id, 'arg_in');
+          let argStr = arg !== null && arg !== undefined ? arg : '';
+          code += indent + `${obj}.${method}(${argStr}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
 
         } else if (type === 'استيراد/مكتبة') {

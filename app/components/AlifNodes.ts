@@ -615,4 +615,101 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }],
     outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
   },
+
+  // --- حزمة الفهارس المتقدمة ---
+  'فهارس/احضر': {
+    label: 'جلب بقيمة افتراضية',
+    subtitle: 'احضر(مفتاح, افتراضي)',
+    iconName: 'FolderSearch',
+    color: '#3b82f6',
+    inputs: [
+      { id: 'dict_in', label: 'الفهرس', type: 'data' },
+      { id: 'key_in', label: 'المفتاح', type: 'data' },
+      { id: 'default_in', label: 'قيمة افتراضية', type: 'data' },
+    ],
+    outputs: [{ id: 'res_out', label: 'القيمة', type: 'data' }],
+  },
+  'فهارس/فحص مفتاح': {
+    label: 'فحص وجود مفتاح',
+    subtitle: 'مفتاح في فهرس',
+    iconName: 'KeyRound',
+    color: '#3b82f6',
+    inputs: [
+      { id: 'dict_in', label: 'الفهرس', type: 'data' },
+      { id: 'key_in', label: 'المفتاح', type: 'data' },
+    ],
+    outputs: [{ id: 'res_out', label: 'النتيجة (صح/خطأ)', type: 'data' }],
+  },
+  'فهارس/حذف مفتاح': {
+    label: 'حذف مفتاح من فهرس',
+    subtitle: 'احذف فهرس[مفتاح]',
+    iconName: 'Trash2',
+    color: '#3b82f6',
+    inputs: [
+      { id: 'seq_in', label: 'تسلسل', type: 'event' },
+      { id: 'dict_in', label: 'الفهرس', type: 'data' },
+      { id: 'key_in', label: 'المفتاح', type: 'data' },
+    ],
+    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+  },
+
+  // --- حزمة المصفوفات المتقدمة ---
+  'مصفوفات/تعديل عنصر': {
+    label: 'تعديل عنصر بمصفوفة',
+    subtitle: 'مصفوفة[فهرس] = قيمة',
+    iconName: 'FileEdit',
+    color: '#06b6d4',
+    inputs: [
+      { id: 'seq_in', label: 'تسلسل', type: 'event' },
+      { id: 'arr_in', label: 'المصفوفة', type: 'data' },
+      { id: 'idx_in', label: 'الفهرس', type: 'data' },
+      { id: 'val_in', label: 'القيمة الجديدة', type: 'data' },
+    ],
+    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+  },
+
+  // --- حزمة الكائنات المتقدمة ---
+  'كائنات/استدعاء طريقة': {
+    label: 'استدعاء دالة كائن',
+    subtitle: 'كائن.دالة(معامل)',
+    iconName: 'Cpu',
+    color: '#6366f1',
+    inputs: [
+      { id: 'seq_in', label: 'تسلسل', type: 'event' },
+      { id: 'obj_in', label: 'الكائن', type: 'data' },
+      { id: 'arg_in', label: 'المعامل', type: 'data' },
+    ],
+    outputs: [
+      { id: 'seq_out', label: 'التالي', type: 'event' },
+      { id: 'res_out', label: 'النتيجة', type: 'data' },
+    ],
+    controls: [{ id: 'method_name', type: 'text', label: 'اسم الدالة / الطريقة', value: 'تشغيل' }],
+  },
+
+  // --- حزمة الشيفرة الحرة المخصصة ---
+  'بيانات/تعبير مخصص': {
+    label: 'تعبير برمجي مخصص',
+    subtitle: 'تعبير ألف حر',
+    iconName: 'FileCode',
+    color: '#8b5cf6',
+    inputs: [
+      { id: 'a_in', label: 'مدخل أ (اختياري)', type: 'data' },
+      { id: 'b_in', label: 'مدخل ب (اختياري)', type: 'data' },
+    ],
+    outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
+    controls: [{ id: 'expr', type: 'text', label: 'التعبير (استخدم أ و ب)', value: 'أ + ب' }],
+  },
+  'أوامر/سطر مخصص': {
+    label: 'سطر برمجي مخصص',
+    subtitle: 'تعليمة ألف حرة',
+    iconName: 'Terminal',
+    color: '#ec4899',
+    inputs: [
+      { id: 'seq_in', label: 'تسلسل', type: 'event' },
+      { id: 'a_in', label: 'مدخل أ (اختياري)', type: 'data' },
+      { id: 'b_in', label: 'مدخل ب (اختياري)', type: 'data' },
+    ],
+    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+    controls: [{ id: 'code', type: 'text', label: 'التعليمة البرمجية', value: 'اطبع("مرحباً بك!")' }],
+  },
 };
