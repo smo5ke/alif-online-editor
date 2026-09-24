@@ -11,6 +11,7 @@ import '@xyflow/react/dist/style.css';
 import { getLayoutedElements } from '../../lib/layoutUtils';
 import { generateAlifCodeFromGraph } from '../../lib/AlifGenerator';
 import { LayoutTemplate, Code, X, Camera } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 
 const nodeTypes = {
   dynamic: DynamicNode,
@@ -479,9 +480,6 @@ export default function VisualEditor() {
                   acc[category].push({ key, def });
                   return acc;
                 }, {} as Record<string, { key: string, def: any }[]>);
-                
-                // Import LucideIcons to use them dynamically in the menu
-                const LucideIcons = require('lucide-react');
 
                 return Object.entries(grouped).map(([category, items]) => (
                   <div key={category} className="mb-2 last:mb-0">
@@ -490,7 +488,7 @@ export default function VisualEditor() {
                     </div>
                     <div>
                       {items.map(({ key, def }) => {
-                        const IconComponent = def.iconName ? LucideIcons[def.iconName] : LucideIcons.Code;
+                        const IconComponent = (def.iconName ? (LucideIcons as any)[def.iconName] : (LucideIcons as any).Code) || (LucideIcons as any).Code;
                         return (
                           <button
                             key={key}

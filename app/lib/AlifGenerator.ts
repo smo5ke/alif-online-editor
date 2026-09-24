@@ -9,6 +9,21 @@ export function generateAlifCodeFromGraph(
   
   function compileContext(nodes: Node[], edges: Edge[], isMacro: boolean, macroName?: string): string {
     let visitedNodes = new Set<string>();
+
+    const escapeAlifString = (s: any): string => {
+      return String(s ?? '')
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '');
+    };
+
+    const normalizeOp = (op: any): string => {
+      // Legacy graphs stored division as backslash; Alif 5.3 uses forward slash
+      if (op === '\\') return '/';
+      if (op === '\\=') return '/=';
+      return op;
+    };
     
     function getNextNodeId(nodeId: string, sourceHandle: string): string | null {
       const edge = edges.find((e) => e.source === nodeId && e.sourceHandle === sourceHandle);
@@ -47,14 +62,14 @@ export function generateAlifCodeFromGraph(
 
       const getControlValue = (id: string) => controls.find((c: any) => c.id === id)?.value;
   
-      if (type === 'بيانات/نص') return `"${getControlValue('value')}"`;
+      if (type === 'بيانات/نص') return `"${escapeAlifString(getControlValue('value'))}"`;
       if (type === 'بيانات/رقم') {
         let val = Number(getControlValue('value'));
         if (!Number.isInteger(val)) val = parseFloat(val.toFixed(4));
         return val;
       }
       if (type === 'شروط/منطق') return getControlValue('value');
-      if (type === 'أوامر/إدخال مستخدم') return `ادخل("${getControlValue('prompt')}")`;
+      if (type === 'أوامر/إدخال مستخدم') return `ادخل("${escapeAlifString(getControlValue('prompt'))}")`;
       if (type === 'متغيرات/قراءة') return getControlValue('var_name');
       if (type === 'دوال/طول') {
         let val = resolveInput(node.id, 'val_in') ?? '""';
@@ -92,7 +107,7 @@ export function generateAlifCodeFromGraph(
       if (type === 'بيانات/حساب' || type === 'شروط/مقارنة' || type === 'شروط/عملية منطقية') {
         let a = resolveInput(node.id, 'a_in') ?? 0;
         let b = resolveInput(node.id, 'b_in') ?? 0;
-        return `(${a} ${getControlValue('op')} ${b})`;
+        return `(${a} ${normalizeOp(getControlValue('op'))} ${b})`;
       }
       if (type === 'بيانات/دمج نصوص') {
         let a = resolveInput(node.id, 'a_in') ?? '""';
@@ -142,7 +157,7 @@ export function generateAlifCodeFromGraph(
       if (type === 'نصوص/تقسيم') {
         let str = resolveInput(node.id, 'str_in') ?? '""';
         let sepIn = resolveInput(node.id, 'sep_in');
-        let sep = sepIn !== undefined ? sepIn : `"${(getControlValue('sep') || ' ').replace(/"/g, '\\"')}"`;
+        let sep = sepIn !== undefined && sepIn !== null ? sepIn : `"${escapeAlifString(getControlValue('sep') || ' ')}"`;
         return `${str}.قسم(${sep})`;
       }
       if (type === 'نصوص/تنظيف') {
@@ -203,7 +218,7 @@ export function generateAlifCodeFromGraph(
       if (type === 'شروط/انتماء') {
         let val = resolveInput(node.id, 'val_in') ?? '""';
         let list = resolveInput(node.id, 'list_in') ?? '[]';
-        return `(${val} ${getControlValue('op')} ${list})`;
+        return `(${val} ${normalizeOp(getControlValue('op'))} ${list})`;
       }
       if (type === 'كائنات/هذا') {
         return `هذا.${getControlValue('prop_name')}`;
@@ -305,8 +320,8 @@ export function generateAlifCodeFromGraph(
           const end = getControlValue('end');
           const flush = getControlValue('flush');
           
-          if (sep !== undefined) kwargs.push(`الفاصل="${sep.replace(/"/g, '\\"')}"`);
-          if (end !== undefined) kwargs.push(`النهاية="${end.replace(/"/g, '\\"')}"`);
+          if (sep !== undefined) kwargs.push(`الفاصل="${escapeAlifString(sep)}"`);
+          if (end !== undefined) kwargs.push(`النهاية="${escapeAlifString(end)}"`);
           if (flush === 'صح') kwargs.push(`مباشر=صح`);
           
           if (kwargs.length > 0) {
@@ -337,7 +352,7 @@ export function generateAlifCodeFromGraph(
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'متغيرات/إسناد رجعي') {
           let varName = getControlValue('var_name');
-          let op = getControlValue('op');
+          let op = normalizeOp(getControlValue('op'));
           let val = resolveInput(currNode.id, 'val_in') ?? 'عدم';
           code += indent + `${varName} ${op} ${val} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');

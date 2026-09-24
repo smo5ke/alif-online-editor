@@ -28,7 +28,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     label: 'إسناد رجعي', subtitle: '+=, -=, ...', iconName: 'ArrowRightLeft', color: '#f97316',
     inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }, { id: 'val_in', label: 'القيمة', type: 'data' }],
     outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
-    controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'س' }, { id: 'op', type: 'select', label: 'العملية', value: '+=', options: ['+=', '-=', '*=', '\\=', '^='] }],
+    controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'س' }, { id: 'op', type: 'select', label: 'العملية', value: '+=', options: ['+=', '-=', '*=', '/=', '%=', '^='] }],
   },
   'متغيرات/إسناد شرطي': {
     label: 'إسناد شرطي', subtitle: 'اذا / والا', iconName: 'HelpCircle', color: '#f97316',
@@ -260,7 +260,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
       { id: 'b_in', label: 'ب', type: 'data' },
     ],
     outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
-    controls: [{ id: 'op', type: 'select', label: 'عملية', value: '+', options: ['+', '-', '*', '\\'] }],
+    controls: [{ id: 'op', type: 'select', label: 'عملية', value: '+', options: ['+', '-', '*', '/', '%', '^'] }],
   },
 
   'بيانات/رقم': {

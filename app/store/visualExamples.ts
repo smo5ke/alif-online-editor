@@ -432,7 +432,7 @@ export const visualExamples: Record<string, VisualExample> = {
         data: { 
           ...nodeDefinitions['بيانات/حساب'], 
           originalType: 'بيانات/حساب',
-          controls: [{ id: 'op', type: 'select', label: 'عملية', value: '*', options: ['+', '-', '*', '\\'] }] 
+          controls: [{ id: 'op', type: 'select', label: 'عملية', value: '*', options: ['+', '-', '*', '/', '%', '^'] }] 
         } 
       },
       { 

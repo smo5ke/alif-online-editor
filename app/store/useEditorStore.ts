@@ -202,19 +202,19 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     edges: typeof edges === 'function' ? edges(state.edges) : edges 
   })),
   
-  onNodesChange: (changes) => set((state) => {
+  onNodesChange: (changes) => {
     if (changes.some(c => c.type === 'remove' || c.type === 'add')) {
-      state.commitHistory();
+      get().commitHistory();
     }
-    return { nodes: applyNodeChanges(changes, state.nodes), errorNodeId: null };
-  }),
+    set((state) => ({ nodes: applyNodeChanges(changes, state.nodes), errorNodeId: null }));
+  },
   
-  onEdgesChange: (changes) => set((state) => {
+  onEdgesChange: (changes) => {
     if (changes.some(c => c.type === 'remove' || c.type === 'add')) {
-      state.commitHistory();
+      get().commitHistory();
     }
-    return { edges: applyEdgeChanges(changes, state.edges), errorNodeId: null };
-  }),
+    set((state) => ({ edges: applyEdgeChanges(changes, state.edges), errorNodeId: null }));
+  },
   
   appendTerminalOutput: (text, color) => set((state) => ({ 
     terminalOutput: [...state.terminalOutput, { text, color }] 
@@ -226,8 +226,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setErrorLineNumber: (line) => set({ errorLineNumber: line }),
   setLastRunCode: (code) => set({ lastRunCode: code }),
 
-  addDynamicInput: (nodeId: string) => set((state) => {
-    state.commitHistory();
+  addDynamicInput: (nodeId: string) => {
+    get().commitHistory();
+    const activeGraphId = get().currentGraphId;
+    set((state) => {
     const newNodes = state.nodes.map((node) => {
       if (node.id === nodeId) {
         const currentInputs = (node.data.inputs as any[]) || [];
@@ -248,15 +250,17 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       return node;
     });
 
-    if (state.currentGraphId !== 'main') {
-      setTimeout(() => useEditorStore.getState().syncMacroInstances(state.currentGraphId), 0);
-    }
-    
     return { nodes: newNodes };
-  }),
+    });
 
-  updateNodeControl: (nodeId: string, controlId: string, value: any) => set((state) => {
-    state.commitHistory();
+    if (activeGraphId !== 'main') {
+      setTimeout(() => useEditorStore.getState().syncMacroInstances(activeGraphId), 0);
+    }
+  },
+
+  updateNodeControl: (nodeId: string, controlId: string, value: any) => {
+    get().commitHistory();
+    set((state) => {
     return {
       nodes: state.nodes.map((node) => {
       if (node.id === nodeId) {
@@ -276,10 +280,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       return node;
       })
     };
-  }),
+    });
+  },
 
-  addDynamicOutput: (nodeId: string) => set((state) => {
-    state.commitHistory();
+  addDynamicOutput: (nodeId: string) => {
+    get().commitHistory();
+    const activeGraphId = get().currentGraphId;
+    set((state) => {
     const newNodes = state.nodes.map((node) => {
       if (node.id === nodeId) {
         const currentOutputs = (node.data.outputs as any[]) || [];
@@ -290,15 +297,19 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       return node;
     });
 
-    if (state.currentGraphId !== 'main') {
-      setTimeout(() => useEditorStore.getState().syncMacroInstances(state.currentGraphId), 0);
+    return { nodes: newNodes };
+    });
+
+    if (activeGraphId !== 'main') {
+      setTimeout(() => useEditorStore.getState().syncMacroInstances(activeGraphId), 0);
     }
 
-    return { nodes: newNodes };
-  }),
+  },
 
-  removeDynamicInput: (nodeId: string, portId: string) => set((state) => {
-    state.commitHistory();
+  removeDynamicInput: (nodeId: string, portId: string) => {
+    get().commitHistory();
+    const activeGraphId = get().currentGraphId;
+    set((state) => {
     const newNodes = state.nodes.map((node) => {
       if (node.id === nodeId) {
         const currentInputs = (node.data.inputs as any[]) || [];
@@ -316,15 +327,19 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     // Cleanup edges connected to this port
     const newEdges = state.edges.filter(e => !(e.target === nodeId && e.targetHandle === portId));
 
-    if (state.currentGraphId !== 'main') {
-      setTimeout(() => useEditorStore.getState().syncMacroInstances(state.currentGraphId), 0);
+    return { nodes: newNodes, edges: newEdges };
+    });
+
+    if (activeGraphId !== 'main') {
+      setTimeout(() => useEditorStore.getState().syncMacroInstances(activeGraphId), 0);
     }
 
-    return { nodes: newNodes, edges: newEdges };
-  }),
+  },
 
-  removeDynamicOutput: (nodeId: string, portId: string) => set((state) => {
-    state.commitHistory();
+  removeDynamicOutput: (nodeId: string, portId: string) => {
+    get().commitHistory();
+    const activeGraphId = get().currentGraphId;
+    set((state) => {
     const newNodes = state.nodes.map((node) => {
       if (node.id === nodeId) {
         const currentOutputs = (node.data.outputs as any[]) || [];
@@ -342,12 +357,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     // Cleanup edges connected to this port
     const newEdges = state.edges.filter(e => !(e.source === nodeId && e.sourceHandle === portId));
 
-    if (state.currentGraphId !== 'main') {
-      setTimeout(() => useEditorStore.getState().syncMacroInstances(state.currentGraphId), 0);
-    }
-
     return { nodes: newNodes, edges: newEdges };
-  }),
+    });
+
+    if (activeGraphId !== 'main') {
+      setTimeout(() => useEditorStore.getState().syncMacroInstances(activeGraphId), 0);
+    }
+  },
 
   syncMacroInstances: (macroId: string) => set((state) => {
     // Determine where the macro's latest definition is
@@ -426,10 +442,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     return newState;
   }),
 
-  createMacro: (name: string) => set((state) => {
-    state.commitHistory();
+  createMacro: (name: string) => {
+    get().commitHistory();
     const macroId = `macro_${Date.now()}`;
-    return {
+    set((state) => ({
       macros: {
         ...state.macros,
         [macroId]: {
@@ -438,13 +454,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           edges: []
         }
       }
-    };
-  }),
+    }));
+  },
 
-  switchGraph: (targetId: string) => set((state) => {
-    if (state.currentGraphId === targetId) return {};
+  switchGraph: (targetId: string) => {
+    const state = get();
+    if (state.currentGraphId === targetId) return;
 
-    state.commitHistory();
+    get().commitHistory();
 
     // 1. Save current active nodes/edges to their storage
     let newMainGraph = state.mainGraph;
@@ -470,17 +487,17 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       targetEdges = newMacros[targetId].edges;
     }
 
-    return {
+    set({
       currentGraphId: targetId,
       mainGraph: newMainGraph,
       macros: newMacros,
       nodes: targetNodes,
       edges: targetEdges
-    };
-  }),
+    });
+  },
 
-  loadProject: (projectId: string, code: string, visualNodes: Node[], visualEdges: Edge[]) => set((state) => {
-    state.commitHistory();
+  loadProject: (projectId: string, code: string, visualNodes: Node[], visualEdges: Edge[]) => {
+    const state = get();
     
     // Save current state to cache
     const newCache = { ...state.projectCache };
@@ -498,7 +515,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     // Load from cache if exists
     if (newCache[projectId]) {
       const cached = newCache[projectId];
-      return {
+      set({
         projectCache: newCache,
         currentProjectId: projectId,
         textCode: cached.textCode,
@@ -510,11 +527,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         past: [],
         future: [],
         errorNodeId: null,
+        errorLineNumber: null,
         terminalOutput: []
-      };
+      });
+      return;
     }
 
-    return {
+    set({
       projectCache: newCache,
       currentProjectId: projectId,
       textCode: code,
@@ -526,7 +545,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       past: [],
       future: [],
       errorNodeId: null,
+      errorLineNumber: null,
       terminalOutput: []
-    };
-  }),
+    });
+  },
 }));

@@ -1,8 +1,31 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useEditorStore, codeExamples } from '../../store/useEditorStore';
 import { visualExamples } from '../../store/visualExamples';
+import { generateAlifCodeFromGraph } from '../../lib/AlifGenerator';
 import { FileText, Copy, Share2, Download, Save, RotateCcw, Maximize, ChevronDown, Code, Undo2, Redo2, BookOpen } from 'lucide-react';
 import CheatsheetModal from '../modals/CheatsheetModal';
+
+function getActiveCode(): string {
+  const state = useEditorStore.getState();
+  if (state.activeMode === 'visual') {
+    let finalMainNodes = state.nodes;
+    let finalMainEdges = state.edges;
+    const finalMacros = { ...state.macros };
+    if (state.currentGraphId !== 'main') {
+      finalMainNodes = state.mainGraph.nodes;
+      finalMainEdges = state.mainGraph.edges;
+      if (finalMacros[state.currentGraphId]) {
+        finalMacros[state.currentGraphId] = {
+          ...finalMacros[state.currentGraphId],
+          nodes: state.nodes,
+          edges: state.edges
+        };
+      }
+    }
+    return generateAlifCodeFromGraph(finalMainNodes, finalMainEdges, finalMacros).replace(/\u00A0/g, " ");
+  }
+  return state.textCode.replace(/\u00A0/g, " ");
+}
 
 export default function EditorToolbar() {
   const { activeMode, setMode, setTextCode, textCode, isTerminalHidden, setIsTerminalHidden, setNodes, setEdges, undo, redo, past, future } = useEditorStore();
@@ -11,7 +34,7 @@ export default function EditorToolbar() {
   const [isCheatsheetOpen, setIsCheatsheetOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
+  // Close dropdown when clicking outside + load shared ?code= links
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -19,6 +42,26 @@ export default function EditorToolbar() {
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
+
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const raw = params.get('code');
+      if (raw) {
+        // Recover '+' characters that URLSearchParams may have turned into spaces
+        const normalized = raw.replace(/ /g, '+');
+        const decoded = decodeURIComponent(atob(normalized));
+        if (decoded) {
+          useEditorStore.getState().setTextCode(decoded);
+          useEditorStore.getState().setMode('code');
+        }
+        // Clean the URL so switching examples doesn't reload shared code
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, '', cleanUrl);
+      }
+    } catch (e) {
+      console.error('فشل تحميل الرابط المشترك:', e);
+    }
+
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
@@ -54,7 +97,7 @@ export default function EditorToolbar() {
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(textCode);
+      await navigator.clipboard.writeText(getActiveCode());
       alert('تم نسخ الكود بنجاح!');
     } catch (err) {
       console.error('فشل النسخ:', err);
@@ -63,8 +106,8 @@ export default function EditorToolbar() {
 
   const handleShare = async () => {
     try {
-      const encoded = btoa(encodeURIComponent(textCode));
-      const url = `${window.location.origin}${window.location.pathname}?code=${encoded}`;
+      const encoded = btoa(encodeURIComponent(getActiveCode()));
+      const url = `${window.location.origin}${window.location.pathname}?code=${encodeURIComponent(encoded)}`;
       await navigator.clipboard.writeText(url);
       alert('تم نسخ رابط المشاركة!');
     } catch (err) {
@@ -73,7 +116,7 @@ export default function EditorToolbar() {
   };
 
   const handleDownload = () => {
-    const blob = new Blob([textCode], { type: 'text/plain;charset=utf-8' });
+    const blob = new Blob([getActiveCode()], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -85,17 +128,50 @@ export default function EditorToolbar() {
   };
 
   const handleSave = () => {
-    localStorage.setItem('alif_saved_code', textCode);
+    const state = useEditorStore.getState();
+    if (state.activeMode === 'visual') {
+      localStorage.setItem('alif_saved_visual', JSON.stringify({
+        nodes: state.nodes,
+        edges: state.edges,
+        mainGraph: state.mainGraph,
+        macros: state.macros,
+        currentGraphId: state.currentGraphId,
+      }));
+    } else {
+      localStorage.setItem('alif_saved_code', state.textCode);
+    }
     alert('تم حفظ الكود محلياً المتصفح!');
   };
 
   const handleRestore = () => {
-    const saved = localStorage.getItem('alif_saved_code');
-    if (saved) {
-      setTextCode(saved);
-      alert('تم استعادة آخر نسخة محفوظة!');
+    const state = useEditorStore.getState();
+    if (state.activeMode === 'visual') {
+      const saved = localStorage.getItem('alif_saved_visual');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          state.setNodes(parsed.nodes || []);
+          state.setEdges(parsed.edges || []);
+          useEditorStore.setState({
+            mainGraph: parsed.mainGraph || { nodes: [], edges: [] },
+            macros: parsed.macros || {},
+            currentGraphId: parsed.currentGraphId || 'main',
+          });
+          alert('تم استعادة آخر نسخة محفوظة!');
+        } catch {
+          alert('نسخة الحفظ المرئي تالفة.');
+        }
+      } else {
+        alert('لا توجد نسخة مرئية محفوظة سابقاً.');
+      }
     } else {
-      alert('لا توجد نسخة محفوظة سابقاً.');
+      const saved = localStorage.getItem('alif_saved_code');
+      if (saved) {
+        setTextCode(saved);
+        alert('تم استعادة آخر نسخة محفوظة!');
+      } else {
+        alert('لا توجد نسخة محفوظة سابقاً.');
+      }
     }
   };
 

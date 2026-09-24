@@ -137,10 +137,11 @@ export function useAlifCompiler() {
 
       const generated = generateAlifCodeFromGraph(finalMainNodes, finalMainEdges, finalMacros);
       codeToRun = generated.replace(/\u00A0/g, " ");
-      useEditorStore.getState().setLastRunCode(codeToRun);
     } else {
       codeToRun = textCode.replace(/\u00A0/g, " ");
     }
+
+    useEditorStore.getState().setLastRunCode(codeToRun);
 
     if (!codeToRun || codeToRun.trim() === '') {
       useEditorStore.getState().appendTerminalOutput('❌ لم يتم العثور على أي كود لتشغيله!\n(إذا كنت في المحرر المرئي، تأكد من وجود عقدة "بداية البرنامج")', 'text-amber-400');
