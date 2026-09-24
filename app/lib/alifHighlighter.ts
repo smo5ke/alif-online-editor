@@ -161,7 +161,8 @@ export function formatAlifCode(code: string): string {
     }
 
     // Check if line should unindent (like والا, اواذا, خلل)
-    if (/^(والا|اواذا|خلل)\b/.test(trimmed)) {
+    // Note: \b does not work after Arabic letters (non-word chars), so match explicitly
+    if (/^(والا|اواذا|خلل)(?![\u0600-\u06FF0-9A-Za-z_])/.test(trimmed)) {
       currentIndent = Math.max(0, currentIndent - 1);
     }
 

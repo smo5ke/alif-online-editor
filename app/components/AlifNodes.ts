@@ -109,6 +109,8 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
   },
   'كائنات/إنشاء': {
     label: 'إنشاء كائن', subtitle: 'جديد()', iconName: 'Box', color: '#f43f5e',
+    allowDynamicInputs: true,
+    dynamicInputLabel: 'معامل',
     inputs: [{ id: 'arg_in', label: 'المعطيات', type: 'data' }], outputs: [{ id: 'obj_out', label: 'الكائن', type: 'data' }],
     controls: [{ id: 'class_name', type: 'text', label: 'اسم الصنف', value: 'شخص' }],
   },
@@ -156,6 +158,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     outputs: [
       { id: 'true_out', label: 'اذا صح', type: 'event' },
       { id: 'false_out', label: 'والا', type: 'event' },
+      { id: 'seq_out', label: 'التالي', type: 'event' },
     ],
   },
   'شروط/مقارنة': {
@@ -472,7 +475,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     outputs: [{ id: 'body_out', label: 'جسم الدالة', type: 'event' }],
     controls: [
       { id: 'func_name', type: 'text', label: 'الاسم', value: 'عملية' },
-      { id: 'arg', type: 'text', label: 'المعامل', value: 'الرقم' },
+      { id: 'arg', type: 'text', label: 'المعاملات (افصل بفاصلة ,)', value: 'الرقم' },
     ],
   },
   'دوال/استدعاء': {
@@ -480,6 +483,8 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     subtitle: 'تشغيل',
     iconName: 'PhoneCall',
     color: '#10b981',
+    allowDynamicInputs: true,
+    dynamicInputLabel: 'معامل',
     inputs: [
       { id: 'seq_in', label: 'تسلسل', type: 'event' },
       { id: 'arg_in', label: 'المعامل', type: 'data' },
@@ -510,6 +515,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
       { id: 'try_out', label: 'حاول', type: 'event' },
       { id: 'catch_out', label: 'في حال الخطأ', type: 'event' },
       { id: 'finally_out', label: 'في النهاية', type: 'event' },
+      { id: 'seq_out', label: 'التالي', type: 'event' },
     ],
   },
 
@@ -674,6 +680,8 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     subtitle: 'كائن.دالة(معامل)',
     iconName: 'Cpu',
     color: '#6366f1',
+    allowDynamicInputs: true,
+    dynamicInputLabel: 'معامل',
     inputs: [
       { id: 'seq_in', label: 'تسلسل', type: 'event' },
       { id: 'obj_in', label: 'الكائن', type: 'data' },

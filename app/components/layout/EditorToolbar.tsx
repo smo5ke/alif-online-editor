@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useEditorStore, codeExamples } from '../../store/useEditorStore';
 import { visualExamples } from '../../store/visualExamples';
 import { generateAlifCodeFromGraph } from '../../lib/AlifGenerator';
+import { buildShareUrl, parseSharedCode } from '../../lib/shareCode';
 import { FileText, Copy, Share2, Download, Save, RotateCcw, Maximize, ChevronDown, Code, Undo2, Redo2, BookOpen } from 'lucide-react';
 import CheatsheetModal from '../modals/CheatsheetModal';
 
@@ -28,7 +29,7 @@ function getActiveCode(): string {
 }
 
 export default function EditorToolbar() {
-  const { activeMode, setMode, setTextCode, textCode, isTerminalHidden, setIsTerminalHidden, setNodes, setEdges, undo, redo, past, future } = useEditorStore();
+  const { activeMode, setMode, setTextCode, currentProjectId, isTerminalHidden, setIsTerminalHidden, setNodes, setEdges, undo, redo, past, future } = useEditorStore();
   
   const [isExamplesOpen, setIsExamplesOpen] = useState(false);
   const [isCheatsheetOpen, setIsCheatsheetOpen] = useState(false);
@@ -44,16 +45,10 @@ export default function EditorToolbar() {
     document.addEventListener('mousedown', handleClickOutside);
 
     try {
-      const params = new URLSearchParams(window.location.search);
-      const raw = params.get('code');
-      if (raw) {
-        // Recover '+' characters that URLSearchParams may have turned into spaces
-        const normalized = raw.replace(/ /g, '+');
-        const decoded = decodeURIComponent(atob(normalized));
-        if (decoded) {
-          useEditorStore.getState().setTextCode(decoded);
-          useEditorStore.getState().setMode('code');
-        }
+      const decoded = parseSharedCode(window.location.search);
+      if (decoded) {
+        useEditorStore.getState().setTextCode(decoded);
+        useEditorStore.getState().setMode('code');
         // Clean the URL so switching examples doesn't reload shared code
         const cleanUrl = window.location.origin + window.location.pathname;
         window.history.replaceState({}, '', cleanUrl);
@@ -106,8 +101,7 @@ export default function EditorToolbar() {
 
   const handleShare = async () => {
     try {
-      const encoded = btoa(encodeURIComponent(getActiveCode()));
-      const url = `${window.location.origin}${window.location.pathname}?code=${encodeURIComponent(encoded)}`;
+      const url = buildShareUrl(window.location.origin, window.location.pathname, getActiveCode());
       await navigator.clipboard.writeText(url);
       alert('تم نسخ رابط المشاركة!');
     } catch (err) {
@@ -262,7 +256,7 @@ export default function EditorToolbar() {
             >
               <ChevronDown size={14} className={`transition-transform duration-300 shrink-0 ${isExamplesOpen ? 'rotate-180' : ''}`} />
               <span className="font-semibold truncate">
-                {examplesList.find(ex => codeExamples[ex.id] === textCode)?.title || 'الأمثلة البرمجية'}
+                {examplesList.find(ex => ex.id === currentProjectId)?.title || 'الأمثلة البرمجية'}
               </span>
             </button>
             

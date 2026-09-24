@@ -3,8 +3,9 @@ import { useEditorStore } from '../../store/useEditorStore';
 import { useAlifCompiler } from '../../hooks/useAlifCompiler';
 
 export default function TerminalConsole() {
-  const { activeMode, isTerminalHidden, terminalOutput, clearTerminal } = useEditorStore();
-  const { sendInput } = useAlifCompiler();
+  const { isTerminalHidden, terminalOutput, clearTerminal } = useEditorStore();
+  const { sendInput, runState } = useAlifCompiler();
+  const isRunning = runState === 'running';
   
   const terminalInputRef = useRef<HTMLInputElement>(null);
   const outputContainerRef = useRef<HTMLDivElement>(null);
@@ -18,6 +19,7 @@ export default function TerminalConsole() {
 
   const handleTerminalInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
+      if (!isRunning) return;
       const val = e.currentTarget.value;
       if (!val) return;
       sendInput(val);
@@ -26,7 +28,7 @@ export default function TerminalConsole() {
   };
 
   return (
-    <section className={`flex-1 flex flex-col bg-black/40 shadow-inner min-h-0 min-w-0 transition-all duration-300
+    <section className={`flex-1 flex-col bg-black/40 shadow-inner min-h-0 min-w-0 transition-all duration-300
       ${isTerminalHidden ? 'hidden' : 'flex'}`}
     >
       <div className="bg-slate-800/50 text-slate-400 text-sm py-2 px-4 border-b border-slate-700/50 flex justify-between items-center shrink-0">
@@ -46,8 +48,9 @@ export default function TerminalConsole() {
           ref={terminalInputRef}
           type="text"
           onKeyDown={handleTerminalInput}
-          className="flex-1 bg-transparent text-white outline-none text-sm placeholder-slate-600"
-          placeholder="اكتب إدخالك هنا واضغط Enter..."
+          disabled={!isRunning}
+          className="flex-1 bg-transparent text-white outline-none text-sm placeholder-slate-600 disabled:opacity-40"
+          placeholder={isRunning ? "اكتب إدخالك هنا واضغط Enter..." : "شغّل البرنامج أولاً لتمكين الإدخال..."}
         />
       </div>
     </section>

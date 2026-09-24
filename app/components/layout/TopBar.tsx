@@ -13,13 +13,14 @@ export default function TopBar() {
       </div>
       <button
         onClick={startRun}
-        disabled={runState === 'connecting' || runState === 'error'}
+        disabled={runState === 'connecting'}
         className={`px-5 py-2 sm:px-6 sm:py-2.5 rounded-xl text-sm sm:text-base font-bold flex items-center gap-2 shadow-lg transition-all
           ${runState === 'running' ? 'bg-red-600 hover:bg-red-500 text-white' : 
-            runState === 'ready' ? 'bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 text-white' : 
+            runState === 'ready' ? 'bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 text-white' :
+            runState === 'error' ? 'bg-amber-600 hover:bg-amber-500 text-white' :
             'bg-slate-600 opacity-80 cursor-not-allowed'}`}
       >
-        <span>{runState === 'running' ? 'إيقاف' : runState === 'connecting' ? 'جاري الاتصال...' : runState === 'error' ? 'انقطع الاتصال' : 'تشغيل'}</span>
+        <span>{runState === 'running' ? 'إيقاف' : runState === 'connecting' ? 'جاري الاتصال...' : runState === 'error' ? 'إعادة الاتصال' : 'تشغيل'}</span>
       </button>
     </header>
   );

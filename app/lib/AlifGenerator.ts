@@ -40,6 +40,23 @@ export function generateAlifCodeFromGraph(
       }
       return null;
     }
+
+    // Collect connected call arguments (supports N dynamic inputs; empty = no args)
+    function resolveCallArgs(node: Node): string[] {
+      return resolveCallArgsExcept(node, []);
+    }
+
+    // Same as above but skips inputs with the given ids (e.g. obj_in of method calls)
+    function resolveCallArgsExcept(node: Node, excludeIds: string[]): string[] {
+      const callInputs = (((node.data as any).inputs as any[]) || [])
+        .filter((i: any) => i.type !== 'event' && !excludeIds.includes(i.id));
+      const args: string[] = [];
+      callInputs.forEach((inp: any) => {
+        const v = resolveInput(node.id, inp.id);
+        if (v !== null && v !== undefined) args.push(v);
+      });
+      return args;
+    }
   
     function resolveValue(node: Node, sourceHandle?: string): any {
       if (!node) return 'عدم';
@@ -49,7 +66,7 @@ export function generateAlifCodeFromGraph(
       const controls = data.controls || [];
       
       if (data.isMacro) {
-        return `var_${node.id.replace(/-/g, '_')}_${sourceHandle}`;
+        return `ناتج_${node.id.replace(/-/g, '_')}_${sourceHandle}`;
       }
 
       if (type === 'ماكرو/مدخلات') {
@@ -97,8 +114,8 @@ export function generateAlifCodeFromGraph(
         return `قرب(${val})`;
       }
       if (type === 'دوال/استدعاء') {
-        let arg = resolveInput(node.id, 'arg_in') ?? 'عدم';
-        return `${getControlValue('func_name')}(${arg})`;
+        const args = resolveCallArgs(node);
+        return `${getControlValue('func_name')}(${args.join(', ')})`;
       }
       if (type === 'شروط/ليس') {
         let val = resolveInput(node.id, 'val_in') ?? 'خطأ';
@@ -224,15 +241,14 @@ export function generateAlifCodeFromGraph(
         return `هذا.${getControlValue('prop_name')}`;
       }
       if (type === 'كائنات/إنشاء') {
-        let arg = resolveInput(node.id, 'arg_in') ?? '';
-        return `${getControlValue('class_name')}(${arg})`;
+        const args = resolveCallArgs(node);
+        return `${getControlValue('class_name')}(${args.join(', ')})`;
       }
       if (type === 'كائنات/استدعاء طريقة') {
         let obj = resolveInput(node.id, 'obj_in') ?? 'كائن';
         let method = getControlValue('method_name') || 'تشغيل';
-        let arg = resolveInput(node.id, 'arg_in');
-        let argStr = arg !== null && arg !== undefined ? arg : '';
-        return `${obj}.${method}(${argStr})`;
+        const methodArgs = resolveCallArgsExcept(node, ['obj_in']);
+        return `${obj}.${method}(${methodArgs.join(', ')})`;
       }
       if (type === 'فهارس/احضر') {
         let dict = resolveInput(node.id, 'dict_in') ?? 'فهرس';
@@ -287,7 +303,7 @@ export function generateAlifCodeFromGraph(
           
           const mOutputs = (data.outputs || []).filter((o: any) => o.type !== 'event');
           if (mOutputs.length > 0) {
-             const outVars = mOutputs.map((out: any) => `var_${currNode.id.replace(/-/g, '_')}_${out.id}`);
+             const outVars = mOutputs.map((out: any) => `ناتج_${currNode.id.replace(/-/g, '_')}_${out.id}`);
              code += indent + `${outVars.join(', ')} = ${mName}(${resolvedArgs.join(', ')}) # @node:${currNode.id}\n`;
           } else {
              code += indent + `${mName}(${resolvedArgs.join(', ')}) # @node:${currNode.id}\n`;
@@ -319,9 +335,10 @@ export function generateAlifCodeFromGraph(
           const sep = getControlValue('sep');
           const end = getControlValue('end');
           const flush = getControlValue('flush');
-          
-          if (sep !== undefined) kwargs.push(`الفاصل="${escapeAlifString(sep)}"`);
-          if (end !== undefined) kwargs.push(`النهاية="${escapeAlifString(end)}"`);
+
+          // Emit kwargs only when they differ from the node defaults (' ' and '\n')
+          if (sep !== undefined && sep !== ' ') kwargs.push(`الفاصل="${escapeAlifString(sep)}"`);
+          if (end !== undefined && end !== '\\n') kwargs.push(`النهاية="${escapeAlifString(end)}"`);
           if (flush === 'صح') kwargs.push(`مباشر=صح`);
           
           if (kwargs.length > 0) {
@@ -409,8 +426,8 @@ export function generateAlifCodeFromGraph(
           code += indent + `احذف ${dictName}[${key}] # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'دوال/استدعاء') {
-          let arg = resolveInput(currNode.id, 'arg_in') ?? 'عدم';
-          code += indent + `${getControlValue('func_name')}(${arg}) # @node:${currNode.id}\n`;
+          const args = resolveCallArgs(currNode);
+          code += indent + `${getControlValue('func_name')}(${args.join(', ')}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
 
         } else if (type === 'كائنات/تعيين_خاصية') {
@@ -421,9 +438,8 @@ export function generateAlifCodeFromGraph(
         } else if (type === 'كائنات/استدعاء طريقة') {
           let obj = resolveInput(currNode.id, 'obj_in') ?? 'كائن';
           let method = getControlValue('method_name') || 'تشغيل';
-          let arg = resolveInput(currNode.id, 'arg_in');
-          let argStr = arg !== null && arg !== undefined ? arg : '';
-          code += indent + `${obj}.${method}(${argStr}) # @node:${currNode.id}\n`;
+          const methodArgs = resolveCallArgsExcept(currNode, ['obj_in']);
+          code += indent + `${obj}.${method}(${methodArgs.join(', ')}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
 
         } else if (type === 'استيراد/مكتبة') {
@@ -454,7 +470,8 @@ export function generateAlifCodeFromGraph(
             code += indent + `والا:\n`;
             code += walkExecution(falseNodeId, indent + '\t', new Set(pathVisited));
           }
-          break; // Branches are fully evaluated recursively
+          // Continuation after the branch (new seq_out); old graphs without it simply end here
+          currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'حلقات/لكل') {
           let startVal = resolveInput(currNode.id, 'start_in') ?? 1;
           let endVal = resolveInput(currNode.id, 'end_in') ?? 10;
@@ -510,7 +527,8 @@ export function generateAlifCodeFromGraph(
             code += walkExecution(finallyNodeId, indent + '\t', new Set(pathVisited));
           }
           code += indent + `نهاية:\n`;
-          break;
+          // Continuation after try/catch (new seq_out); old graphs without it simply end here
+          currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'كائنات/صنف') {
           let className = getControlValue('class_name');
           let inherits = getControlValue('inherits');

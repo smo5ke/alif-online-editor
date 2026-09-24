@@ -99,6 +99,11 @@ export const codeExamples: Record<string, string> = {
 
 const defaultCode = codeExamples['hello'];
 
+// Coalesce rapid control keystrokes into a single undo step (per node+control)
+let lastControlCommitKey = '';
+let lastControlCommitTime = 0;
+const CONTROL_COMMIT_COALESCE_MS = 1200;
+
 export const useEditorStore = create<EditorState>((set, get) => ({
   activeMode: 'visual',
   isTerminalHidden: false,
@@ -138,7 +143,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     };
   }),
 
-  undo: () => set((state) => {
+  undo: () => {
+    lastControlCommitKey = '';
+    lastControlCommitTime = 0;
+    set((state) => {
     if (state.past.length === 0) return {};
     
     const previous = state.past[state.past.length - 1];
@@ -161,9 +169,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       macros: previous.macros,
       currentGraphId: previous.currentGraphId
     };
-  }),
+    });
+  },
 
-  redo: () => set((state) => {
+  redo: () => {
+    lastControlCommitKey = '';
+    lastControlCommitTime = 0;
+    set((state) => {
     if (state.future.length === 0) return {};
     
     const next = state.future[0];
@@ -186,7 +198,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       macros: next.macros,
       currentGraphId: next.currentGraphId
     };
-  }),
+    });
+  },
 
   setMode: (mode) => set({ activeMode: mode }),
   
@@ -259,7 +272,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   updateNodeControl: (nodeId: string, controlId: string, value: any) => {
-    get().commitHistory();
+    const commitKey = `${nodeId}:${controlId}`;
+    const now = Date.now();
+    if (commitKey !== lastControlCommitKey || now - lastControlCommitTime > CONTROL_COMMIT_COALESCE_MS) {
+      get().commitHistory();
+      lastControlCommitKey = commitKey;
+    }
+    lastControlCommitTime = now;
     set((state) => {
     return {
       nodes: state.nodes.map((node) => {

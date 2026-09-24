@@ -18,6 +18,86 @@ const useCompilerStore = create<CompilerStore>((set) => ({
 let globalWs: WebSocket | null = null;
 let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 let isConnecting = false;
+let isManualStop = false;
+
+function openAlifSocket() {
+  if (globalWs && (globalWs.readyState === WebSocket.OPEN || globalWs.readyState === WebSocket.CONNECTING)) {
+    return; // Already connected or connecting
+  }
+
+  if (isConnecting) return;
+  isConnecting = true;
+
+  try {
+    const socket = new WebSocket('wss://alif-playground.onrender.com');
+    globalWs = socket;
+
+    socket.onopen = () => {
+      isConnecting = false;
+      useCompilerStore.getState().setRunState('ready');
+      useEditorStore.getState().appendTerminalOutput('--- تم الاتصال بمفسر ألف 5.3 بنجاح ---\n', 'text-green-500 font-bold');
+    };
+
+    socket.onmessage = (event) => {
+      let data: { type?: string; text?: string };
+      try {
+        data = JSON.parse(event.data) as { type?: string; text?: string };
+      } catch {
+        console.error('تجاهل رسالة غير صالحة من المفسر');
+        return;
+      }
+      if (typeof data.type !== 'string') return;
+      if (data.type === 'output' || data.type === 'error') {
+        const text = typeof data.text === 'string' ? data.text : '';
+        const color = data.type === 'error' ? 'text-red-400' : 'text-slate-300';
+
+        if (data.type === 'error') {
+           const match = text.match(/السطر\s+(\d+)/);
+           if (match) {
+               const lineNum = parseInt(match[1]);
+               const state = useEditorStore.getState();
+               state.setErrorLineNumber(lineNum);
+               const codeLines = state.lastRunCode.split('\n');
+               if (lineNum > 0 && lineNum <= codeLines.length) {
+                   const lineText = codeLines[lineNum - 1];
+                   const nodeMatch = lineText.match(/# @node:([a-zA-Z0-9-]+)/);
+                   if (nodeMatch) {
+                       state.setErrorNode(nodeMatch[1]);
+                   }
+               }
+           }
+        }
+
+        useEditorStore.getState().appendTerminalOutput(text, color);
+      } else if (data.type === 'done') {
+        useEditorStore.getState().appendTerminalOutput('\n--- انتهى تنفيذ البرنامج ---\n', 'text-slate-500');
+        useCompilerStore.getState().setRunState('ready');
+      }
+      // أنواع الرسائل الأخرى (مثل إشعارات الحالة) تُتجاهل عمداً
+    };
+
+    socket.onclose = () => {
+      isConnecting = false;
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      if (isManualStop) {
+        isManualStop = false;
+        useCompilerStore.getState().setRunState('connecting');
+      } else {
+        useCompilerStore.getState().setRunState('error');
+      }
+      reconnectTimeout = setTimeout(openAlifSocket, 3000);
+    };
+
+    socket.onerror = () => {
+      if (socket.readyState !== WebSocket.CLOSED) {
+        useEditorStore.getState().appendTerminalOutput('\nحدث خطأ في الاتصال بالسحابة.\n', 'text-red-400');
+      }
+    };
+  } catch (error) {
+    isConnecting = false;
+    console.error('WS Error:', error);
+  }
+}
 
 export function useAlifCompiler() {
   const { runState, setRunState } = useCompilerStore();
@@ -33,68 +113,7 @@ export function useAlifCompiler() {
   } = useEditorStore();
 
   const connectWebSocket = useCallback(() => {
-    if (globalWs && (globalWs.readyState === WebSocket.OPEN || globalWs.readyState === WebSocket.CONNECTING)) {
-      return; // Already connected or connecting
-    }
-    
-    if (isConnecting) return;
-    isConnecting = true;
-
-    try {
-      const socket = new WebSocket('wss://alif-playground.onrender.com');
-      globalWs = socket;
-      
-      socket.onopen = () => {
-        isConnecting = false;
-        useCompilerStore.getState().setRunState('ready');
-        useEditorStore.getState().appendTerminalOutput('--- تم الاتصال بمفسر ألف 5.3 بنجاح ---\n', 'text-green-500 font-bold');
-      };
-      
-      socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.type === 'output' || data.type === 'error') {
-          const color = data.type === 'error' ? 'text-red-400' : 'text-slate-300';
-          
-          if (data.type === 'error') {
-             const match = data.text.match(/السطر\s+(\d+)/);
-             if (match) {
-                 const lineNum = parseInt(match[1]);
-                 const state = useEditorStore.getState();
-                 state.setErrorLineNumber(lineNum);
-                 const codeLines = state.lastRunCode.split('\n');
-                 if (lineNum > 0 && lineNum <= codeLines.length) {
-                     const lineText = codeLines[lineNum - 1];
-                     const nodeMatch = lineText.match(/# @node:([a-zA-Z0-9-]+)/);
-                     if (nodeMatch) {
-                         state.setErrorNode(nodeMatch[1]);
-                     }
-                 }
-             }
-          }
-          
-          useEditorStore.getState().appendTerminalOutput(data.text, color);
-        } else if (data.type === 'done') {
-          useEditorStore.getState().appendTerminalOutput('\n--- انتهى تنفيذ البرنامج ---\n', 'text-slate-500');
-          useCompilerStore.getState().setRunState('ready');
-        }
-      };
-      
-      socket.onclose = () => {
-        isConnecting = false;
-        useCompilerStore.getState().setRunState('error');
-        if (reconnectTimeout) clearTimeout(reconnectTimeout);
-        reconnectTimeout = setTimeout(connectWebSocket, 3000);
-      };
-      
-      socket.onerror = () => {
-        if (socket.readyState !== WebSocket.CLOSED) {
-          useEditorStore.getState().appendTerminalOutput('\nحدث خطأ في الاتصال بالسحابة.\n', 'text-red-400');
-        }
-      };
-    } catch (error) {
-      isConnecting = false;
-      console.error('WS Error:', error);
-    }
+    openAlifSocket();
   }, []);
 
   useEffect(() => {
@@ -102,9 +121,16 @@ export function useAlifCompiler() {
   }, [connectWebSocket]);
 
   const startRun = () => {
-    if (!globalWs || globalWs.readyState !== WebSocket.OPEN) return;
+    if (!globalWs || globalWs.readyState !== WebSocket.OPEN) {
+      useEditorStore.getState().appendTerminalOutput('\nجاري إعادة الاتصال بالمفسر... حاول التشغيل مجدداً بعد لحظات.\n', 'text-amber-400');
+      setIsTerminalHidden(false);
+      openAlifSocket();
+      return;
+    }
     if (useCompilerStore.getState().runState === 'running') {
-      globalWs.close(); // Force reconnect
+      isManualStop = true;
+      setRunState('connecting');
+      globalWs.close(); // Kill server execution, then auto-reconnect
       useEditorStore.getState().appendTerminalOutput('\n⚠️ تم إيقاف التنفيذ يدوياً.\n', 'text-amber-400 font-bold');
       return;
     }
@@ -121,7 +147,7 @@ export function useAlifCompiler() {
       const state = useEditorStore.getState();
       let finalMainNodes = state.nodes;
       let finalMainEdges = state.edges;
-      let finalMacros = { ...state.macros };
+      const finalMacros = { ...state.macros };
 
       if (state.currentGraphId !== 'main') {
         finalMainNodes = state.mainGraph.nodes;

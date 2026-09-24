@@ -102,27 +102,34 @@ export default function VisualEditor() {
       
       const outputPort = sourceData.outputs?.find(o => o.id === params.sourceHandle);
       const inputPort = targetData.inputs?.find(i => i.id === params.targetHandle);
-      
+
+      const reportConnectError = (msg: string) => {
+        const st = useEditorStore.getState();
+        st.appendTerminalOutput(`⚠️ ${msg}\n`, 'text-amber-400');
+        st.setIsTerminalHidden(false);
+      };
+
       if (!outputPort || !inputPort) {
-        alert('⚠️ اتجاه التوصيل غير صحيح! تأكد من سحب الخط دائماً من مخرج العقدة (اليسار) إلى مدخل العقدة التالية (اليمين).');
+        reportConnectError('اتجاه التوصيل غير صحيح! اسحب الخط دائماً من مخرج العقدة (اليسار) إلى مدخل العقدة التالية (اليمين).');
         return;
       }
 
       const sourceType = outputPort.type;
       const targetType = inputPort.type;
-      
-      let isValid = false;
-      if (sourceType === 'event' || targetType === 'event') {
-        isValid = sourceType === targetType;
-      } else if (sourceType === 'data' || sourceType === 'any' || targetType === 'data' || targetType === 'any') {
-        isValid = true;
-      } else {
-        isValid = sourceType === targetType;
+
+      // ألف لغة ديناميكية: المنع الصارم فقط لخلط حدث/بيانات أو عكس الاتجاه.
+      // اختلاف الأنواع الفرعية للبيانات (رقم مقابل نص...) مجرد تحذير مع السماح بالتوصيل.
+      const involvesEvent = sourceType === 'event' || targetType === 'event';
+
+      if (involvesEvent && sourceType !== targetType) {
+        reportConnectError('اتجاه التوصيل غير صحيح! وصل مخرجات التسلسل بمدخلات التسلسل فقط، ومخارج البيانات بمدخلات البيانات.');
+        return;
       }
 
-      if (!isValid) {
-        alert('⚠️ نوع البيانات غير متطابق. تأكد من توافق أنواع المخرجات والمدخلات (النص مع النص، الرقم مع الرقم، إلخ).');
-        return;
+      const isWildcard = (t?: string) => t === 'data' || t === 'any';
+      if (!involvesEvent && !isWildcard(sourceType) && !isWildcard(targetType) && sourceType !== targetType) {
+        const st = useEditorStore.getState();
+        st.appendTerminalOutput(`⚠️ تنبيه: توصيل ${sourceType} بمدخل ${targetType} (لغة ألف ديناميكية، تم السماح بالتوصيل).\n`, 'text-amber-400');
       }
       
       commitHistory();
@@ -169,18 +176,18 @@ export default function VisualEditor() {
     const sourceType = outputPort.type;
     const targetType = inputPort.type;
 
+    // ألف ديناميكية: الرفض الحي فقط لخلط حدث/بيانات؛ باقي توصيلات البيانات مسموحة
     if (sourceType === 'event' || targetType === 'event') {
       return sourceType === targetType;
     }
-    if (sourceType === 'data' || sourceType === 'any' || targetType === 'data' || targetType === 'any') {
-      return true;
-    }
-    return sourceType === targetType;
+    return true;
   }, [nodes]);
 
   const exportAsImage = useCallback(() => {
     if (nodes.length === 0) {
-      alert('لا توجد عقد في المخطط لتصديرها!');
+      const st = useEditorStore.getState();
+      st.appendTerminalOutput('⚠️ لا توجد عقد في المخطط لتصديرها!\n', 'text-amber-400');
+      st.setIsTerminalHidden(false);
       return;
     }
 
@@ -218,7 +225,9 @@ export default function VisualEditor() {
       })
       .catch((err) => {
         console.error('فشل تصدير الصورة:', err);
-        alert('حدث خطأ أثناء تصدير الصورة.');
+        const st = useEditorStore.getState();
+        st.appendTerminalOutput('⚠️ حدث خطأ أثناء تصدير الصورة.\n', 'text-red-400');
+        st.setIsTerminalHidden(false);
       });
   }, [nodes]);
 
@@ -274,10 +283,15 @@ export default function VisualEditor() {
 
   useEffect(() => {
     if (nodes.length === 0) {
-      addNode('أوامر/بداية البرنامج');
+      if (currentGraphId === 'main') {
+        addNode('أوامر/بداية البرنامج');
+      } else {
+        addNode('ماكرو/مدخلات');
+        setTimeout(() => addNode('ماكرو/مخرجات'), 50);
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [currentGraphId, nodes.length]);
 
   return (
     <div ref={wrapperRef} className={`absolute inset-0 transition-opacity duration-200 ${activeMode === 'visual' ? 'z-10 opacity-100' : 'z-0 opacity-0 pointer-events-none'}`}>
