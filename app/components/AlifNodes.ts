@@ -98,13 +98,14 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     controls: [{ id: 'class_name', type: 'text', label: 'اسم الصنف', value: 'شخص' }, { id: 'inherits', type: 'text', label: 'يرث من', value: '' }],
   },
   'كائنات/هذا': {
-    label: 'خاصية الكائن', subtitle: 'هذا.', iconName: 'Target', color: '#f43f5e',
+    label: 'خاصية الكائن', subtitle: 'كائن.خاصية', iconName: 'Target', color: '#f43f5e',
+    inputs: [{ id: 'obj_in', label: 'الكائن (فارغ = هذا)', type: 'data' }],
     outputs: [{ id: 'res_out', label: 'الخاصية', type: 'data' }],
     controls: [{ id: 'prop_name', type: 'text', label: 'الاسم', value: 'العمر' }],
   },
   'كائنات/تعيين_خاصية': {
-    label: 'تعيين خاصية', subtitle: 'هذا.س =', iconName: 'Target', color: '#f43f5e',
-    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }, { id: 'val_in', label: 'القيمة', type: 'data' }], outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+    label: 'تعيين خاصية', subtitle: 'كائن.س =', iconName: 'Target', color: '#f43f5e',
+    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }, { id: 'obj_in', label: 'الكائن (فارغ = هذا)', type: 'data' }, { id: 'val_in', label: 'القيمة', type: 'data' }], outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
     controls: [{ id: 'prop_name', type: 'text', label: 'الخاصية', value: 'العمر' }],
   },
   'كائنات/إنشاء': {
@@ -472,7 +473,11 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     subtitle: 'دالة مخصصة',
     iconName: 'Cog',
     color: '#10b981', // Emerald
-    outputs: [{ id: 'body_out', label: 'جسم الدالة', type: 'event' }],
+    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }],
+    outputs: [
+      { id: 'body_out', label: 'جسم الدالة', type: 'event' },
+      { id: 'seq_out', label: 'التالي', type: 'event' },
+    ],
     controls: [
       { id: 'func_name', type: 'text', label: 'الاسم', value: 'عملية' },
       { id: 'arg', type: 'text', label: 'المعاملات (افصل بفاصلة ,)', value: 'الرقم' },

@@ -192,8 +192,7 @@ describe('generateAlifCodeFromGraph', () => {
     expect(code).not.toContain('var_');
   });
 
-  it('generates حاول blocks without a trailing نهاية: line', () => {
-    const tryNode = node('try1', 'أخطاء/محاولة', {
+  it('generates حاول blocks without a trailing نهاية: line', () => {    const tryNode = node('try1', 'أخطاء/محاولة', {
       inputs: [{ ...SEQ_IN }],
       outputs: [
         { id: 'try_out', label: 'حاول', type: 'event' },
@@ -209,6 +208,8 @@ describe('generateAlifCodeFromGraph', () => {
       textNode('tTry', 'محاولة'),
       printNode('pCatch'),
       textNode('tCatch', 'خطأ'),
+      printNode('pFin'),
+      textNode('tFin', 'دائما'),
     ];
     const edges = [
       edge('e1', 'start', 'seq_out', 'try1', 'seq_in'),
@@ -216,11 +217,15 @@ describe('generateAlifCodeFromGraph', () => {
       edge('e3', 'tTry', 'val_out', 'pTry', 'val_in'),
       edge('e4', 'try1', 'catch_out', 'pCatch', 'seq_in'),
       edge('e5', 'tCatch', 'val_out', 'pCatch', 'val_in'),
+      edge('e6', 'try1', 'finally_out', 'pFin', 'seq_in'),
+      edge('e7', 'tFin', 'val_out', 'pFin', 'val_in'),
     ];
     const code = generateAlifCodeFromGraph(nodes, edges);
     expect(code).toContain('حاول:');
     expect(code).toContain('خلل:');
+    expect(code).toContain('والا:');
     expect(code).not.toContain('نهاية:');
+    expect(code).not.toContain('وإلا:');
   });
 
   it('emits استورد الوقت once when explicitly imported and time nodes are used', () => {
@@ -241,6 +246,94 @@ describe('generateAlifCodeFromGraph', () => {
     const code = generateAlifCodeFromGraph(nodes, edges);
     const occurrences = code.split('\n').filter((l) => l.trim().startsWith('استورد الوقت')).length;
     expect(occurrences).toBe(1);
+  });
+
+  it('emits methods nested inside صنف once and indented', () => {
+    const cls = node('cls1', 'كائنات/صنف', {
+      inputs: [{ ...SEQ_IN }],
+      outputs: [
+        { id: 'body_out', label: 'المحتوى', type: 'event' },
+        { ...SEQ_OUT },
+      ],
+      controls: [
+        { id: 'class_name', type: 'text', label: 'اسم الصنف', value: 'سيارة' },
+        { id: 'inherits', type: 'text', label: 'يرث من', value: '' },
+      ],
+    });
+    const def = node('def1', 'دوال/تعريف دالة', {
+      inputs: [{ ...SEQ_IN }],
+      outputs: [
+        { id: 'body_out', label: 'جسم الدالة', type: 'event' },
+        { ...SEQ_OUT },
+      ],
+      controls: [
+        { id: 'func_name', type: 'text', label: 'الاسم', value: '__تهيئة__' },
+        { id: 'arg', type: 'text', label: 'المعاملات', value: 'هذا, السرعة' },
+      ],
+    });
+    const nodes = [startNode(), cls, def, printNode('p1'), textNode('t1', 'تم')];
+    const edges = [
+      edge('e1', 'start', 'seq_out', 'cls1', 'seq_in'),
+      edge('e2', 'cls1', 'body_out', 'def1', 'seq_in'),
+      edge('e3', 'def1', 'body_out', 'p1', 'seq_in'),
+      edge('e4', 't1', 'val_out', 'p1', 'val_in'),
+    ];
+    const code = generateAlifCodeFromGraph(nodes, edges);
+    expect(code).toContain('صنف سيارة:');
+    expect(code).toContain('\tدالة __تهيئة__(هذا, السرعة):');
+    expect(code).toContain('\t\tاطبع("تم")');
+    // Emitted inline only — not duplicated at top level
+    expect(code.split('دالة __تهيئة__').length - 1).toBe(1);
+  });
+
+  it('targets named objects in property set/read, defaulting to هذا', () => {
+    const setProp = node('sp1', 'كائنات/تعيين_خاصية', {
+      inputs: [
+        { ...SEQ_IN },
+        { id: 'obj_in', label: 'الكائن', type: 'data' },
+        { id: 'val_in', label: 'القيمة', type: 'data' },
+      ],
+      outputs: [{ ...SEQ_OUT }],
+      controls: [{ id: 'prop_name', type: 'text', label: 'الخاصية', value: 'السرعة' }],
+    });
+    const getProp = node('gp1', 'كائنات/هذا', {
+      inputs: [{ id: 'obj_in', label: 'الكائن', type: 'data' }],
+      outputs: [{ id: 'res_out', label: 'الخاصية', type: 'data' }],
+      controls: [{ id: 'prop_name', type: 'text', label: 'الاسم', value: 'السرعة' }],
+    });
+    const bareGet = node('gp2', 'كائنات/هذا', {
+      inputs: [],
+      outputs: [{ id: 'res_out', label: 'الخاصية', type: 'data' }],
+      controls: [{ id: 'prop_name', type: 'text', label: 'الاسم', value: 'العمر' }],
+    });
+    const carVar = node('car', 'متغيرات/قراءة', {
+      outputs: [{ id: 'val_out', label: 'القيمة', type: 'data' }],
+      controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'سيارتي' }],
+    });
+    const nodes = [
+      startNode(),
+      setProp,
+      printNode('p1'),
+      getProp,
+      printNode('p2'),
+      bareGet,
+      carVar,
+      numNode('n200', 200),
+    ];
+    const edges = [
+      edge('e1', 'start', 'seq_out', 'sp1', 'seq_in'),
+      edge('e2', 'sp1', 'seq_out', 'p1', 'seq_in'),
+      edge('e3', 'car', 'val_out', 'sp1', 'obj_in'),
+      edge('e4', 'n200', 'val_out', 'sp1', 'val_in'),
+      edge('e5', 'gp1', 'res_out', 'p1', 'val_in'),
+      edge('e6', 'car', 'val_out', 'gp1', 'obj_in'),
+      edge('e7', 'p1', 'seq_out', 'p2', 'seq_in'),
+      edge('e8', 'gp2', 'res_out', 'p2', 'val_in'),
+    ];
+    const code = generateAlifCodeFromGraph(nodes, edges);
+    expect(code).toContain('سيارتي.السرعة = 200');
+    expect(code).toContain('اطبع(سيارتي.السرعة)');
+    expect(code).toContain('اطبع(هذا.العمر)');
   });
 
   it('asks for a start node when the graph is empty of entry points', () => {

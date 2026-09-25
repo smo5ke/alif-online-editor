@@ -150,76 +150,109 @@ export const visualExamples: Record<string, VisualExample> = {
   oop: {
     nodes: [
       { id: 'start', type: 'dynamic', position: { x: 50, y: 50 }, data: { ...nodeDefinitions['أوامر/بداية البرنامج'], originalType: 'أوامر/بداية البرنامج' } },
-      { 
-        id: 'class_def', 
-        type: 'dynamic', 
-        position: { x: 50, y: 200 }, 
-        data: { 
-          ...nodeDefinitions['كائنات/صنف'], 
+      {
+        id: 'class_def',
+        type: 'dynamic',
+        position: { x: 50, y: 200 },
+        data: {
+          ...nodeDefinitions['كائنات/صنف'],
           originalType: 'كائنات/صنف',
-          controls: [{ id: 'class_name', type: 'text', label: 'اسم الصنف', value: 'سيارة' }, { id: 'inherits', type: 'text', label: 'يرث من', value: '' }] 
-        } 
+          controls: [{ id: 'class_name', type: 'text', label: 'اسم الصنف', value: 'سيارة' }, { id: 'inherits', type: 'text', label: 'يرث من', value: '' }]
+        }
       },
-      { 
-        id: 'set_prop', 
-        type: 'dynamic', 
-        position: { x: 300, y: 350 }, 
-        data: { 
-          ...nodeDefinitions['كائنات/تعيين_خاصية'], 
+      {
+        id: 'init_def',
+        type: 'dynamic',
+        position: { x: 350, y: 200 },
+        data: {
+          ...nodeDefinitions['دوال/تعريف دالة'],
+          originalType: 'دوال/تعريف دالة',
+          controls: [{ id: 'func_name', type: 'text', label: 'الاسم', value: '__تهيئة__' }, { id: 'arg', type: 'text', label: 'المعاملات (افصل بفاصلة ,)', value: 'هذا, السرعة' }]
+        }
+      },
+      {
+        id: 'set_prop',
+        type: 'dynamic',
+        position: { x: 650, y: 200 },
+        data: {
+          ...nodeDefinitions['كائنات/تعيين_خاصية'],
           originalType: 'كائنات/تعيين_خاصية',
-          controls: [{ id: 'prop_name', type: 'text', label: 'الخاصية', value: 'السرعة' }] 
-        } 
+          controls: [{ id: 'prop_name', type: 'text', label: 'الخاصية', value: 'السرعة' }]
+        }
       },
-      { 
-        id: 'num_val', 
-        type: 'dynamic', 
-        position: { x: 100, y: 350 }, 
-        data: { 
-          ...nodeDefinitions['بيانات/رقم'], 
-          originalType: 'بيانات/رقم',
-          controls: [{ id: 'value', type: 'number', label: 'الرقم', value: 200 }] 
-        } 
-      },
-      { 
-        id: 'obj_assign', 
-        type: 'dynamic', 
-        position: { x: 50, y: 350 }, 
-        data: { 
-          ...nodeDefinitions['متغيرات/إسناد'], 
-          originalType: 'متغيرات/إسناد',
-          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'سيارتي' }] 
-        } 
-      },
-      { 
-        id: 'create_obj', 
-        type: 'dynamic', 
-        position: { x: -300, y: 350 }, 
-        data: { 
-          ...nodeDefinitions['كائنات/إنشاء'], 
-          originalType: 'كائنات/إنشاء',
-          controls: [{ id: 'class_name', type: 'text', label: 'اسم الصنف', value: 'سيارة' }] 
-        } 
-      },
-      { id: 'print', type: 'dynamic', position: { x: 50, y: 500 }, data: { ...nodeDefinitions['أوامر/اطبع'], originalType: 'أوامر/اطبع' } },
-      { 
-        id: 'read_obj', 
-        type: 'dynamic', 
-        position: { x: -300, y: 500 }, 
-        data: { 
-          ...nodeDefinitions['متغيرات/قراءة'], 
+      {
+        id: 'read_speed',
+        type: 'dynamic',
+        position: { x: 650, y: 350 },
+        data: {
+          ...nodeDefinitions['متغيرات/قراءة'],
           originalType: 'متغيرات/قراءة',
-          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'سيارتي' }] 
-        } 
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'السرعة' }]
+        }
+      },
+      {
+        id: 'obj_assign',
+        type: 'dynamic',
+        position: { x: 50, y: 400 },
+        data: {
+          ...nodeDefinitions['متغيرات/إسناد'],
+          originalType: 'متغيرات/إسناد',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'سيارتي' }]
+        }
+      },
+      {
+        id: 'create_obj',
+        type: 'dynamic',
+        position: { x: -300, y: 400 },
+        data: {
+          ...nodeDefinitions['كائنات/إنشاء'],
+          originalType: 'كائنات/إنشاء',
+          controls: [{ id: 'class_name', type: 'text', label: 'اسم الصنف', value: 'سيارة' }]
+        }
+      },
+      {
+        id: 'num_val',
+        type: 'dynamic',
+        position: { x: -300, y: 520 },
+        data: {
+          ...nodeDefinitions['بيانات/رقم'],
+          originalType: 'بيانات/رقم',
+          controls: [{ id: 'value', type: 'number', label: 'الرقم', value: 200 }]
+        }
+      },
+      { id: 'print', type: 'dynamic', position: { x: 50, y: 560 }, data: { ...nodeDefinitions['أوامر/اطبع'], originalType: 'أوامر/اطبع' } },
+      {
+        id: 'read_prop',
+        type: 'dynamic',
+        position: { x: -300, y: 620 },
+        data: {
+          ...nodeDefinitions['كائنات/هذا'],
+          originalType: 'كائنات/هذا',
+          controls: [{ id: 'prop_name', type: 'text', label: 'الاسم', value: 'السرعة' }]
+        }
+      },
+      {
+        id: 'read_car',
+        type: 'dynamic',
+        position: { x: -600, y: 620 },
+        data: {
+          ...nodeDefinitions['متغيرات/قراءة'],
+          originalType: 'متغيرات/قراءة',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'سيارتي' }]
+        }
       }
     ],
     edges: [
       { id: 'e1', type: 'deletable', source: 'start', target: 'class_def', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
-      { id: 'e2', type: 'deletable', source: 'class_def', target: 'set_prop', sourceHandle: 'body_out', targetHandle: 'seq_in' },
-      { id: 'e3', type: 'deletable', source: 'num_val', target: 'set_prop', sourceHandle: 'val_out', targetHandle: 'val_in' },
-      { id: 'e4', type: 'deletable', source: 'class_def', target: 'obj_assign', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
-      { id: 'e5', type: 'deletable', source: 'create_obj', target: 'obj_assign', sourceHandle: 'obj_out', targetHandle: 'val_in' },
-      { id: 'e6', type: 'deletable', source: 'obj_assign', target: 'print', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
-      { id: 'e7', type: 'deletable', source: 'read_obj', target: 'print', sourceHandle: 'val_out', targetHandle: 'val_in' }
+      { id: 'e2', type: 'deletable', source: 'class_def', target: 'init_def', sourceHandle: 'body_out', targetHandle: 'seq_in' },
+      { id: 'e3', type: 'deletable', source: 'init_def', target: 'set_prop', sourceHandle: 'body_out', targetHandle: 'seq_in' },
+      { id: 'e4', type: 'deletable', source: 'read_speed', target: 'set_prop', sourceHandle: 'val_out', targetHandle: 'val_in' },
+      { id: 'e5', type: 'deletable', source: 'class_def', target: 'obj_assign', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e6', type: 'deletable', source: 'num_val', target: 'create_obj', sourceHandle: 'val_out', targetHandle: 'arg_in' },
+      { id: 'e7', type: 'deletable', source: 'create_obj', target: 'obj_assign', sourceHandle: 'obj_out', targetHandle: 'val_in' },
+      { id: 'e8', type: 'deletable', source: 'obj_assign', target: 'print', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e9', type: 'deletable', source: 'read_car', target: 'read_prop', sourceHandle: 'val_out', targetHandle: 'obj_in' },
+      { id: 'e10', type: 'deletable', source: 'read_prop', target: 'print', sourceHandle: 'res_out', targetHandle: 'val_in' }
     ]
   },
   dict: {

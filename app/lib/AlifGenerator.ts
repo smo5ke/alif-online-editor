@@ -238,7 +238,8 @@ export function generateAlifCodeFromGraph(
         return `(${val} ${normalizeOp(getControlValue('op'))} ${list})`;
       }
       if (type === 'كائنات/هذا') {
-        return `هذا.${getControlValue('prop_name')}`;
+        const objTarget = resolveInput(node.id, 'obj_in') ?? 'هذا';
+        return `${objTarget}.${getControlValue('prop_name')}`;
       }
       if (type === 'كائنات/إنشاء') {
         const args = resolveCallArgs(node);
@@ -432,8 +433,9 @@ export function generateAlifCodeFromGraph(
 
         } else if (type === 'كائنات/تعيين_خاصية') {
           let prop = getControlValue('prop_name');
+          const objTarget = resolveInput(currNode.id, 'obj_in') ?? 'هذا';
           let val = resolveInput(currNode.id, 'val_in') ?? 'عدم';
-          code += indent + `هذا.${prop} = ${val} # @node:${currNode.id}\n`;
+          code += indent + `${objTarget}.${prop} = ${val} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'كائنات/استدعاء طريقة') {
           let obj = resolveInput(currNode.id, 'obj_in') ?? 'كائن';
@@ -523,7 +525,7 @@ export function generateAlifCodeFromGraph(
           
           let finallyNodeId = getNextNodeId(currNode.id, 'finally_out');
           if (finallyNodeId) {
-            code += indent + `وإلا:\n`;
+            code += indent + `والا:\n`;
             code += walkExecution(finallyNodeId, indent + '\t', new Set(pathVisited));
           }
           // Continuation after try/catch (new seq_out); old graphs without it simply end here
@@ -540,6 +542,15 @@ export function generateAlifCodeFromGraph(
           else code += indent + '\tتجاوز\n';
           
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
+        } else if (type === 'دوال/تعريف دالة' && indent !== '') {
+          // Nested definition (e.g. a method inside صنف body): emit it inline
+          const fname = getControlValue('func_name') || 'دالة';
+          const farg = getControlValue('arg') || '';
+          code += indent + `دالة ${fname}(${farg}): # @node:${currNode.id}\n`;
+          const defBodyId = getNextNodeId(currNode.id, 'body_out');
+          if (defBodyId) code += walkExecution(defBodyId, indent + '\t', new Set(pathVisited));
+          else code += indent + '\tتجاوز\n';
+          currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'أوامر/بداية البرنامج' || type === 'دوال/تعريف دالة' || type === 'ماكرو/مدخلات') {
           currNodeId = getNextNodeId(currNode.id, 'seq_out') || getNextNodeId(currNode.id, 'body_out');
         } else {
@@ -551,8 +562,34 @@ export function generateAlifCodeFromGraph(
   
     let localCode = '';
     
+    // Definitions nested under a صنف body are emitted inline by walkExecution;
+    // exclude them from the top-level pass to avoid duplicates
+    const nestedDefIds = new Set<string>();
+    {
+      const branchHandles = ['body_out', 'true_out', 'false_out', 'try_out', 'catch_out', 'finally_out'];
+      const stack: string[] = nodes
+        .filter(n => (n.data as any).originalType === 'كائنات/صنف')
+        .map(n => n.id);
+      const seen = new Set<string>();
+      while (stack.length > 0) {
+        const nid = stack.pop() as string;
+        if (seen.has(nid)) continue;
+        seen.add(nid);
+        for (const h of branchHandles) {
+          const next = getNextNodeId(nid, h);
+          if (next) {
+            const target = nodes.find(n => n.id === next);
+            if (target && (target.data as any).originalType === 'دوال/تعريف دالة') {
+              nestedDefIds.add(next);
+            }
+            stack.push(next);
+          }
+        }
+      }
+    }
+
     // Support definition functions inside the graph
-    const funcNodes = nodes.filter(n => (n.data as any).originalType === 'دوال/تعريف دالة');
+    const funcNodes = nodes.filter(n => (n.data as any).originalType === 'دوال/تعريف دالة' && !nestedDefIds.has(n.id));
     funcNodes.forEach((node) => {
       const getControlValue = (id: string) => ((node.data as NodeData).controls || []).find((c: any) => c.id === id)?.value;
       localCode += `دالة ${getControlValue('func_name')}(${getControlValue('arg')}):\n`;
