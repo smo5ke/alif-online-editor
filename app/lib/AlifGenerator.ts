@@ -526,7 +526,6 @@ export function generateAlifCodeFromGraph(
             code += indent + `وإلا:\n`;
             code += walkExecution(finallyNodeId, indent + '\t', new Set(pathVisited));
           }
-          code += indent + `نهاية:\n`;
           // Continuation after try/catch (new seq_out); old graphs without it simply end here
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'كائنات/صنف') {
@@ -609,14 +608,22 @@ export function generateAlifCodeFromGraph(
 
   let finalCode = '# تم التوليد برمجياً من المحرر المرئي 🕸️\n\n';
   
-  // Auto-import modules if specific nodes are used anywhere (main or macros)
+  // Auto-import modules if specific nodes are used anywhere (main or macros),
+  // unless the user already imports them explicitly via استيراد/مكتبة nodes
   const allNodes = [
     ...mainNodes,
     ...(macros ? Object.values(macros).flatMap(m => m.nodes) : [])
   ];
 
+  const explicitImports = new Set(
+    allNodes
+      .filter(n => (n.data as any).originalType === 'استيراد/مكتبة')
+      .map(n => ((n.data as any).controls as any[] || []).find((c: any) => c.id === 'lib')?.value)
+      .filter((v): v is string => typeof v === 'string')
+  );
+
   const usesTime = allNodes.some(n => (n.data as any).originalType === 'وقت/انتظر' || (n.data as any).originalType === 'وقت/الآن' || (n.data as any).originalType === 'وقت/منسق');
-  if (usesTime) {
+  if (usesTime && !explicitImports.has('الوقت')) {
     finalCode += 'استورد الوقت\n\n';
   }
   

@@ -1,8 +1,22 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useAlifCompiler } from '../../hooks/useAlifCompiler';
 
 export default function TopBar() {
   const { runState, startRun } = useAlifCompiler();
+  const runRef = useRef(startRun);
+  runRef.current = startRun;
+
+  // Ctrl+Enter (or Cmd+Enter) runs the program from anywhere
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        runRef.current();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   return (
     <header className="bg-slate-800/80 backdrop-blur-md border-b border-slate-700/50 p-3 sm:p-4 flex justify-between items-center shadow-lg z-10 shrink-0">
@@ -14,6 +28,7 @@ export default function TopBar() {
       <button
         onClick={startRun}
         disabled={runState === 'connecting'}
+        title="تشغيل البرنامج (Ctrl+Enter)"
         className={`px-5 py-2 sm:px-6 sm:py-2.5 rounded-xl text-sm sm:text-base font-bold flex items-center gap-2 shadow-lg transition-all
           ${runState === 'running' ? 'bg-red-600 hover:bg-red-500 text-white' : 
             runState === 'ready' ? 'bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 text-white' :

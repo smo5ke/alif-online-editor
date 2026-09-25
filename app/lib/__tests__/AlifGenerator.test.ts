@@ -192,6 +192,57 @@ describe('generateAlifCodeFromGraph', () => {
     expect(code).not.toContain('var_');
   });
 
+  it('generates حاول blocks without a trailing نهاية: line', () => {
+    const tryNode = node('try1', 'أخطاء/محاولة', {
+      inputs: [{ ...SEQ_IN }],
+      outputs: [
+        { id: 'try_out', label: 'حاول', type: 'event' },
+        { id: 'catch_out', label: 'في حال الخطأ', type: 'event' },
+        { id: 'finally_out', label: 'في النهاية', type: 'event' },
+        { id: 'seq_out', label: 'التالي', type: 'event' },
+      ],
+    });
+    const nodes = [
+      startNode(),
+      tryNode,
+      printNode('pTry'),
+      textNode('tTry', 'محاولة'),
+      printNode('pCatch'),
+      textNode('tCatch', 'خطأ'),
+    ];
+    const edges = [
+      edge('e1', 'start', 'seq_out', 'try1', 'seq_in'),
+      edge('e2', 'try1', 'try_out', 'pTry', 'seq_in'),
+      edge('e3', 'tTry', 'val_out', 'pTry', 'val_in'),
+      edge('e4', 'try1', 'catch_out', 'pCatch', 'seq_in'),
+      edge('e5', 'tCatch', 'val_out', 'pCatch', 'val_in'),
+    ];
+    const code = generateAlifCodeFromGraph(nodes, edges);
+    expect(code).toContain('حاول:');
+    expect(code).toContain('خلل:');
+    expect(code).not.toContain('نهاية:');
+  });
+
+  it('emits استورد الوقت once when explicitly imported and time nodes are used', () => {
+    const importNode = node('imp1', 'استيراد/مكتبة', {
+      inputs: [{ ...SEQ_IN }],
+      outputs: [{ ...SEQ_OUT }],
+      controls: [{ id: 'lib', type: 'select', label: 'المكتبة', value: 'الوقت', options: [] }],
+    });
+    const timeNode = node('time1', 'وقت/الآن', {
+      outputs: [{ id: 'res_out', label: 'الوقت', type: 'data' }],
+    });
+    const nodes = [startNode(), importNode, timeNode, printNode()];
+    const edges = [
+      edge('e1', 'start', 'seq_out', 'imp1', 'seq_in'),
+      edge('e2', 'imp1', 'seq_out', 'print', 'seq_in'),
+      edge('e3', 'time1', 'res_out', 'print', 'val_in'),
+    ];
+    const code = generateAlifCodeFromGraph(nodes, edges);
+    const occurrences = code.split('\n').filter((l) => l.trim().startsWith('استورد الوقت')).length;
+    expect(occurrences).toBe(1);
+  });
+
   it('asks for a start node when the graph is empty of entry points', () => {
     const code = generateAlifCodeFromGraph([printNode()], []);
     expect(code).toContain('بداية البرنامج');
