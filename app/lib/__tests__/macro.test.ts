@@ -130,6 +130,49 @@ describe('syncMacroInstances', () => {
   });
 });
 
+describe('macro management', () => {
+  function seedMacroState() {
+    const call = macroCallNode('call1', 'm1');
+    useEditorStore.setState({
+      nodes: [startNode(), call, printNode('p1')],
+      edges: [
+        edge('e1', 'start', 'seq_out', 'call1', 'seq_in'),
+        edge('e2', 'call1', 'seq_out', 'p1', 'seq_in'),
+      ],
+      mainGraph: { nodes: [], edges: [] },
+      macros: {
+        m1: { name: 'قديمة', nodes: [], edges: [] },
+      },
+      currentGraphId: 'main',
+      past: [],
+      future: [],
+    });
+  }
+
+  it('renames a macro', () => {
+    seedMacroState();
+    useEditorStore.getState().renameMacro('m1', '  جديدة  ');
+    expect(useEditorStore.getState().macros['m1'].name).toBe('جديدة');
+  });
+
+  it('ignores blank renames and unknown ids', () => {
+    seedMacroState();
+    useEditorStore.getState().renameMacro('m1', '   ');
+    useEditorStore.getState().renameMacro('nope', 'س');
+    expect(useEditorStore.getState().macros['m1'].name).toBe('قديمة');
+  });
+
+  it('deletes a macro with all its call nodes and edges', () => {
+    seedMacroState();
+    useEditorStore.getState().deleteMacro('m1');
+    const state = useEditorStore.getState();
+    expect(state.macros['m1']).toBeUndefined();
+    expect(state.nodes.some((n) => n.id === 'call1')).toBe(false);
+    expect(state.edges).toHaveLength(0);
+    expect(state.nodes.some((n) => n.id === 'start')).toBe(true);
+  });
+});
+
 describe('macro code generation with flow', () => {
   it('continues execution after a macro call', () => {
     const code = generateAlifCodeFromGraph(

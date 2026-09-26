@@ -903,6 +903,18 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     ],
     outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
   },
+  'مصفوفات/فهم': {
+    label: 'فهم مصفوفة',
+    subtitle: '[س لكل س في ...]',
+    iconName: 'ListFilter',
+    color: '#06b6d4',
+    inputs: [
+      { id: 'elem_in', label: 'التعبير', type: 'data' },
+      { id: 'iter_in', label: 'المصدر', type: 'data' },
+    ],
+    outputs: [{ id: 'res_out', label: 'المصفوفة', type: 'data' }],
+    controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'س' }],
+  },
 
   // --- حزمة الكائنات المتقدمة ---
   'كائنات/استدعاء طريقة': {
@@ -923,6 +935,26 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     ],
     controls: [
       { id: 'method_name', type: 'text', label: 'اسم الدالة / الطريقة', value: 'تشغيل' },
+      { id: 'kwargs', type: 'text', label: 'مفتاحية (اختياري)', value: '' },
+    ],
+  },
+  'كائنات/اصل': {
+    label: 'استدعاء الأب',
+    subtitle: 'اصل().دالة()',
+    iconName: 'CornerUpLeft',
+    color: '#6366f1',
+    allowDynamicInputs: true,
+    dynamicInputLabel: 'معامل',
+    inputs: [
+      { id: 'seq_in', label: 'تسلسل', type: 'event' },
+      { id: 'arg_in', label: 'المعامل', type: 'data' },
+    ],
+    outputs: [
+      { id: 'seq_out', label: 'التالي', type: 'event' },
+      { id: 'res_out', label: 'النتيجة', type: 'data' },
+    ],
+    controls: [
+      { id: 'method_name', type: 'text', label: 'اسم الدالة', value: 'تشغيل' },
       { id: 'kwargs', type: 'text', label: 'مفتاحية (اختياري)', value: '' },
     ],
   },

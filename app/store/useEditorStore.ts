@@ -79,6 +79,8 @@ interface EditorState {
   syncMacroInstances: (macroId: string) => void;
   updateNodeControl: (nodeId: string, controlId: string, value: any) => void;
   createMacro: (name: string) => void;
+  renameMacro: (macroId: string, name: string) => void;
+  deleteMacro: (macroId: string) => void;
   switchGraph: (targetId: string) => void;
   loadProject: (projectId: string, code: string, visualNodes: Node[], visualEdges: Edge[], visualMacros?: Record<string, MacroData>) => void;
   setErrorNode: (nodeId: string | null) => void;
@@ -495,6 +497,75 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         }
       }
     }));
+  },
+
+  renameMacro: (macroId: string, name: string) => {
+    const state = get();
+    if (!state.macros[macroId] || !name.trim()) return;
+    get().commitHistory();
+    set((s) => ({
+      macros: {
+        ...s.macros,
+        [macroId]: { ...s.macros[macroId], name: name.trim() },
+      },
+    }));
+  },
+
+  deleteMacro: (macroId: string) => {
+    const state = get();
+    if (!state.macros[macroId]) return;
+    get().commitHistory();
+
+    // Remove all call nodes of this macro (and their edges) from every graph
+    const stripCalls = (nodes: Node[], edges: Edge[]) => {
+      const removedIds = new Set(
+        nodes.filter((n) => (n.data as any).isMacro && (n.data as any).macroId === macroId).map((n) => n.id)
+      );
+      if (removedIds.size === 0) return { nodes, edges };
+      return {
+        nodes: nodes.filter((n) => !removedIds.has(n.id)),
+        edges: edges.filter((e) => !removedIds.has(e.source) && !removedIds.has(e.target)),
+      };
+    };
+
+    set((s) => {
+      const newMacros = { ...s.macros };
+      delete newMacros[macroId];
+
+      const storedMain = s.currentGraphId === 'main'
+        ? { nodes: s.nodes, edges: s.edges }
+        : s.mainGraph;
+      const cleanStoredMain = stripCalls(storedMain.nodes, storedMain.edges);
+
+      let liveNodes = s.nodes;
+      let liveEdges = s.edges;
+      if (s.currentGraphId === 'main') {
+        liveNodes = cleanStoredMain.nodes;
+        liveEdges = cleanStoredMain.edges;
+      }
+
+      const cleanedMacros: typeof newMacros = {};
+      for (const [id, macro] of Object.entries(newMacros)) {
+        const src = s.currentGraphId === id
+          ? { nodes: s.nodes, edges: s.edges }
+          : { nodes: macro.nodes, edges: macro.edges };
+        const stripped = stripCalls(src.nodes, src.edges);
+        cleanedMacros[id] = { ...macro, nodes: stripped.nodes, edges: stripped.edges };
+        if (s.currentGraphId === id) {
+          liveNodes = stripped.nodes;
+          liveEdges = stripped.edges;
+        }
+      }
+
+      const viewingDeleted = s.currentGraphId === macroId;
+      return {
+        macros: cleanedMacros,
+        mainGraph: cleanStoredMain,
+        nodes: viewingDeleted ? cleanStoredMain.nodes : liveNodes,
+        edges: viewingDeleted ? cleanStoredMain.edges : liveEdges,
+        currentGraphId: viewingDeleted ? 'main' : s.currentGraphId,
+      };
+    });
   },
 
   switchGraph: (targetId: string) => {

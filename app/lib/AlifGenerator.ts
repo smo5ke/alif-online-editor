@@ -186,6 +186,19 @@ export function generateAlifCodeFromGraph(
         let val = resolveInput(node.id, 'val_in') ?? '[]';
         return `معكوس(${val})`;
       }
+      if (type === 'مصفوفات/فهم') {
+        const elem = resolveInput(node.id, 'elem_in') ?? 'عدم';
+        const iter = resolveInput(node.id, 'iter_in') ?? '[]';
+        const vname = getControlValue('var_name') || 'س';
+        return `[${elem} لكل ${vname} في ${iter}]`;
+      }
+      if (type === 'كائنات/اصل') {
+        let method = getControlValue('method_name') || 'تشغيل';
+        const methodArgs = resolveCallArgs(node);
+        const kwargs = (getControlValue('kwargs') || '').trim();
+        const all = kwargs ? [...methodArgs, kwargs].join(', ') : methodArgs.join(', ');
+        return `اصل().${method}(${all})`;
+      }
       if (type === 'مميزة/جديدة') {
         const inputs = data.inputs || [];
         const elements = inputs.map((input: any) => resolveInput(node.id, input.id) ?? 'عدم');
@@ -533,6 +546,13 @@ export function generateAlifCodeFromGraph(
           const kwargs = (getControlValue('kwargs') || '').trim();
           const all = kwargs ? [...methodArgs, kwargs].join(', ') : methodArgs.join(', ');
           code += indent + `${obj}.${method}(${all}) # @node:${currNode.id}\n`;
+          currNodeId = getNextNodeId(currNode.id, 'seq_out');
+        } else if (type === 'كائنات/اصل') {
+          let method = getControlValue('method_name') || 'تشغيل';
+          const methodArgs = resolveCallArgs(currNode);
+          const kwargs = (getControlValue('kwargs') || '').trim();
+          const all = kwargs ? [...methodArgs, kwargs].join(', ') : methodArgs.join(', ');
+          code += indent + `اصل().${method}(${all}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
 
         } else if (type === 'استيراد/مكتبة') {

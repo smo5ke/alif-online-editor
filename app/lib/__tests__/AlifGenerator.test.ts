@@ -765,6 +765,47 @@ describe('generateAlifCodeFromGraph', () => {
     expect(code).toContain('س, ص = 5, 9');
   });
 
+  it('generates اصل() calls and فهم comprehensions', () => {
+    const sup = node('sup1', 'كائنات/اصل', {
+      inputs: [
+        { ...SEQ_IN },
+        { id: 'arg_in', label: 'المعامل', type: 'data' },
+      ],
+      outputs: [{ ...SEQ_OUT }, { id: 'res_out', label: 'النتيجة', type: 'data' }],
+      controls: [
+        { id: 'method_name', type: 'text', label: 'اسم الدالة', value: 'قيمة' },
+        { id: 'kwargs', type: 'text', label: 'مفتاحية', value: '' },
+      ],
+    });
+    const comp = node('cp1', 'مصفوفات/فهم', {
+      inputs: [
+        { id: 'elem_in', label: 'التعبير', type: 'data' },
+        { id: 'iter_in', label: 'المصدر', type: 'data' },
+      ],
+      outputs: [{ id: 'res_out', label: 'المصفوفة', type: 'data' }],
+      controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'ص' }],
+    });
+    const code = generateAlifCodeFromGraph(
+      [startNode(), printNode(), sup, comp, numNode('n1', 1)],
+      [
+        edge('e1', 'start', 'seq_out', 'sup1', 'seq_in'),
+        edge('e2', 'sup1', 'seq_out', 'print', 'seq_in'),
+        edge('e3', 'sup1', 'res_out', 'print', 'val_in'),
+      ]
+    );
+    expect(code).toContain('اصل().قيمة()');
+    const code2 = generateAlifCodeFromGraph(
+      [startNode(), printNode('p2'), comp, numNode('n4', 4), numNode('n2', 2)],
+      [
+        edge('e1', 'start', 'seq_out', 'p2', 'seq_in'),
+        edge('e2', 'cp1', 'res_out', 'p2', 'val_in'),
+        edge('e3', 'n4', 'val_out', 'cp1', 'iter_in'),
+        edge('e4', 'n2', 'val_out', 'cp1', 'elem_in'),
+      ]
+    );
+    expect(code2).toContain('[2 لكل ص في 4]');
+  });
+
   it('asks for a start node when the graph is empty of entry points', () => {
     const code = generateAlifCodeFromGraph([printNode()], []);
     expect(code).toContain('بداية البرنامج');

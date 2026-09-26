@@ -22,7 +22,7 @@ const edgeTypes = {
 };
 
 export default function VisualEditor() {
-  const { activeMode, nodes, edges, setNodes, setEdges, onNodesChange, onEdgesChange, currentGraphId, macros, createMacro, switchGraph, commitHistory, undo, redo } = useEditorStore();
+  const { activeMode, nodes, edges, setNodes, setEdges, onNodesChange, onEdgesChange, currentGraphId, macros, createMacro, renameMacro, deleteMacro, switchGraph, commitHistory, undo, redo } = useEditorStore();
   
   const [menuPos, setMenuPos] = useState<{ x: number; y: number; showAll?: boolean } | null>(null);
   const [editMenuPos, setEditMenuPos] = useState<{ x: number; y: number; nodeId: string } | null>(null);
@@ -333,13 +333,39 @@ export default function VisualEditor() {
           <div className="w-px h-6 bg-slate-600 mx-1"></div>
           
           {Object.entries(macros || {}).map(([id, macro]) => (
-            <button
+            <span
               key={id}
-              onClick={() => switchGraph(id)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${currentGraphId === id ? 'bg-purple-600 text-white' : 'hover:bg-slate-700 text-slate-400'}`}
+              className={`group flex items-center gap-1 pl-1 rounded-lg text-sm font-bold transition-colors ${currentGraphId === id ? 'bg-purple-600 text-white' : 'hover:bg-slate-700 text-slate-400'}`}
             >
-              {macro.name}
-            </button>
+              <button
+                onClick={() => switchGraph(id)}
+                className="px-2 py-1.5"
+                title="فتح الكتلة"
+              >
+                {macro.name}
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const name = prompt('اسم جديد للكتلة:', macro.name);
+                  if (name) renameMacro(id, name);
+                }}
+                className="opacity-60 hover:opacity-100 hover:text-white px-1 text-xs"
+                title="إعادة تسمية الكتلة"
+              >
+                ✎
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (confirm(`حذف الكتلة "${macro.name}" وكل استدعاءاتها؟`)) deleteMacro(id);
+                }}
+                className="opacity-60 hover:opacity-100 hover:text-red-300 px-1 text-xs"
+                title="حذف الكتلة"
+              >
+                ✕
+              </button>
+            </span>
           ))}
 
           <button
@@ -362,6 +388,7 @@ export default function VisualEditor() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         isValidConnection={isValidConnection}
+        deleteKeyCode={['Backspace', 'Delete']}
         onNodeDragStart={() => commitHistory()}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
@@ -556,6 +583,33 @@ export default function VisualEditor() {
               <span className="text-sm md:text-xs text-yellow-400 font-bold">⚙️ تعديل العقدة</span>
               <button onClick={() => setEditMenuPos(null)} className="text-white text-sm md:text-xs px-2">✕</button>
             </div>
+            <button
+              onClick={() => {
+                const st = useEditorStore.getState();
+                const src = st.nodes.find(n => n.id === editMenuPos.nodeId);
+                if (src) {
+                  st.commitHistory();
+                  const cloneId = uuidv4();
+                  const clone = {
+                    ...src,
+                    id: cloneId,
+                    position: { x: src.position.x + 40, y: src.position.y + 40 },
+                    // Rebind control handler to the clone id (the spread copy
+                    // still closes over the original node's id)
+                    data: {
+                      ...(src.data as object),
+                      onControlChange: (cId: string, val: any) => onControlChange(cloneId, cId, val),
+                    },
+                    selected: false,
+                  };
+                  setNodes(nds => nds.concat(clone));
+                }
+                setEditMenuPos(null);
+              }}
+              className="w-full text-right px-5 md:px-4 py-4 md:py-3 hover:bg-slate-700 text-slate-200 text-sm border-b border-slate-700 transition-colors"
+            >
+              استنساخ العقدة 📄
+            </button>
             <button
               onClick={() => {
                 useEditorStore.getState().commitHistory();

@@ -3,8 +3,16 @@ import { useEditorStore, codeExamples } from '../../store/useEditorStore';
 import { visualExamples } from '../../store/visualExamples';
 import { generateRunnableCode } from '../../lib/runnableGraph';
 import { buildShareUrl, parseSharedCode } from '../../lib/shareCode';
-import { FileText, Copy, Share2, Download, Save, RotateCcw, Maximize, ChevronDown, Code, Undo2, Redo2, BookOpen } from 'lucide-react';
+import { FileText, Copy, Share2, Download, Save, RotateCcw, Maximize, ChevronDown, Code, Undo2, Redo2, BookOpen, Keyboard } from 'lucide-react';
 import CheatsheetModal from '../modals/CheatsheetModal';
+
+const SHORTCUTS: Array<[string, string]> = [
+  ['Ctrl + Enter', 'تشغيل البرنامج'],
+  ['Ctrl + Z', 'تراجع (المحرر المرئي)'],
+  ['Ctrl + Shift + Z / Ctrl + Y', 'إعادة (المحرر المرئي)'],
+  ['Delete / Backspace', 'حذف العقد والخطوط المحددة'],
+  ['Tab / Shift + Tab', 'مسافة بادئة / إزاحتها (محرر الشيفرة)'],
+];
 
 function getActiveCode(): string {
   const state = useEditorStore.getState();
@@ -19,6 +27,7 @@ export default function EditorToolbar() {
   
   const [isExamplesOpen, setIsExamplesOpen] = useState(false);
   const [isCheatsheetOpen, setIsCheatsheetOpen] = useState(false);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside + load shared ?code= links
@@ -245,6 +254,9 @@ export default function EditorToolbar() {
             <button onClick={handleFullscreen} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="ملء الشاشة">
               <Maximize size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
             </button>
+            <button onClick={() => setIsShortcutsOpen(true)} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="اختصارات لوحة المفاتيح">
+              <Keyboard size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
+            </button>
           </div>
         </div>
         
@@ -291,6 +303,35 @@ export default function EditorToolbar() {
         isOpen={isCheatsheetOpen}
         onClose={() => setIsCheatsheetOpen(false)}
       />
+      {isShortcutsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setIsShortcutsOpen(false)}>
+          <div
+            className="w-full max-w-sm bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden"
+            dir="rtl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-700/60 bg-slate-800/60">
+              <h2 className="text-sm font-bold text-white">اختصارات لوحة المفاتيح</h2>
+              <button
+                onClick={() => setIsShortcutsOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-4 flex flex-col gap-2">
+              {SHORTCUTS.map(([keys, desc]) => (
+                <div key={keys} className="flex items-center justify-between gap-3 text-xs">
+                  <span className="text-slate-300">{desc}</span>
+                  <span className="font-mono px-2 py-1 rounded-md bg-slate-800 border border-slate-700 text-emerald-300 whitespace-nowrap" dir="ltr">
+                    {keys}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
