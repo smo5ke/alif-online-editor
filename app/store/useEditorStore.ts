@@ -78,7 +78,7 @@ interface EditorState {
   updateNodeControl: (nodeId: string, controlId: string, value: any) => void;
   createMacro: (name: string) => void;
   switchGraph: (targetId: string) => void;
-  loadProject: (projectId: string, code: string, visualNodes: Node[], visualEdges: Edge[]) => void;
+  loadProject: (projectId: string, code: string, visualNodes: Node[], visualEdges: Edge[], visualMacros?: Record<string, MacroData>) => void;
   setErrorNode: (nodeId: string | null) => void;
   setErrorLineNumber: (line: number | null) => void;
   setLastRunCode: (code: string) => void;
@@ -94,6 +94,16 @@ export const codeExamples: Record<string, string> = {
   dict: `# القواميس (الفهارس)\n\nعلامات = {"عربي": 95, "رياضيات": 88, "علوم": 92}\nاطبع("مفاتيح الفهرس:", علامات.مفاتيح())\nاطبع("القيم:", علامات.قيم())\n\n# جلب قيمة غير موجودة مع قيمة افتراضية\nتاريخ = علامات.احضر("تاريخ", "المادة غير مسجلة")\nاطبع(م"نتيجة التاريخ: {تاريخ}")`,
   trycatch: `# معالجة الأخطاء الاستثنائية\n\nصنف سيارة:\n\tدالة __تهيئة__(هذا, السرعة, اللون):\n\t\tهذا.السرعة = السرعة\n\t\tهذا.اللون = اللون\n\nالسيارة = سيارة(240, "اسود")\n\nحاول:\n\tالوزن = السيارة.الوزن\n\tاطبع(الوزن)\nخلل خطأ_خاصية:\n\tاطبع("هذه الخاصية غير متوفرة في هذا الكائن")\nوالا:\n\tاطبع("تم إسناد الصفة")`,
   input: `# تفاعل الطرفية مع إدخال المستخدم\n\nالمجموع = 0\nاطبع("--- برنامج جمع الأرقام ---")\n\nلكل س في مدى(3):\n\tرقم = صحيح(ادخل(م"ادخل العدد رقم {س + 1}: "))\n\tالمجموع += رقم\n\nاطبع(م"المجموع النهائي هو: {المجموع}")`,
+  while: `# حلقة بينما مع إسناد رجعي\n\nالعد = 3\nبينما العد > 0:\n\tاطبع(العد)\n\tالعد -= 1\nاطبع("انطلاق!")`,
+  logic: `# العمليات المنطقية والانتماء\n\nن1 = (5 > 3) و (2 < 4)\nاطبع(ن1)\nن2 = ليس صح\nاطبع(ن2)\nن3 = 2 في [1, 2, 3]\nاطبع(ن3)`,
+  strings: `# دوال النصوص الأساسية\n\nخام = "السلام,عليكم"\nاطبع(خام.افصل(","))\nاطبع(خام[0:6])\nاطبع(خام.استبدل("عليكم", "أهلا"))\nاطبع(خام.اوجد("عليكم"))\nاطبع("لا لا".كم("لا"))\nاطبع("-".اربط(["أ", "ب"]))\nاطبع(طول(خام))`,
+  advarr: `# عمليات المصفوفات المتقدمة\n\nارقام = [3, 1, 2]\nارقام.اضف(9)\nاطبع("بعد الإضافة:", ارقام)\nارقام.رتب()\nاطبع("مرتبة:", ارقام)\nاطبع("الأول:", ارقام[0])\nارقام[0] = 99\nاطبع("بعد التعديل:", ارقام)`,
+  advdict: `# عمليات الفهارس المتقدمة\n\nطالب = {"اسم": "أحمد"}\nطالب["معدل"] = 94\nاطبع(طالب["معدل"])\nاطبع(طالب.احضر("مدينة", "غير مسجلة"))\nاطبع("اسم" في طالب)\nاحذف طالب["معدل"]\nاطبع(طالب)`,
+  timemath: `# الوقت والرياضيات\n\nاستورد الوقت\nاستورد الرياضيات\nاطبع("الآن:", الوقت.الان())\nاطبع("منسق:", الوقت.منسق())\nاطبع("جيب 90:", الرياضيات.جيب(90))\nاطبع("مطلق:", الرياضيات.قيمة_مطلقة(-7))\nالوقت.غفوة(1)\nاطبع("انتهى الانتظار")`,
+  random: `# الأرقام العشوائية ببذرة ثابتة\n\nاستورد العشوائي\nالعشوائي.البذرة(60)\nاطبع(العشوائي.عشوائي())\nاطبع(العشوائي.منتظم(-1, 1))`,
+  foreach: `# التكرار على عناصر مصفوفة مع تخطي\n\nفواكه = ["تفاح", "موز", "عنب"]\nلكل فاكهة في فواكه:\n\tاذا فاكهة == "موز":\n\t\tاستمر\n\tاطبع(فاكهة)\nاطبع(م"الطول: {طول(فواكه)}")`,
+  multiarg: `# دالة بمعاملين وإسناد شرطي\n\nدالة جمع(أ, ب):\n\tارجع أ + ب\nاطبع(جمع(7, 8))\n\nالوصف = "كبير" اذا 15 > 10 والا "صغير"\nاطبع(الوصف)\nمؤقت = 1\nاحذف مؤقت`,
+  macro: `# الكتل (تعادل دالة في الشيفرة)\n\nدالة مضاعفة(عدد):\n\tارجع عدد * 2\n\nاطبع(مضاعفة(5))`,
   blank: ``
 };
 
@@ -515,7 +525,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
   },
 
-  loadProject: (projectId: string, code: string, visualNodes: Node[], visualEdges: Edge[]) => {
+  loadProject: (projectId: string, code: string, visualNodes: Node[], visualEdges: Edge[], visualMacros?: Record<string, MacroData>) => {
     const state = get();
     
     // Save current state to cache
@@ -558,7 +568,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       textCode: code,
       nodes: visualNodes,
       edges: visualEdges,
-      macros: {},
+      macros: visualMacros ?? {},
       currentGraphId: 'main',
       mainGraph: { nodes: [], edges: [] },
       past: [],

@@ -1,6 +1,23 @@
 import { Node, Edge } from '@xyflow/react';
 import { NodeData } from '../components/DynamicNode';
 
+// Macro ids may contain Latin characters (e.g. custom test ids), which are
+// invalid inside Alif identifiers, so derive a deterministic Arabic-safe name.
+export function macroSafeName(id: string): string {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return `م_${h}`;
+}
+
+// Temporary variables for macro call outputs must also be fully Arabic-safe
+// (Alif rejects mixed identifiers like ناتج_call_block_res_out).
+export function macroTempVar(nodeId: string, sourceHandle?: string): string {
+  const base = `${nodeId}_${sourceHandle ?? ''}`;
+  let h = 0;
+  for (let i = 0; i < base.length; i++) h = (h * 31 + base.charCodeAt(i)) >>> 0;
+  return `ناتج_${h}`;
+}
+
 export function generateAlifCodeFromGraph(
   mainNodes: Node[], 
   mainEdges: Edge[],
@@ -70,7 +87,7 @@ export function generateAlifCodeFromGraph(
       const controls = data.controls || [];
       
       if (data.isMacro) {
-        return `ناتج_${node.id.replace(/-/g, '_')}_${sourceHandle}`;
+        return macroTempVar(node.id, sourceHandle);
       }
 
       if (type === 'ماكرو/مدخلات') {
@@ -89,16 +106,12 @@ export function generateAlifCodeFromGraph(
         if (!Number.isInteger(val)) val = parseFloat(val.toFixed(4));
         return val;
       }
-      if (type === 'شروط/منطق') return getControlValue('value');
+      if (type === 'شروط/منطق' || type === 'بيانات/منطق') return getControlValue('value');
       if (type === 'أوامر/إدخال مستخدم') return `ادخل("${escapeAlifString(getControlValue('prompt'))}")`;
       if (type === 'متغيرات/قراءة') return getControlValue('var_name');
       if (type === 'دوال/طول') {
         let val = resolveInput(node.id, 'val_in') ?? '""';
         return `طول(${val})`;
-      }
-      if (type === 'بيانات/تحويل لنص') {
-        let val = resolveInput(node.id, 'val_in') ?? 'عدم';
-        return `نص(${val})`;
       }
       if (type === 'بيانات/تحويل لرقم') {
         let val = resolveInput(node.id, 'val_in') ?? 'عدم';
@@ -107,6 +120,10 @@ export function generateAlifCodeFromGraph(
       if (type === 'بيانات/تحويل لصحيح') {
         let val = resolveInput(node.id, 'val_in') ?? 'عدم';
         return `صحيح(${val})`;
+      }
+      if (type === 'بيانات/تحويل لمصفوفة') {
+        let val = resolveInput(node.id, 'val_in') ?? 'عدم';
+        return `مصفوفة(${val})`;
       }
       if (type === 'بيانات/نوع') {
         let val = resolveInput(node.id, 'val_in') ?? 'عدم';
@@ -154,11 +171,6 @@ export function generateAlifCodeFromGraph(
         let b = resolveInput(node.id, 'b_in') ?? '[]';
         return `(${a} + ${b})`;
       }
-      if (type === 'مصفوفات/موقع عنصر') {
-        let arr = resolveInput(node.id, 'arr_in') ?? '[]';
-        let val = resolveInput(node.id, 'val_in') ?? 'عدم';
-        return `${arr}.فهرس(${val})`;
-      }
       if (type === 'نصوص/قص') {
         let str = resolveInput(node.id, 'str_in') ?? '""';
         let start = resolveInput(node.id, 'start_in') ?? 0;
@@ -171,14 +183,6 @@ export function generateAlifCodeFromGraph(
         let newStr = resolveInput(node.id, 'new_in') ?? '""';
         return `${str}.استبدل(${oldStr}, ${newStr})`;
       }
-      if (type === 'نصوص/تكبير') {
-        let str = resolveInput(node.id, 'str_in') ?? '""';
-        return `${str}.كبير()`;
-      }
-      if (type === 'نصوص/تصغير') {
-        let str = resolveInput(node.id, 'str_in') ?? '""';
-        return `${str}.صغير()`;
-      }
       if (type === 'نصوص/تقسيم') {
         let str = resolveInput(node.id, 'str_in') ?? '""';
         let sepIn = resolveInput(node.id, 'sep_in');
@@ -187,17 +191,25 @@ export function generateAlifCodeFromGraph(
         if (defaultSep === ' ') return `${str}.افصل()`;
         return `${str}.افصل("${escapeAlifString(defaultSep)}")`;
       }
-      if (type === 'نصوص/تنظيف') {
-        let str = resolveInput(node.id, 'str_in') ?? '""';
-        return `${str}.جرد()`;
-      }
       if (type === 'نصوص/فحص') {
         let str = resolveInput(node.id, 'str_in') ?? '""';
         let target = resolveInput(node.id, 'target_in') ?? '""';
-        let checkType = getControlValue('check_type') || 'يحتوي';
-        if (checkType === 'يبدأ_بـ') return `${str}.يبدأ_بـ(${target})`;
-        if (checkType === 'ينتهي_بـ') return `${str}.ينتهي_بـ(${target})`;
         return `(${target} في ${str})`;
+      }
+      if (type === 'نصوص/اوجد') {
+        let str = resolveInput(node.id, 'str_in') ?? '""';
+        let target = resolveInput(node.id, 'target_in') ?? '""';
+        return `${str}.اوجد(${target})`;
+      }
+      if (type === 'نصوص/عدد') {
+        let str = resolveInput(node.id, 'str_in') ?? '""';
+        let target = resolveInput(node.id, 'target_in') ?? '""';
+        return `${str}.كم(${target})`;
+      }
+      if (type === 'نصوص/اربط') {
+        let sep = resolveInput(node.id, 'str_in') ?? '""';
+        let arr = resolveInput(node.id, 'target_in') ?? '[]';
+        return `${sep}.اربط(${arr})`;
       }
       if (type === 'فهارس/جديد') {
         const inputs = data.inputs || [];
@@ -331,13 +343,13 @@ export function generateAlifCodeFromGraph(
         const getControlValue = (id: string) => controls.find((c: any) => c.id === id)?.value;
         
         if (data.isMacro) {
-          const mName = (data.macroId || 'م_مجهول').replace('macro_', 'م_');
+          const mName = macroSafeName(data.macroId || 'م_مجهول');
           const mInputs = (data.inputs || []).filter((i: any) => i.type !== 'event');
           const resolvedArgs = mInputs.map((inp: any) => resolveInput(currNode.id, inp.id) ?? 'عدم');
           
           const mOutputs = (data.outputs || []).filter((o: any) => o.type !== 'event');
           if (mOutputs.length > 0) {
-             const outVars = mOutputs.map((out: any) => `ناتج_${currNode.id.replace(/-/g, '_')}_${out.id}`);
+             const outVars = mOutputs.map((out: any) => macroTempVar(currNode.id, out.id));
              code += indent + `${outVars.join(', ')} = ${mName}(${resolvedArgs.join(', ')}) # @node:${currNode.id}\n`;
           } else {
              code += indent + `${mName}(${resolvedArgs.join(', ')}) # @node:${currNode.id}\n`;
@@ -380,9 +392,6 @@ export function generateAlifCodeFromGraph(
           }
           
           code += indent + `اطبع(${argsStr}) # @node:${currNode.id}\n`;
-          currNodeId = getNextNodeId(currNode.id, 'seq_out');
-        } else if (type === 'أوامر/مسح الطرفية') {
-          code += indent + `امسح() # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'أوامر/سطر مخصص') {
           let cmd = getControlValue('code') || 'تجاوز';
@@ -437,10 +446,6 @@ export function generateAlifCodeFromGraph(
         } else if (type === 'مصفوفات/ترتيب') {
           let arrName = resolveInput(currNode.id, 'arr_in') ?? 'مصفوفة';
           code += indent + `${arrName}.رتب() # @node:${currNode.id}\n`;
-          currNodeId = getNextNodeId(currNode.id, 'seq_out');
-        } else if (type === 'مصفوفات/عكس') {
-          let arrName = resolveInput(currNode.id, 'arr_in') ?? 'مصفوفة';
-          code += indent + `${arrName}.اعكس() # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'مصفوفات/تعديل عنصر') {
           let arr = resolveInput(currNode.id, 'arr_in') ?? 'مصفوفة';
@@ -721,9 +726,7 @@ export function generateAlifCodeFromGraph(
   // Pre-compile macros as functions
   if (macros) {
     Object.entries(macros).forEach(([id, macro]) => {
-      // Use macro ID to generate a 100% Arabic-compliant safe identifier
-      const safeName = id.replace('macro_', 'م_');
-      finalCode += compileContext(macro.nodes, macro.edges, true, safeName);
+      finalCode += compileContext(macro.nodes, macro.edges, true, macroSafeName(id));
     });
   }
 

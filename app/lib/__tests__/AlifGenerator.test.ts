@@ -1,6 +1,32 @@
 import { describe, it, expect } from 'vitest';
 import type { Node, Edge } from '@xyflow/react';
-import { generateAlifCodeFromGraph } from '../AlifGenerator';
+import { generateAlifCodeFromGraph, macroTempVar } from '../AlifGenerator';
+import { visualExamples } from '../../store/visualExamples';
+
+describe('built-in visual examples', () => {
+  for (const [id, example] of Object.entries(visualExamples)) {
+    it(`example ${id} generates runnable-looking code`, () => {
+      const code = generateAlifCodeFromGraph(example.nodes, example.edges, example.macros);
+      // Must have an entry point and real output statements
+      expect(code).not.toContain('يرجى إضافة');
+      expect(code).toContain('اطبع(');
+      // Dead patterns that previously shipped broken code
+      expect(code).not.toContain('.قسم(');
+      expect(code).not.toContain('.كبير()');
+      expect(code).not.toContain('.صغير()');
+      expect(code).not.toContain('.جرد()');
+      expect(code).not.toContain('.فهرس(');
+      expect(code).not.toContain('.اعكس()');
+      expect(code).not.toContain('امسح()');
+      expect(code).not.toContain('نص(');
+      expect(code).not.toContain('وإلا:');
+      expect(code).not.toMatch(/\(\d+ \/ \d+\)/);
+      // Macro identifiers must be Arabic-safe (no Latin mixed in)
+      expect(code).not.toMatch(/م_[A-Za-z]/);
+      expect(code).not.toMatch(/ناتج_[A-Za-z]/);
+    });
+  }
+});
 
 type Port = { id: string; label: string; type: string };
 type Control = { id: string; type: string; label: string; value: unknown; options?: string[] };
@@ -197,8 +223,9 @@ describe('generateAlifCodeFromGraph', () => {
     const code = generateAlifCodeFromGraph(nodes, edges, {
       macro_1: { name: 'كتلة', nodes: [], edges: [] },
     });
-    expect(code).toContain('ناتج_node_1_out1');
+    expect(code).toContain(macroTempVar('node-1', 'out1'));
     expect(code).not.toContain('var_');
+    expect(code).not.toMatch(/ناتج_[A-Za-z]/);
   });
 
   it('generates حاول blocks with نهاية: and no else unless wired', () => {

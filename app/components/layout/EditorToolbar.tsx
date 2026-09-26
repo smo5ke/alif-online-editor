@@ -70,6 +70,16 @@ export default function EditorToolbar() {
     { id: 'dict', title: 'المثال 7: الفهارس' },
     { id: 'trycatch', title: 'المثال 8: الأخطاء' },
     { id: 'input', title: 'المثال 9: الإدخال' },
+    { id: 'while', title: 'المثال 10: بينما' },
+    { id: 'logic', title: 'المثال 11: المنطق' },
+    { id: 'strings', title: 'المثال 12: النصوص' },
+    { id: 'advarr', title: 'المثال 13: مصفوفات متقدمة' },
+    { id: 'advdict', title: 'المثال 14: فهارس متقدمة' },
+    { id: 'timemath', title: 'المثال 15: الوقت والرياضيات' },
+    { id: 'random', title: 'المثال 16: العشوائي' },
+    { id: 'foreach', title: 'المثال 17: لكل في مصفوفة' },
+    { id: 'multiarg', title: 'المثال 18: دوال متعددة' },
+    { id: 'macro', title: 'المثال 19: الكتل' },
     { id: 'blank', title: 'مستند فارغ' },
   ];
 
@@ -78,7 +88,8 @@ export default function EditorToolbar() {
       const code = codeExamples[val];
       const vNodes = visualExamples[val] ? visualExamples[val].nodes : [];
       const vEdges = visualExamples[val] ? visualExamples[val].edges : [];
-      useEditorStore.getState().loadProject(val, code, vNodes, vEdges);
+      const vMacros = visualExamples[val]?.macros;
+      useEditorStore.getState().loadProject(val, code, vNodes, vEdges, vMacros);
       if (!visualExamples[val] && val !== 'blank') {
         // Fallback to code mode for advanced examples
         if (activeMode !== 'code') {

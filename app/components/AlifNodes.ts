@@ -298,14 +298,6 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     outputs: [{ id: 'val_out', label: 'نص', type: 'text' }],
     controls: [{ id: 'value', type: 'text', label: 'النص', value: 'مرحباً' }],
   },
-  'بيانات/تحويل لنص': {
-    label: 'تحويل لنص',
-    subtitle: 'نص()',
-    iconName: 'WholeWord',
-    color: '#eab308',
-    inputs: [{ id: 'val_in', label: 'القيمة', type: 'data' }],
-    outputs: [{ id: 'res_out', label: 'النص', type: 'data' }],
-  },
   'بيانات/تحويل لرقم': {
     label: 'تحويل لرقم',
     subtitle: 'رقم()',
@@ -321,6 +313,14 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     color: '#3b82f6',
     inputs: [{ id: 'val_in', label: 'القيمة', type: 'data' }],
     outputs: [{ id: 'res_out', label: 'العدد الصحيح', type: 'data' }],
+  },
+  'بيانات/تحويل لمصفوفة': {
+    label: 'تحويل لمصفوفة',
+    subtitle: 'مصفوفة()',
+    iconName: 'List',
+    color: '#06b6d4',
+    inputs: [{ id: 'val_in', label: 'القيمة', type: 'data' }],
+    outputs: [{ id: 'res_out', label: 'المصفوفة', type: 'data' }],
   },
   'بيانات/نوع': {
     label: 'نوع البيانات',
@@ -371,22 +371,6 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
       { id: 'old_in', label: 'القديم', type: 'data' },
       { id: 'new_in', label: 'الجديد', type: 'data' },
     ],
-    outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
-  },
-  'نصوص/تكبير': {
-    label: 'تكبير الحروف',
-    subtitle: 'نص كبير',
-    iconName: 'CaseUpper',
-    color: '#eab308',
-    inputs: [{ id: 'str_in', label: 'النص', type: 'data' }],
-    outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
-  },
-  'نصوص/تصغير': {
-    label: 'تصغير الحروف',
-    subtitle: 'نص صغير',
-    iconName: 'CaseLower',
-    color: '#eab308',
-    inputs: [{ id: 'str_in', label: 'النص', type: 'data' }],
     outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
   },
   'شروط/منطق': {
@@ -597,17 +581,9 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     outputs: [{ id: 'res_out', label: 'المصفوفة', type: 'data' }],
     controls: [{ id: 'sep', type: 'text', label: 'الفاصل الافتراضي', value: ' ' }],
   },
-  'نصوص/تنظيف': {
-    label: 'تنظيف النص',
-    subtitle: 'جرد()',
-    iconName: 'Eraser',
-    color: '#eab308',
-    inputs: [{ id: 'str_in', label: 'النص', type: 'data' }],
-    outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
-  },
   'نصوص/فحص': {
     label: 'فحص النص',
-    subtitle: 'يبدأ / ينتهي / يحتوي',
+    subtitle: 'يحتوي (في)',
     iconName: 'SearchCode',
     color: '#eab308',
     inputs: [
@@ -615,21 +591,43 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
       { id: 'target_in', label: 'المستهدف', type: 'data' },
     ],
     outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
-    controls: [{ id: 'check_type', type: 'select', label: 'نوع الفحص', value: 'يحتوي', options: ['يحتوي', 'يبدأ_بـ', 'ينتهي_بـ'] }],
+    controls: [{ id: 'check_type', type: 'select', label: 'نوع الفحص', value: 'يحتوي', options: ['يحتوي'] }],
+  },
+  'نصوص/اوجد': {
+    label: 'موقع نص فرعي',
+    subtitle: 'اوجد()',
+    iconName: 'Search',
+    color: '#eab308',
+    inputs: [
+      { id: 'str_in', label: 'النص', type: 'data' },
+      { id: 'target_in', label: 'المستهدف', type: 'data' },
+    ],
+    outputs: [{ id: 'res_out', label: 'الموقع', type: 'data' }],
+  },
+  'نصوص/عدد': {
+    label: 'عد التكرارات',
+    subtitle: 'كم()',
+    iconName: 'Hash',
+    color: '#eab308',
+    inputs: [
+      { id: 'str_in', label: 'النص', type: 'data' },
+      { id: 'target_in', label: 'المستهدف', type: 'data' },
+    ],
+    outputs: [{ id: 'res_out', label: 'العدد', type: 'data' }],
+  },
+  'نصوص/اربط': {
+    label: 'ربط مصفوفة بنص',
+    subtitle: 'فاصل.اربط()',
+    iconName: 'Link',
+    color: '#eab308',
+    inputs: [
+      { id: 'str_in', label: 'الفاصل', type: 'data' },
+      { id: 'target_in', label: 'المصفوفة', type: 'data' },
+    ],
+    outputs: [{ id: 'res_out', label: 'النص', type: 'data' }],
   },
 
   // --- حزمة المصفوفات ---
-  'مصفوفات/عكس': {
-    label: 'عكس المصفوفة',
-    subtitle: 'اعكس()',
-    iconName: 'ArrowLeftRight',
-    color: '#06b6d4',
-    inputs: [
-      { id: 'seq_in', label: 'تسلسل', type: 'event' },
-      { id: 'arr_in', label: 'المصفوفة', type: 'data' },
-    ],
-    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
-  },
   'مصفوفات/دمج': {
     label: 'دمج مصفوفتين',
     subtitle: 'أ + ب',
@@ -641,27 +639,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     ],
     outputs: [{ id: 'res_out', label: 'المصفوفة', type: 'data' }],
   },
-  'مصفوفات/موقع عنصر': {
-    label: 'موقع عنصر',
-    subtitle: 'فهرس()',
-    iconName: 'LocateFixed',
-    color: '#06b6d4',
-    inputs: [
-      { id: 'arr_in', label: 'المصفوفة', type: 'data' },
-      { id: 'val_in', label: 'العنصر', type: 'data' },
-    ],
-    outputs: [{ id: 'res_out', label: 'رقم الفهرس', type: 'data' }],
-  },
-
   // --- حزمة الأوامر والطرفية ---
-  'أوامر/مسح الطرفية': {
-    label: 'مسح الطرفية',
-    subtitle: 'امسح()',
-    iconName: 'Terminal',
-    color: '#ec4899',
-    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }],
-    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
-  },
 
   // --- حزمة الفهارس المتقدمة ---
   'فهارس/احضر': {
