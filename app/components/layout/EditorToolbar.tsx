@@ -80,6 +80,8 @@ export default function EditorToolbar() {
     { id: 'foreach', title: 'المثال 17: لكل في مصفوفة' },
     { id: 'multiarg', title: 'المثال 18: دوال متعددة' },
     { id: 'macro', title: 'المثال 19: الكتل' },
+    { id: 'guess', title: 'المثال 20: التخمين' },
+    { id: 'calc', title: 'المثال 21: الآلة الحاسبة' },
     { id: 'blank', title: 'مستند فارغ' },
   ];
 
