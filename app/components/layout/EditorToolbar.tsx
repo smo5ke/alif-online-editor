@@ -82,6 +82,9 @@ export default function EditorToolbar() {
     { id: 'macro', title: 'المثال 19: الكتل' },
     { id: 'guess', title: 'المثال 20: التخمين' },
     { id: 'calc', title: 'المثال 21: الآلة الحاسبة' },
+    { id: 'files', title: 'المثال 22: الملفات' },
+    { id: 'sets', title: 'المثال 23: المميزة' },
+    { id: 'lambda', title: 'المثال 24: الخطية' },
     { id: 'blank', title: 'مستند فارغ' },
   ];
 

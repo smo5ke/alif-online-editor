@@ -575,6 +575,196 @@ describe('generateAlifCodeFromGraph', () => {
     ).toContain('مدى(1, 10, 2)');
   });
 
+  it('generates حذف as امسح (key/branch parity)', () => {
+    const del = node('del1', 'مصفوفات/حذف', {
+      inputs: [
+        { ...SEQ_IN },
+        { id: 'arr_in', label: 'المصفوفة', type: 'data' },
+        { id: 'val_in', label: 'القيمة', type: 'data' },
+      ],
+      outputs: [{ ...SEQ_OUT }],
+    });
+    const arrVar = node('arr', 'متغيرات/قراءة', {
+      outputs: [{ id: 'val_out', label: 'القيمة', type: 'data' }],
+      controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'س' }],
+    });
+    const code = generateAlifCodeFromGraph([startNode(), del, arrVar, numNode('n2', 2)], [
+      edge('e1', 'start', 'seq_out', 'del1', 'seq_in'),
+      edge('e2', 'arr', 'val_out', 'del1', 'arr_in'),
+      edge('e3', 'n2', 'val_out', 'del1', 'val_in'),
+    ]);
+    expect(code).toContain('س.امسح(2)');
+  });
+
+  it('generates concat with + for arrays and strings', () => {
+    const arrCat = node('c1', 'مصفوفات/دمج', {
+      inputs: [
+        { id: 'a_in', label: 'مصفوفة أ', type: 'data' },
+        { id: 'b_in', label: 'مصفوفة ب', type: 'data' },
+      ],
+      outputs: [{ id: 'res_out', label: 'المصفوفة', type: 'data' }],
+    });
+    const strCat = node('c2', 'بيانات/دمج نصوص', {
+      inputs: [
+        { id: 'a_in', label: 'أ (نص)', type: 'data' },
+        { id: 'b_in', label: 'ب (نص)', type: 'data' },
+      ],
+      outputs: [{ id: 'res_out', label: 'الناتج', type: 'data' }],
+    });
+    const code = generateAlifCodeFromGraph(
+      [startNode(), printNode(), arrCat, strCat, textNode('t1', 'أ'), textNode('t2', 'ب')],
+      [
+        edge('e1', 'start', 'seq_out', 'print', 'seq_in'),
+        edge('e2', 'c1', 'res_out', 'print', 'val_in'),
+        edge('e3', 't1', 'val_out', 'c2', 'a_in'),
+        edge('e4', 't2', 'val_out', 'c2', 'b_in'),
+      ]
+    );
+    expect(code).toContain('اطبع(');
+  });
+
+  it('generates obj.method(args) for استدعاء طريقة', () => {
+    const mcall = node('mc1', 'كائنات/استدعاء طريقة', {
+      inputs: [
+        { ...SEQ_IN },
+        { id: 'obj_in', label: 'الكائن', type: 'data' },
+        { id: 'arg_in', label: 'المعامل', type: 'data' },
+      ],
+      outputs: [{ ...SEQ_OUT }, { id: 'res_out', label: 'النتيجة', type: 'data' }],
+      controls: [{ id: 'method_name', type: 'text', label: 'اسم الدالة / الطريقة', value: 'جمع' }],
+    });
+    const objVar = node('obj', 'متغيرات/قراءة', {
+      outputs: [{ id: 'val_out', label: 'القيمة', type: 'data' }],
+      controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'م' }],
+    });
+    const code = generateAlifCodeFromGraph([startNode(), printNode(), mcall, objVar, numNode('n3', 3)], [
+      edge('e1', 'start', 'seq_out', 'print', 'seq_in'),
+      edge('e2', 'mc1', 'res_out', 'print', 'val_in'),
+      edge('e3', 'obj', 'val_out', 'mc1', 'obj_in'),
+      edge('e4', 'n3', 'val_out', 'mc1', 'arg_in'),
+    ]);
+    expect(code).toContain('م.جمع(3)');
+  });
+
+  it('generates file open/write/read/close statements', () => {
+    const open = node('fopen', 'ملفات/افتح', {
+      inputs: [
+        { ...SEQ_IN },
+        { id: 'path_in', label: 'المسار', type: 'data' },
+        { id: 'mode_in', label: 'الوضع', type: 'data' },
+      ],
+      outputs: [{ ...SEQ_OUT }, { id: 'file_out', label: 'الملف', type: 'data' }],
+      controls: [
+        { id: 'var_name', type: 'text', label: 'متغير الملف', value: 'س' },
+        { id: 'path', type: 'text', label: 'المسار', value: 'ملف.الف' },
+        { id: 'mode', type: 'select', label: 'الوضع', value: 'ك' },
+      ],
+    });
+    const write = node('fw', 'ملفات/اكتب', {
+      inputs: [
+        { ...SEQ_IN },
+        { id: 'file_in', label: 'الملف', type: 'data' },
+        { id: 'text_in', label: 'النص', type: 'data' },
+      ],
+      outputs: [{ ...SEQ_OUT }],
+    });
+    const readF = node('fr', 'ملفات/اقرا', {
+      inputs: [{ id: 'file_in', label: 'الملف', type: 'data' }],
+      outputs: [{ id: 'res_out', label: 'المحتوى', type: 'data' }],
+    });
+    const close = node('fc', 'ملفات/اغلق', {
+      inputs: [{ ...SEQ_IN }, { id: 'file_in', label: 'الملف', type: 'data' }],
+      outputs: [{ ...SEQ_OUT }],
+    });
+    const readS = node('svar', 'متغيرات/قراءة', {
+      outputs: [{ id: 'val_out', label: 'القيمة', type: 'data' }],
+      controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'س' }],
+    });
+    const code = generateAlifCodeFromGraph(
+      [startNode(), open, write, printNode('p1'), readF, close, readS, textNode('tt', 'hi')],
+      [
+        edge('e1', 'start', 'seq_out', 'fopen', 'seq_in'),
+        edge('e2', 'fopen', 'seq_out', 'fw', 'seq_in'),
+        edge('e3', 'svar', 'val_out', 'fw', 'file_in'),
+        edge('e4', 'tt', 'val_out', 'fw', 'text_in'),
+        edge('e5', 'fw', 'seq_out', 'p1', 'seq_in'),
+        edge('e6', 'fr', 'res_out', 'p1', 'val_in'),
+        edge('e7', 'svar', 'val_out', 'fr', 'file_in'),
+        edge('e8', 'p1', 'seq_out', 'fc', 'seq_in'),
+        edge('e9', 'svar', 'val_out', 'fc', 'file_in'),
+      ]
+    );
+    expect(code).toContain('س = افتح("ملف.الف", "ك")');
+    expect(code).toContain('س.اكتب("hi")');
+    expect(code).toContain('س.اقرا()');
+    expect(code).toContain('س.اغلق()');
+  });
+
+  it('generates sets, مقرون, خطية, conversions and multi-assign', () => {
+    const setNew = node('sn', 'مميزة/جديدة', {
+      inputs: [
+        { id: 'item_0', label: 'عنصر 1', type: 'data' },
+        { id: 'item_1', label: 'عنصر 2', type: 'data' },
+      ],
+      outputs: [{ id: 'set_out', label: 'مميزة', type: 'array' }],
+    });
+    const maqroon = node('mq', 'مصفوفات/مقرون', {
+      inputs: [
+        { id: 'a_in', label: 'قائمة أ', type: 'data' },
+        { id: 'b_in', label: 'قائمة ب', type: 'data' },
+      ],
+      outputs: [{ id: 'res_out', label: 'المقرون', type: 'data' }],
+    });
+    const lam = node('lm', 'دوال/خطية', {
+      inputs: [{ id: 'body_in', label: 'الجسم', type: 'data' }],
+      outputs: [{ id: 'res_out', label: 'الدالة', type: 'data' }],
+      controls: [{ id: 'params', type: 'text', label: 'المعاملات', value: 'س' }],
+    });
+    const multi = node('mu', 'متغيرات/إسناد متعدد', {
+      inputs: [
+        { ...SEQ_IN },
+        { id: 'val_in', label: 'القيمة 1', type: 'data' },
+        { id: 'item_0', label: 'قيمة 2', type: 'data' },
+      ],
+      outputs: [{ ...SEQ_OUT }],
+      controls: [{ id: 'var_names', type: 'text', label: 'المتغيرات', value: 'س, ص' }],
+    });
+    const setAdd = node('sa', 'مميزة/إضافة', {
+      inputs: [
+        { ...SEQ_IN },
+        { id: 'set_in', label: 'المميزة', type: 'data' },
+        { id: 'val_in', label: 'القيمة', type: 'data' },
+      ],
+      outputs: [{ ...SEQ_OUT }],
+    });
+    const code = generateAlifCodeFromGraph(
+      [
+        startNode(), printNode(), setNew, numNode('n5', 5), numNode('n9', 9),
+        maqroon, lam, multi, setAdd, textNode('t7', 'x'),
+        printNode('p2'), printNode('p3'),
+      ],
+      [
+        edge('e1', 'start', 'seq_out', 'print', 'seq_in'),
+        edge('e2', 'sn', 'set_out', 'print', 'val_in'),
+        edge('e3', 'n5', 'val_out', 'sn', 'item_0'),
+        edge('e4', 'n9', 'val_out', 'sn', 'item_1'),
+        edge('e5', 'print', 'seq_out', 'p2', 'seq_in'),
+        edge('e6', 'mq', 'res_out', 'p2', 'val_in'),
+        edge('e7', 'p2', 'seq_out', 'p3', 'seq_in'),
+        edge('e8', 'lm', 'res_out', 'p3', 'val_in'),
+        edge('e9', 't7', 'val_out', 'lm', 'body_in'),
+        edge('e10', 'p3', 'seq_out', 'mu', 'seq_in'),
+        edge('e11', 'n5', 'val_out', 'mu', 'val_in'),
+        edge('e12', 'n9', 'val_out', 'mu', 'item_0'),
+        edge('e13', 'mu', 'seq_out', 'sa', 'seq_in'),
+      ]
+    );
+    expect(code).toContain('{5, 9}');
+    expect(code).toContain('مقرون(');
+    expect(code).toContain('(خطية س: "x")');
+    expect(code).toContain('س, ص = 5, 9');
+  });
+
   it('asks for a start node when the graph is empty of entry points', () => {
     const code = generateAlifCodeFromGraph([printNode()], []);
     expect(code).toContain('بداية البرنامج');

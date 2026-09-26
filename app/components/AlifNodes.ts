@@ -60,7 +60,16 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     label: 'استيراد', subtitle: 'استيراد مكتبة', iconName: 'Package', color: '#14b8a6',
     inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }],
     outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
-    controls: [{ id: 'lib', type: 'select', label: 'المكتبة', value: 'الوقت', options: ['الوقت', 'الرياضيات', 'العشوائي'] }],
+    controls: [{ id: 'lib', type: 'text', label: 'المكتبة (نقاط للفرعية)', value: 'الوقت' }],
+  },
+  'استيراد/من': {
+    label: 'استيراد من', subtitle: 'من X استورد Y', iconName: 'Download', color: '#14b8a6',
+    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }],
+    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+    controls: [
+      { id: 'pkg', type: 'text', label: 'الحزمة', value: 'الوقت' },
+      { id: 'name', type: 'text', label: 'الاسم', value: 'غفوة' },
+    ],
   },
   'عشوائي/بذرة': {
     label: 'تعيين البذرة', subtitle: 'البذرة()', iconName: 'Dices', color: '#8b5cf6',
@@ -268,6 +277,20 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     outputs: [{ id: 'val_out', label: 'القيمة', type: 'data' }],
     controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'س' }],
   },
+  'متغيرات/إسناد متعدد': {
+    label: 'إسناد متعدد',
+    subtitle: 'س, ص = ...',
+    iconName: 'Database',
+    color: '#14b8a6',
+    allowDynamicInputs: true,
+    dynamicInputLabel: 'قيمة',
+    inputs: [
+      { id: 'seq_in', label: 'تسلسل', type: 'event' },
+      { id: 'val_in', label: 'القيمة 1', type: 'data' },
+    ],
+    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+    controls: [{ id: 'var_names', type: 'text', label: 'المتغيرات (افصل بفاصلة)', value: 'س, ص' }],
+  },
 
   'بيانات/حساب': {
     label: 'عملية حسابية',
@@ -321,6 +344,30 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     color: '#06b6d4',
     inputs: [{ id: 'val_in', label: 'القيمة', type: 'data' }],
     outputs: [{ id: 'res_out', label: 'المصفوفة', type: 'data' }],
+  },
+  'بيانات/تحويل لمنطق': {
+    label: 'تحويل لمنطق',
+    subtitle: 'منطق()',
+    iconName: 'ToggleRight',
+    color: '#3b82f6',
+    inputs: [{ id: 'val_in', label: 'القيمة', type: 'data' }],
+    outputs: [{ id: 'res_out', label: 'صح/خطأ', type: 'data' }],
+  },
+  'بيانات/تحويل لمترابطة': {
+    label: 'تحويل لمترابطة',
+    subtitle: 'مترابطة()',
+    iconName: 'Combine',
+    color: '#06b6d4',
+    inputs: [{ id: 'val_in', label: 'القيمة', type: 'data' }],
+    outputs: [{ id: 'res_out', label: 'المترابطة', type: 'data' }],
+  },
+  'بيانات/تحويل لمميزة': {
+    label: 'تحويل لمميزة',
+    subtitle: 'مميزة()',
+    iconName: 'Hash',
+    color: '#a855f7',
+    inputs: [{ id: 'val_in', label: 'القيمة', type: 'data' }],
+    outputs: [{ id: 'res_out', label: 'المميزة', type: 'data' }],
   },
   'بيانات/نوع': {
     label: 'نوع البيانات',
@@ -516,7 +563,10 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
       { id: 'seq_out', label: 'التالي', type: 'event' },
       { id: 'res_out', label: 'النتيجة', type: 'data' },
     ],
-    controls: [{ id: 'func_name', type: 'text', label: 'الاسم', value: 'عملية' }],
+    controls: [
+      { id: 'func_name', type: 'text', label: 'الاسم', value: 'عملية' },
+      { id: 'kwargs', type: 'text', label: 'مفتاحية (ليمون = "10")', value: '' },
+    ],
   },
   'دوال/إرجاع': {
     label: 'إرجاع',
@@ -527,6 +577,32 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
       { id: 'seq_in', label: 'تسلسل', type: 'event' },
       { id: 'val_in', label: 'قيمة', type: 'data' },
     ],
+  },
+  'دوال/خطية': {
+    label: 'دالة خطية',
+    subtitle: 'خطية س: ...',
+    iconName: 'FileCode',
+    color: '#10b981',
+    inputs: [{ id: 'body_in', label: 'الجسم', type: 'data' }],
+    outputs: [{ id: 'res_out', label: 'الدالة', type: 'data' }],
+    controls: [{ id: 'params', type: 'text', label: 'المعاملات', value: 'س' }],
+  },
+  'دوال/تحقق_اي': {
+    label: 'تحقق أي',
+    subtitle: 'تحقق_اي()',
+    iconName: 'Eye',
+    color: '#06b6d4',
+    inputs: [{ id: 'val_in', label: 'القائمة', type: 'data' }],
+    outputs: [{ id: 'res_out', label: 'صح/خطأ', type: 'data' }],
+  },
+  'دوال/هل_نوع': {
+    label: 'هل النوع؟',
+    subtitle: 'هل_نوع()',
+    iconName: 'Fingerprint',
+    color: '#8b5cf6',
+    inputs: [{ id: 'val_in', label: 'القيمة', type: 'data' }],
+    outputs: [{ id: 'res_out', label: 'صح/خطأ', type: 'data' }],
+    controls: [{ id: 'typename', type: 'select', label: 'النوع', value: 'صحيح', options: ['صحيح', 'عشري', 'نص', 'مصفوفة', 'مترابطة', 'مميزة', 'فهرس'] }],
   },
   'أخطاء/محاولة': {
     label: 'محاولة / خطأ',
@@ -639,6 +715,122 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     ],
     outputs: [{ id: 'res_out', label: 'المصفوفة', type: 'data' }],
   },
+  'مصفوفات/مقرون': {
+    label: 'مقرون (zip)',
+    subtitle: 'مقرون(...)',
+    iconName: 'Combine',
+    color: '#06b6d4',
+    allowDynamicInputs: true,
+    dynamicInputLabel: 'قائمة',
+    inputs: [
+      { id: 'a_in', label: 'قائمة أ', type: 'data' },
+      { id: 'b_in', label: 'قائمة ب', type: 'data' },
+    ],
+    outputs: [{ id: 'res_out', label: 'المقرون', type: 'data' }],
+  },
+  'مصفوفات/معكوس': {
+    label: 'معكوس (كائن)',
+    subtitle: 'معكوس() + مصفوفة()',
+    iconName: 'ArrowLeftRight',
+    color: '#06b6d4',
+    inputs: [{ id: 'val_in', label: 'القيمة', type: 'data' }],
+    outputs: [{ id: 'res_out', label: 'المعكوس', type: 'data' }],
+  },
+
+  // --- حزمة المميزة (Sets) ---
+  'مميزة/جديدة': {
+    label: 'مميزة جديدة',
+    subtitle: '{...}',
+    iconName: 'Hash',
+    color: '#a855f7',
+    allowDynamicInputs: true,
+    dynamicInputLabel: 'عنصر',
+    outputs: [{ id: 'set_out', label: 'مميزة', type: 'array' }],
+  },
+  'مميزة/إضافة': {
+    label: 'إضافة لمميزة',
+    subtitle: 'اضف()',
+    iconName: 'ListPlus',
+    color: '#a855f7',
+    inputs: [
+      { id: 'seq_in', label: 'تسلسل', type: 'event' },
+      { id: 'set_in', label: 'المميزة', type: 'data' },
+      { id: 'val_in', label: 'القيمة', type: 'data' },
+    ],
+    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+  },
+  'مميزة/اسحب': {
+    label: 'سحب من مميزة',
+    subtitle: 'اسحب()',
+    iconName: 'ListMinus',
+    color: '#a855f7',
+    inputs: [
+      { id: 'seq_in', label: 'تسلسل', type: 'event' },
+      { id: 'set_in', label: 'المميزة', type: 'data' },
+    ],
+    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+  },
+
+  // --- حزمة الملفات ---
+  'ملفات/افتح': {
+    label: 'فتح ملف',
+    subtitle: 'افتح()',
+    iconName: 'FileText',
+    color: '#14b8a6',
+    inputs: [
+      { id: 'seq_in', label: 'تسلسل', type: 'event' },
+      { id: 'path_in', label: 'المسار', type: 'data' },
+      { id: 'mode_in', label: 'الوضع', type: 'data' },
+    ],
+    outputs: [
+      { id: 'seq_out', label: 'التالي', type: 'event' },
+      { id: 'file_out', label: 'الملف', type: 'data' },
+    ],
+    controls: [
+      { id: 'var_name', type: 'text', label: 'متغير الملف', value: 'ملف_مفتوح' },
+      { id: 'path', type: 'text', label: 'المسار', value: 'ملف.الف' },
+      { id: 'mode', type: 'select', label: 'الوضع', value: 'ق', options: ['ق', 'ك', 'ض', 'ج'] },
+    ],
+  },
+  'ملفات/اكتب': {
+    label: 'كتابة في ملف',
+    subtitle: 'اكتب()',
+    iconName: 'FileText',
+    color: '#14b8a6',
+    inputs: [
+      { id: 'seq_in', label: 'تسلسل', type: 'event' },
+      { id: 'file_in', label: 'الملف', type: 'data' },
+      { id: 'text_in', label: 'النص', type: 'data' },
+    ],
+    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+  },
+  'ملفات/اقرا': {
+    label: 'قراءة ملف',
+    subtitle: 'اقرا()',
+    iconName: 'BookOpen',
+    color: '#14b8a6',
+    inputs: [{ id: 'file_in', label: 'الملف', type: 'data' }],
+    outputs: [{ id: 'res_out', label: 'المحتوى', type: 'data' }],
+  },
+  'ملفات/اقرا سطر': {
+    label: 'قراءة سطر',
+    subtitle: 'اقرا_سطر()',
+    iconName: 'BookOpen',
+    color: '#14b8a6',
+    inputs: [{ id: 'file_in', label: 'الملف', type: 'data' }],
+    outputs: [{ id: 'res_out', label: 'السطر', type: 'data' }],
+  },
+  'ملفات/اغلق': {
+    label: 'إغلاق ملف',
+    subtitle: 'اغلق()',
+    iconName: 'X',
+    color: '#14b8a6',
+    inputs: [
+      { id: 'seq_in', label: 'تسلسل', type: 'event' },
+      { id: 'file_in', label: 'الملف', type: 'data' },
+    ],
+    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+  },
   // --- حزمة الأوامر والطرفية ---
 
   // --- حزمة الفهارس المتقدمة ---
@@ -710,7 +902,10 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
       { id: 'seq_out', label: 'التالي', type: 'event' },
       { id: 'res_out', label: 'النتيجة', type: 'data' },
     ],
-    controls: [{ id: 'method_name', type: 'text', label: 'اسم الدالة / الطريقة', value: 'تشغيل' }],
+    controls: [
+      { id: 'method_name', type: 'text', label: 'اسم الدالة / الطريقة', value: 'تشغيل' },
+      { id: 'kwargs', type: 'text', label: 'مفتاحية (اختياري)', value: '' },
+    ],
   },
 
   // --- حزمة الشيفرة الحرة المخصصة ---

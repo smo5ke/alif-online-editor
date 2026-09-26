@@ -2703,5 +2703,365 @@ export const visualExamples: Record<string, VisualExample> = {
         ]
       }
     }
+  },
+  files: {
+    nodes: [
+      { id: 'start', type: 'dynamic', position: { x: 50, y: 50 }, data: { ...nodeDefinitions['أوامر/بداية البرنامج'], originalType: 'أوامر/بداية البرنامج' } },
+      {
+        id: 'open1',
+        type: 'dynamic',
+        position: { x: 50, y: 200 },
+        data: {
+          ...nodeDefinitions['ملفات/افتح'],
+          originalType: 'ملفات/افتح',
+          controls: [
+            { id: 'var_name', type: 'text', label: 'متغير الملف', value: 'س' },
+            { id: 'path', type: 'text', label: 'المسار', value: 'تجربة.الف' },
+            { id: 'mode', type: 'select', label: 'الوضع', value: 'ك', options: ['ق', 'ك', 'ض', 'ج'] },
+          ]
+        }
+      },
+      { id: 'write1', type: 'dynamic', position: { x: 50, y: 350 }, data: { ...nodeDefinitions['ملفات/اكتب'], originalType: 'ملفات/اكتب' } },
+      {
+        id: 'read_f1',
+        type: 'dynamic',
+        position: { x: -300, y: 350 },
+        data: {
+          ...nodeDefinitions['متغيرات/قراءة'],
+          originalType: 'متغيرات/قراءة',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'س' }]
+        }
+      },
+      {
+        id: 't_hello',
+        type: 'dynamic',
+        position: { x: -300, y: 430 },
+        data: { ...nodeDefinitions['بيانات/نص'], originalType: 'بيانات/نص', controls: [{ id: 'value', type: 'text', label: 'النص', value: 'مجتمع ألف' }] }
+      },
+      { id: 'close1', type: 'dynamic', position: { x: 50, y: 500 }, data: { ...nodeDefinitions['ملفات/اغلق'], originalType: 'ملفات/اغلق' } },
+      {
+        id: 'read_f2',
+        type: 'dynamic',
+        position: { x: -300, y: 500 },
+        data: {
+          ...nodeDefinitions['متغيرات/قراءة'],
+          originalType: 'متغيرات/قراءة',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'س' }]
+        }
+      },
+      {
+        id: 'open2',
+        type: 'dynamic',
+        position: { x: 50, y: 650 },
+        data: {
+          ...nodeDefinitions['ملفات/افتح'],
+          originalType: 'ملفات/افتح',
+          controls: [
+            { id: 'var_name', type: 'text', label: 'متغير الملف', value: 'س' },
+            { id: 'path', type: 'text', label: 'المسار', value: 'تجربة.الف' },
+            { id: 'mode', type: 'select', label: 'الوضع', value: 'ق', options: ['ق', 'ك', 'ض', 'ج'] },
+          ]
+        }
+      },
+      { id: 'print1', type: 'dynamic', position: { x: 50, y: 800 }, data: { ...nodeDefinitions['أوامر/اطبع'], originalType: 'أوامر/اطبع' } },
+      { id: 'read1', type: 'dynamic', position: { x: -300, y: 800 }, data: { ...nodeDefinitions['ملفات/اقرا'], originalType: 'ملفات/اقرا' } },
+      {
+        id: 'read_f3',
+        type: 'dynamic',
+        position: { x: -600, y: 800 },
+        data: {
+          ...nodeDefinitions['متغيرات/قراءة'],
+          originalType: 'متغيرات/قراءة',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'س' }]
+        }
+      },
+      { id: 'close2', type: 'dynamic', position: { x: 50, y: 950 }, data: { ...nodeDefinitions['ملفات/اغلق'], originalType: 'ملفات/اغلق' } },
+      {
+        id: 'read_f4',
+        type: 'dynamic',
+        position: { x: -300, y: 950 },
+        data: {
+          ...nodeDefinitions['متغيرات/قراءة'],
+          originalType: 'متغيرات/قراءة',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'س' }]
+        }
+      }
+    ],
+    edges: [
+      { id: 'e1', type: 'deletable', source: 'start', target: 'open1', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e2', type: 'deletable', source: 'open1', target: 'write1', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e3', type: 'deletable', source: 'read_f1', target: 'write1', sourceHandle: 'val_out', targetHandle: 'file_in' },
+      { id: 'e4', type: 'deletable', source: 't_hello', target: 'write1', sourceHandle: 'val_out', targetHandle: 'text_in' },
+      { id: 'e5', type: 'deletable', source: 'write1', target: 'close1', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e6', type: 'deletable', source: 'read_f2', target: 'close1', sourceHandle: 'val_out', targetHandle: 'file_in' },
+      { id: 'e7', type: 'deletable', source: 'close1', target: 'open2', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e8', type: 'deletable', source: 'open2', target: 'print1', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e9', type: 'deletable', source: 'read_f3', target: 'read1', sourceHandle: 'val_out', targetHandle: 'file_in' },
+      { id: 'e10', type: 'deletable', source: 'read1', target: 'print1', sourceHandle: 'res_out', targetHandle: 'val_in' },
+      { id: 'e11', type: 'deletable', source: 'print1', target: 'close2', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e12', type: 'deletable', source: 'read_f4', target: 'close2', sourceHandle: 'val_out', targetHandle: 'file_in' }
+    ]
+  },
+  sets: {
+    nodes: [
+      { id: 'start', type: 'dynamic', position: { x: 50, y: 50 }, data: { ...nodeDefinitions['أوامر/بداية البرنامج'], originalType: 'أوامر/بداية البرنامج' } },
+      {
+        id: 'set_new',
+        type: 'dynamic',
+        position: { x: -300, y: 200 },
+        data: {
+          ...nodeDefinitions['مميزة/جديدة'],
+          originalType: 'مميزة/جديدة',
+          inputs: [
+            { id: 'item_0', label: 'عنصر 1', type: 'data' },
+            { id: 'item_1', label: 'عنصر 2', type: 'data' },
+            { id: 'item_2', label: 'عنصر 3', type: 'data' },
+            { id: 'item_3', label: 'عنصر 4', type: 'data' },
+            { id: 'item_4', label: 'عنصر 5', type: 'data' }
+          ]
+        }
+      },
+      {
+        id: 'v5', type: 'dynamic', position: { x: -600, y: 120 },
+        data: { ...nodeDefinitions['بيانات/رقم'], originalType: 'بيانات/رقم', controls: [{ id: 'value', type: 'number', label: 'الرقم', value: 5 }] }
+      },
+      {
+        id: 'v9', type: 'dynamic', position: { x: -600, y: 200 },
+        data: { ...nodeDefinitions['بيانات/رقم'], originalType: 'بيانات/رقم', controls: [{ id: 'value', type: 'number', label: 'الرقم', value: 9 }] }
+      },
+      {
+        id: 'v9b', type: 'dynamic', position: { x: -600, y: 280 },
+        data: { ...nodeDefinitions['بيانات/رقم'], originalType: 'بيانات/رقم', controls: [{ id: 'value', type: 'number', label: 'الرقم', value: 9 }] }
+      },
+      {
+        id: 'v7', type: 'dynamic', position: { x: -600, y: 360 },
+        data: { ...nodeDefinitions['بيانات/رقم'], originalType: 'بيانات/رقم', controls: [{ id: 'value', type: 'number', label: 'الرقم', value: 7 }] }
+      },
+      {
+        id: 'v3', type: 'dynamic', position: { x: -600, y: 440 },
+        data: { ...nodeDefinitions['بيانات/رقم'], originalType: 'بيانات/رقم', controls: [{ id: 'value', type: 'number', label: 'الرقم', value: 3 }] }
+      },
+      {
+        id: 'assign',
+        type: 'dynamic',
+        position: { x: 50, y: 200 },
+        data: {
+          ...nodeDefinitions['متغيرات/إسناد'],
+          originalType: 'متغيرات/إسناد',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'ص' }]
+        }
+      },
+      { id: 'print1', type: 'dynamic', position: { x: 50, y: 350 }, data: { ...nodeDefinitions['أوامر/اطبع'], originalType: 'أوامر/اطبع' } },
+      {
+        id: 'read_s1',
+        type: 'dynamic',
+        position: { x: -300, y: 350 },
+        data: {
+          ...nodeDefinitions['متغيرات/قراءة'],
+          originalType: 'متغيرات/قراءة',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'ص' }]
+        }
+      },
+      { id: 'add1', type: 'dynamic', position: { x: 50, y: 500 }, data: { ...nodeDefinitions['مميزة/إضافة'], originalType: 'مميزة/إضافة' } },
+      {
+        id: 'read_s2',
+        type: 'dynamic',
+        position: { x: -300, y: 480 },
+        data: {
+          ...nodeDefinitions['متغيرات/قراءة'],
+          originalType: 'متغيرات/قراءة',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'ص' }]
+        }
+      },
+      {
+        id: 'n6', type: 'dynamic', position: { x: -300, y: 560 },
+        data: { ...nodeDefinitions['بيانات/رقم'], originalType: 'بيانات/رقم', controls: [{ id: 'value', type: 'number', label: 'الرقم', value: 6 }] }
+      },
+      { id: 'print2', type: 'dynamic', position: { x: 50, y: 650 }, data: { ...nodeDefinitions['أوامر/اطبع'], originalType: 'أوامر/اطبع' } },
+      {
+        id: 'read_s3',
+        type: 'dynamic',
+        position: { x: -300, y: 650 },
+        data: {
+          ...nodeDefinitions['متغيرات/قراءة'],
+          originalType: 'متغيرات/قراءة',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'ص' }]
+        }
+      },
+      { id: 'pop1', type: 'dynamic', position: { x: 50, y: 800 }, data: { ...nodeDefinitions['مميزة/اسحب'], originalType: 'مميزة/اسحب' } },
+      {
+        id: 'read_s4',
+        type: 'dynamic',
+        position: { x: -300, y: 800 },
+        data: {
+          ...nodeDefinitions['متغيرات/قراءة'],
+          originalType: 'متغيرات/قراءة',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'ص' }]
+        }
+      },
+      { id: 'print3', type: 'dynamic', position: { x: 50, y: 950 }, data: { ...nodeDefinitions['أوامر/اطبع'], originalType: 'أوامر/اطبع' } },
+      {
+        id: 'read_s5',
+        type: 'dynamic',
+        position: { x: -300, y: 950 },
+        data: {
+          ...nodeDefinitions['متغيرات/قراءة'],
+          originalType: 'متغيرات/قراءة',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'ص' }]
+        }
+      }
+    ],
+    edges: [
+      { id: 'e1', type: 'deletable', source: 'v5', target: 'set_new', sourceHandle: 'val_out', targetHandle: 'item_0' },
+      { id: 'e2', type: 'deletable', source: 'v9', target: 'set_new', sourceHandle: 'val_out', targetHandle: 'item_1' },
+      { id: 'e3', type: 'deletable', source: 'v9b', target: 'set_new', sourceHandle: 'val_out', targetHandle: 'item_2' },
+      { id: 'e4', type: 'deletable', source: 'v7', target: 'set_new', sourceHandle: 'val_out', targetHandle: 'item_3' },
+      { id: 'e5', type: 'deletable', source: 'v3', target: 'set_new', sourceHandle: 'val_out', targetHandle: 'item_4' },
+      { id: 'e6', type: 'deletable', source: 'start', target: 'assign', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e7', type: 'deletable', source: 'set_new', target: 'assign', sourceHandle: 'set_out', targetHandle: 'val_in' },
+      { id: 'e8', type: 'deletable', source: 'assign', target: 'print1', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e9', type: 'deletable', source: 'read_s1', target: 'print1', sourceHandle: 'val_out', targetHandle: 'val_in' },
+      { id: 'e10', type: 'deletable', source: 'print1', target: 'add1', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e11', type: 'deletable', source: 'read_s2', target: 'add1', sourceHandle: 'val_out', targetHandle: 'set_in' },
+      { id: 'e12', type: 'deletable', source: 'n6', target: 'add1', sourceHandle: 'val_out', targetHandle: 'val_in' },
+      { id: 'e13', type: 'deletable', source: 'add1', target: 'print2', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e14', type: 'deletable', source: 'read_s3', target: 'print2', sourceHandle: 'val_out', targetHandle: 'val_in' },
+      { id: 'e15', type: 'deletable', source: 'print2', target: 'pop1', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e16', type: 'deletable', source: 'read_s4', target: 'pop1', sourceHandle: 'val_out', targetHandle: 'set_in' },
+      { id: 'e17', type: 'deletable', source: 'pop1', target: 'print3', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e18', type: 'deletable', source: 'read_s5', target: 'print3', sourceHandle: 'val_out', targetHandle: 'val_in' }
+    ]
+  },
+  lambda: {
+    nodes: [
+      { id: 'start', type: 'dynamic', position: { x: 50, y: 50 }, data: { ...nodeDefinitions['أوامر/بداية البرنامج'], originalType: 'أوامر/بداية البرنامج' } },
+      {
+        id: 'lam1',
+        type: 'dynamic',
+        position: { x: -300, y: 200 },
+        data: {
+          ...nodeDefinitions['دوال/خطية'],
+          originalType: 'دوال/خطية',
+          controls: [{ id: 'params', type: 'text', label: 'المعاملات', value: 'س' }]
+        }
+      },
+      {
+        id: 'mult1',
+        type: 'dynamic',
+        position: { x: -600, y: 200 },
+        data: {
+          ...nodeDefinitions['بيانات/حساب'],
+          originalType: 'بيانات/حساب',
+          controls: [{ id: 'op', type: 'select', label: 'عملية', value: '*', options: ['+', '-', '*', '\\', '\\\\', '\\*', '^'] }]
+        }
+      },
+      {
+        id: 'read_s1',
+        type: 'dynamic',
+        position: { x: -850, y: 180 },
+        data: {
+          ...nodeDefinitions['متغيرات/قراءة'],
+          originalType: 'متغيرات/قراءة',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'س' }]
+        }
+      },
+      {
+        id: 'n3', type: 'dynamic', position: { x: -850, y: 260 },
+        data: { ...nodeDefinitions['بيانات/رقم'], originalType: 'بيانات/رقم', controls: [{ id: 'value', type: 'number', label: 'الرقم', value: 3 }] }
+      },
+      {
+        id: 'assign_lam',
+        type: 'dynamic',
+        position: { x: 50, y: 200 },
+        data: {
+          ...nodeDefinitions['متغيرات/إسناد'],
+          originalType: 'متغيرات/إسناد',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'س' }]
+        }
+      },
+      { id: 'print1', type: 'dynamic', position: { x: 50, y: 350 }, data: { ...nodeDefinitions['أوامر/اطبع'], originalType: 'أوامر/اطبع' } },
+      {
+        id: 'call_lam',
+        type: 'dynamic',
+        position: { x: -300, y: 350 },
+        data: {
+          ...nodeDefinitions['دوال/استدعاء'],
+          originalType: 'دوال/استدعاء',
+          controls: [
+            { id: 'func_name', type: 'text', label: 'الاسم', value: 'س' },
+            { id: 'kwargs', type: 'text', label: 'مفتاحية (ليمون = "10")', value: '' },
+          ]
+        }
+      },
+      {
+        id: 'n99', type: 'dynamic', position: { x: -600, y: 350 },
+        data: { ...nodeDefinitions['بيانات/رقم'], originalType: 'بيانات/رقم', controls: [{ id: 'value', type: 'number', label: 'الرقم', value: 99 }] }
+      },
+      {
+        id: 'func_def',
+        type: 'dynamic',
+        position: { x: 50, y: 500 },
+        data: {
+          ...nodeDefinitions['دوال/تعريف دالة'],
+          originalType: 'دوال/تعريف دالة',
+          controls: [{ id: 'func_name', type: 'text', label: 'الاسم', value: 'تجربة' }, { id: 'arg', type: 'text', label: 'المعاملات (افصل بفاصلة ,)', value: 'س, ليمون = "10"' }]
+        }
+      },
+      { id: 'print_s', type: 'dynamic', position: { x: 350, y: 500 }, data: { ...nodeDefinitions['أوامر/اطبع'], originalType: 'أوامر/اطبع' } },
+      {
+        id: 'read_ps',
+        type: 'dynamic',
+        position: { x: 100, y: 500 },
+        data: {
+          ...nodeDefinitions['متغيرات/قراءة'],
+          originalType: 'متغيرات/قراءة',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'س' }]
+        }
+      },
+      { id: 'print_l', type: 'dynamic', position: { x: 350, y: 650 }, data: { ...nodeDefinitions['أوامر/اطبع'], originalType: 'أوامر/اطبع' } },
+      {
+        id: 'read_pl',
+        type: 'dynamic',
+        position: { x: 100, y: 650 },
+        data: {
+          ...nodeDefinitions['متغيرات/قراءة'],
+          originalType: 'متغيرات/قراءة',
+          controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'ليمون' }]
+        }
+      },
+      {
+        id: 'call_kw',
+        type: 'dynamic',
+        position: { x: 50, y: 800 },
+        data: {
+          ...nodeDefinitions['دوال/استدعاء'],
+          originalType: 'دوال/استدعاء',
+          controls: [
+            { id: 'func_name', type: 'text', label: 'الاسم', value: 'تجربة' },
+            { id: 'kwargs', type: 'text', label: 'مفتاحية (ليمون = "10")', value: 'ليمون = "7"' },
+          ]
+        }
+      },
+      {
+        id: 'n3b', type: 'dynamic', position: { x: -300, y: 800 },
+        data: { ...nodeDefinitions['بيانات/رقم'], originalType: 'بيانات/رقم', controls: [{ id: 'value', type: 'number', label: 'الرقم', value: 3 }] }
+      }
+    ],
+    edges: [
+      { id: 'e1', type: 'deletable', source: 'read_s1', target: 'mult1', sourceHandle: 'val_out', targetHandle: 'a_in' },
+      { id: 'e2', type: 'deletable', source: 'n3', target: 'mult1', sourceHandle: 'val_out', targetHandle: 'b_in' },
+      { id: 'e3', type: 'deletable', source: 'mult1', target: 'lam1', sourceHandle: 'res_out', targetHandle: 'body_in' },
+      { id: 'e4', type: 'deletable', source: 'start', target: 'assign_lam', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e5', type: 'deletable', source: 'lam1', target: 'assign_lam', sourceHandle: 'res_out', targetHandle: 'val_in' },
+      { id: 'e6', type: 'deletable', source: 'assign_lam', target: 'print1', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e7', type: 'deletable', source: 'call_lam', target: 'print1', sourceHandle: 'res_out', targetHandle: 'val_in' },
+      { id: 'e8', type: 'deletable', source: 'n99', target: 'call_lam', sourceHandle: 'val_out', targetHandle: 'arg_in' },
+      { id: 'e9', type: 'deletable', source: 'print1', target: 'call_kw', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e10', type: 'deletable', source: 'n3b', target: 'call_kw', sourceHandle: 'val_out', targetHandle: 'arg_in' },
+      { id: 'e11', type: 'deletable', source: 'func_def', target: 'print_s', sourceHandle: 'body_out', targetHandle: 'seq_in' },
+      { id: 'e12', type: 'deletable', source: 'read_ps', target: 'print_s', sourceHandle: 'val_out', targetHandle: 'val_in' },
+      { id: 'e13', type: 'deletable', source: 'print_s', target: 'print_l', sourceHandle: 'seq_out', targetHandle: 'seq_in' },
+      { id: 'e14', type: 'deletable', source: 'read_pl', target: 'print_l', sourceHandle: 'val_out', targetHandle: 'val_in' }
+    ]
   }
 };

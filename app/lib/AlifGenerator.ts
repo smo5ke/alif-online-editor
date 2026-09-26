@@ -125,22 +125,27 @@ export function generateAlifCodeFromGraph(
         let val = resolveInput(node.id, 'val_in') ?? 'عدم';
         return `مصفوفة(${val})`;
       }
+      if (type === 'بيانات/تحويل لمنطق') {
+        let val = resolveInput(node.id, 'val_in') ?? 'عدم';
+        return `منطق(${val})`;
+      }
+      if (type === 'بيانات/تحويل لمترابطة') {
+        let val = resolveInput(node.id, 'val_in') ?? 'عدم';
+        return `مترابطة(${val})`;
+      }
+      if (type === 'بيانات/تحويل لمميزة') {
+        let val = resolveInput(node.id, 'val_in') ?? 'عدم';
+        return `مميزة(${val})`;
+      }
       if (type === 'بيانات/نوع') {
         let val = resolveInput(node.id, 'val_in') ?? 'عدم';
         return `نوع(${val})`;
       }
-      if (type === 'بيانات/عشوائي') {
-        let a = resolveInput(node.id, 'min_in') ?? 1;
-        let b = resolveInput(node.id, 'max_in') ?? 100;
-        return `عشوائي(${a}, ${b})`;
-      }
-      if (type === 'بيانات/تقريب') {
-        let val = resolveInput(node.id, 'val_in') ?? 0;
-        return `قرب(${val})`;
-      }
       if (type === 'دوال/استدعاء') {
         const args = resolveCallArgs(node);
-        return `${getControlValue('func_name')}(${args.join(', ')})`;
+        const kwargs = (getControlValue('kwargs') || '').trim();
+        const all = kwargs ? [...args, kwargs].join(', ') : args.join(', ');
+        return `${getControlValue('func_name')}(${all})`;
       }
       if (type === 'شروط/ليس') {
         let val = resolveInput(node.id, 'val_in') ?? 'خطأ';
@@ -170,6 +175,48 @@ export function generateAlifCodeFromGraph(
         let a = resolveInput(node.id, 'a_in') ?? '[]';
         let b = resolveInput(node.id, 'b_in') ?? '[]';
         return `(${a} + ${b})`;
+      }
+      if (type === 'مصفوفات/مقرون') {
+        const lists = (((node.data as any).inputs as any[]) || [])
+          .filter((i: any) => i.type !== 'event')
+          .map((inp: any) => resolveInput(node.id, inp.id) ?? '[]');
+        return `مقرون(${lists.join(', ')})`;
+      }
+      if (type === 'مصفوفات/معكوس') {
+        let val = resolveInput(node.id, 'val_in') ?? '[]';
+        return `معكوس(${val})`;
+      }
+      if (type === 'مميزة/جديدة') {
+        const inputs = data.inputs || [];
+        const elements = inputs.map((input: any) => resolveInput(node.id, input.id) ?? 'عدم');
+        return `{${elements.join(', ')}}`;
+      }
+      if (type === 'ملفات/اقرا') {
+        let file = resolveInput(node.id, 'file_in') ?? 'ملف_مفتوح';
+        return `${file}.اقرا()`;
+      }
+      if (type === 'ملفات/افتح') {
+        // Usable as an expression (the assigned variable) or as a flow statement
+        const varName = controls.find((c: any) => c.id === 'var_name')?.value || 'ملف_مفتوح';
+        return varName;
+      }
+      if (type === 'ملفات/اقرا سطر') {
+        let file = resolveInput(node.id, 'file_in') ?? 'ملف';
+        return `${file}.اقرا_سطر()`;
+      }
+      if (type === 'دوال/خطية') {
+        const params = getControlValue('params') || 'س';
+        const body = resolveInput(node.id, 'body_in') ?? 'عدم';
+        return `(خطية ${params}: ${body})`;
+      }
+      if (type === 'دوال/تحقق_اي') {
+        let val = resolveInput(node.id, 'val_in') ?? '[]';
+        return `تحقق_اي(${val})`;
+      }
+      if (type === 'دوال/هل_نوع') {
+        let val = resolveInput(node.id, 'val_in') ?? 'عدم';
+        const typename = getControlValue('typename') || 'صحيح';
+        return `هل_نوع(${val}, ${typename})`;
       }
       if (type === 'نصوص/قص') {
         let str = resolveInput(node.id, 'str_in') ?? '""';
@@ -271,7 +318,9 @@ export function generateAlifCodeFromGraph(
         let obj = resolveInput(node.id, 'obj_in') ?? 'كائن';
         let method = getControlValue('method_name') || 'تشغيل';
         const methodArgs = resolveCallArgsExcept(node, ['obj_in']);
-        return `${obj}.${method}(${methodArgs.join(', ')})`;
+        const kwargs = (getControlValue('kwargs') || '').trim();
+        const all = kwargs ? [...methodArgs, kwargs].join(', ') : methodArgs.join(', ');
+        return `${obj}.${method}(${all})`;
       }
       if (type === 'فهارس/احضر') {
         let dict = resolveInput(node.id, 'dict_in') ?? 'فهرس';
@@ -432,7 +481,7 @@ export function generateAlifCodeFromGraph(
           let val = resolveInput(currNode.id, 'val_in') ?? 'عدم';
           code += indent + `${arrName}.اضف(${val}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
-        } else if (type === 'مصفوفات/إزالة') {
+        } else if (type === 'مصفوفات/حذف') {
           let arrName = resolveInput(currNode.id, 'arr_in') ?? 'مصفوفة';
           let val = resolveInput(currNode.id, 'val_in') ?? 'عدم';
           code += indent + `${arrName}.امسح(${val}) # @node:${currNode.id}\n`;
@@ -466,7 +515,9 @@ export function generateAlifCodeFromGraph(
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'دوال/استدعاء') {
           const args = resolveCallArgs(currNode);
-          code += indent + `${getControlValue('func_name')}(${args.join(', ')}) # @node:${currNode.id}\n`;
+          const kwargs = (getControlValue('kwargs') || '').trim();
+          const all = kwargs ? [...args, kwargs].join(', ') : args.join(', ');
+          code += indent + `${getControlValue('func_name')}(${all}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
 
         } else if (type === 'كائنات/تعيين_خاصية') {
@@ -479,12 +530,53 @@ export function generateAlifCodeFromGraph(
           let obj = resolveInput(currNode.id, 'obj_in') ?? 'كائن';
           let method = getControlValue('method_name') || 'تشغيل';
           const methodArgs = resolveCallArgsExcept(currNode, ['obj_in']);
-          code += indent + `${obj}.${method}(${methodArgs.join(', ')}) # @node:${currNode.id}\n`;
+          const kwargs = (getControlValue('kwargs') || '').trim();
+          const all = kwargs ? [...methodArgs, kwargs].join(', ') : methodArgs.join(', ');
+          code += indent + `${obj}.${method}(${all}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
 
         } else if (type === 'استيراد/مكتبة') {
           let lib = getControlValue('lib') || 'الوقت';
           code += indent + `استورد ${lib} # @node:${currNode.id}\n`;
+          currNodeId = getNextNodeId(currNode.id, 'seq_out');
+        } else if (type === 'استيراد/من') {
+          let pkg = getControlValue('pkg') || 'الوقت';
+          let name = getControlValue('name') || 'غفوة';
+          code += indent + `من ${pkg} استورد ${name} # @node:${currNode.id}\n`;
+          currNodeId = getNextNodeId(currNode.id, 'seq_out');
+        } else if (type === 'ملفات/افتح') {
+          const varName = getControlValue('var_name') || 'ملف_مفتوح';
+          const pathIn = resolveInput(currNode.id, 'path_in');
+          const modeIn = resolveInput(currNode.id, 'mode_in');
+          const pathStr = pathIn !== null && pathIn !== undefined ? pathIn : `"${escapeAlifString(getControlValue('path') || 'ملف.الف')}"`;
+          const modeVal = modeIn !== null && modeIn !== undefined ? modeIn : getControlValue('mode') || 'ق';
+          const modeStr = String(modeVal).startsWith('"') ? modeVal : `"${escapeAlifString(modeVal)}"`;
+          code += indent + `${varName} = افتح(${pathStr}, ${modeStr}) # @node:${currNode.id}\n`;
+          currNodeId = getNextNodeId(currNode.id, 'seq_out');
+        } else if (type === 'ملفات/اكتب') {
+          let file = resolveInput(currNode.id, 'file_in') ?? 'ملف_مفتوح';
+          let text = resolveInput(currNode.id, 'text_in') ?? '""';
+          code += indent + `${file}.اكتب(${text}) # @node:${currNode.id}\n`;
+          currNodeId = getNextNodeId(currNode.id, 'seq_out');
+        } else if (type === 'ملفات/اغلق') {
+          let file = resolveInput(currNode.id, 'file_in') ?? 'ملف_مفتوح';
+          code += indent + `${file}.اغلق() # @node:${currNode.id}\n`;
+          currNodeId = getNextNodeId(currNode.id, 'seq_out');
+        } else if (type === 'مميزة/إضافة') {
+          let setName = resolveInput(currNode.id, 'set_in') ?? 'مميزة';
+          let val = resolveInput(currNode.id, 'val_in') ?? 'عدم';
+          code += indent + `${setName}.اضف(${val}) # @node:${currNode.id}\n`;
+          currNodeId = getNextNodeId(currNode.id, 'seq_out');
+        } else if (type === 'مميزة/اسحب') {
+          let setName = resolveInput(currNode.id, 'set_in') ?? 'مميزة';
+          code += indent + `${setName}.اسحب() # @node:${currNode.id}\n`;
+          currNodeId = getNextNodeId(currNode.id, 'seq_out');
+        } else if (type === 'متغيرات/إسناد متعدد') {
+          const varNames = getControlValue('var_names') || 'س, ص';
+          const vals = (((currNode.data as any).inputs as any[]) || [])
+            .filter((i: any) => i.type !== 'event')
+            .map((inp: any) => resolveInput(currNode.id, inp.id) ?? 'عدم');
+          code += indent + `${varNames} = ${vals.join(', ')} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'عشوائي/بذرة') {
           let val = resolveInput(currNode.id, 'val_in') ?? 0;
