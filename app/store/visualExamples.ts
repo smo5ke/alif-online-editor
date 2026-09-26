@@ -465,7 +465,7 @@ export const visualExamples: Record<string, VisualExample> = {
         data: { 
           ...nodeDefinitions['بيانات/حساب'], 
           originalType: 'بيانات/حساب',
-          controls: [{ id: 'op', type: 'select', label: 'عملية', value: '*', options: ['+', '-', '*', '/', '%', '^'] }] 
+          controls: [{ id: 'op', type: 'select', label: 'عملية', value: '*', options: ['+', '-', '*', '\\', '\\\\', '\\*', '^'] }] 
         } 
       },
       { 
@@ -548,15 +548,26 @@ export const visualExamples: Record<string, VisualExample> = {
         } 
       },
       { id: 'print_finally', type: 'dynamic', position: { x: -200, y: 350 }, data: { ...nodeDefinitions['أوامر/اطبع'], originalType: 'أوامر/اطبع' } },
-      { 
-        id: 'text_finally', 
-        type: 'dynamic', 
-        position: { x: -200, y: 500 }, 
-        data: { 
-          ...nodeDefinitions['بيانات/نص'], 
+      {
+        id: 'text_finally',
+        type: 'dynamic',
+        position: { x: -200, y: 500 },
+        data: {
+          ...nodeDefinitions['بيانات/نص'],
           originalType: 'بيانات/نص',
-          controls: [{ id: 'value', type: 'text', label: 'النص', value: 'الجزء (نهاية) يتنفذ دائماً' }] 
-        } 
+          controls: [{ id: 'value', type: 'text', label: 'النص', value: 'الجزء (نهاية) يتنفذ دائماً' }]
+        }
+      },
+      { id: 'print_else', type: 'dynamic', position: { x: -450, y: 350 }, data: { ...nodeDefinitions['أوامر/اطبع'], originalType: 'أوامر/اطبع' } },
+      {
+        id: 'text_else',
+        type: 'dynamic',
+        position: { x: -450, y: 500 },
+        data: {
+          ...nodeDefinitions['بيانات/نص'],
+          originalType: 'بيانات/نص',
+          controls: [{ id: 'value', type: 'text', label: 'النص', value: 'لا يوجد خلل' }]
+        }
       }
     ],
     edges: [
@@ -566,7 +577,9 @@ export const visualExamples: Record<string, VisualExample> = {
       { id: 'e4', type: 'deletable', source: 'try_node', target: 'print_catch', sourceHandle: 'catch_out', targetHandle: 'seq_in' },
       { id: 'e5', type: 'deletable', source: 'text_catch', target: 'print_catch', sourceHandle: 'val_out', targetHandle: 'val_in' },
       { id: 'e6', type: 'deletable', source: 'try_node', target: 'print_finally', sourceHandle: 'finally_out', targetHandle: 'seq_in' },
-      { id: 'e7', type: 'deletable', source: 'text_finally', target: 'print_finally', sourceHandle: 'val_out', targetHandle: 'val_in' }
+      { id: 'e7', type: 'deletable', source: 'text_finally', target: 'print_finally', sourceHandle: 'val_out', targetHandle: 'val_in' },
+      { id: 'e8', type: 'deletable', source: 'try_node', target: 'print_else', sourceHandle: 'else_out', targetHandle: 'seq_in' },
+      { id: 'e9', type: 'deletable', source: 'text_else', target: 'print_else', sourceHandle: 'val_out', targetHandle: 'val_in' }
     ]
   },
   input: {

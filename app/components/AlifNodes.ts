@@ -28,7 +28,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     label: 'إسناد رجعي', subtitle: '+=, -=, ...', iconName: 'ArrowRightLeft', color: '#f97316',
     inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }, { id: 'val_in', label: 'القيمة', type: 'data' }],
     outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
-    controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'س' }, { id: 'op', type: 'select', label: 'العملية', value: '+=', options: ['+=', '-=', '*=', '/=', '%=', '^='] }],
+    controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'س' }, { id: 'op', type: 'select', label: 'العملية', value: '+=', options: ['+=', '-=', '*=', '\\=', '\\\\=', '\\*=', '^='] }],
   },
   'متغيرات/إسناد شرطي': {
     label: 'إسناد شرطي', subtitle: 'اذا / والا', iconName: 'HelpCircle', color: '#f97316',
@@ -158,8 +158,22 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     ],
     outputs: [
       { id: 'true_out', label: 'اذا صح', type: 'event' },
-      { id: 'false_out', label: 'والا', type: 'event' },
+      { id: 'false_out', label: 'والا / اواذا', type: 'event' },
       { id: 'seq_out', label: 'التالي', type: 'event' },
+    ],
+  },
+  'شروط/اواذا': {
+    label: 'اواذا',
+    subtitle: 'شرط إضافي (تُربط بعد اذا)',
+    iconName: 'GitBranch',
+    color: '#8b5cf6',
+    inputs: [
+      { id: 'seq_in', label: 'تسلسل', type: 'event' },
+      { id: 'cond_in', label: 'الشرط', type: 'data' },
+    ],
+    outputs: [
+      { id: 'true_out', label: 'اذا صح', type: 'event' },
+      { id: 'false_out', label: 'والا / اواذا', type: 'event' },
     ],
   },
   'شروط/مقارنة': {
@@ -204,6 +218,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
       { id: 'seq_in', label: 'تسلسل', type: 'event' },
       { id: 'start_in', label: 'من', type: 'data' },
       { id: 'end_in', label: 'إلى', type: 'data' },
+      { id: 'step_in', label: 'الخطوة (اختياري)', type: 'data' },
     ],
     outputs: [
       { id: 'body_out', label: 'جسم', type: 'event' },
@@ -264,7 +279,7 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
       { id: 'b_in', label: 'ب', type: 'data' },
     ],
     outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
-    controls: [{ id: 'op', type: 'select', label: 'عملية', value: '+', options: ['+', '-', '*', '/', '%', '^'] }],
+    controls: [{ id: 'op', type: 'select', label: 'عملية', value: '+', options: ['+', '-', '*', '\\', '\\\\', '\\*', '^'] }],
   },
 
   'بيانات/رقم': {
@@ -298,6 +313,14 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     color: '#3b82f6',
     inputs: [{ id: 'val_in', label: 'القيمة', type: 'data' }],
     outputs: [{ id: 'res_out', label: 'الرقم', type: 'data' }],
+  },
+  'بيانات/تحويل لصحيح': {
+    label: 'تحويل لصحيح',
+    subtitle: 'صحيح()',
+    iconName: 'Hash',
+    color: '#3b82f6',
+    inputs: [{ id: 'val_in', label: 'القيمة', type: 'data' }],
+    outputs: [{ id: 'res_out', label: 'العدد الصحيح', type: 'data' }],
   },
   'بيانات/نوع': {
     label: 'نوع البيانات',
@@ -434,6 +457,17 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     ],
     outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
   },
+  'مصفوفات/ترتيب': {
+    label: 'ترتيب المصفوفة',
+    subtitle: 'رتب()',
+    iconName: 'ArrowDownUp',
+    color: '#06b6d4',
+    inputs: [
+      { id: 'seq_in', label: 'تسلسل', type: 'event' },
+      { id: 'arr_in', label: 'المصفوفة', type: 'data' },
+    ],
+    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
+  },
   
   'فهارس/جديد': {
     label: 'فهرس جديد',
@@ -519,9 +553,11 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     outputs: [
       { id: 'try_out', label: 'حاول', type: 'event' },
       { id: 'catch_out', label: 'في حال الخطأ', type: 'event' },
-      { id: 'finally_out', label: 'في النهاية', type: 'event' },
+      { id: 'else_out', label: 'والا (بلا خطأ)', type: 'event' },
+      { id: 'finally_out', label: 'نهاية (دائماً)', type: 'event' },
       { id: 'seq_out', label: 'التالي', type: 'event' },
     ],
+    controls: [{ id: 'err_type', type: 'text', label: 'نوع الخطأ (فارغ = الكل)', value: '' }],
   },
 
   // --- حزمة التحكم والتكرار ---

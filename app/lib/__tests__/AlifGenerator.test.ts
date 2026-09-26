@@ -85,25 +85,34 @@ describe('generateAlifCodeFromGraph', () => {
     expect(code).toContain('اطبع("قال \\"مرحبا\\"")');
   });
 
-  it('normalizes legacy backslash division to forward slash', () => {
-    const calc = node('calc', 'بيانات/حساب', {
-      inputs: [
-        { id: 'a_in', label: 'أ', type: 'data' },
-        { id: 'b_in', label: 'ب', type: 'data' },
-      ],
-      outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
-      controls: [{ id: 'op', type: 'select', label: 'عملية', value: '\\', options: [] }],
-    });
-    const nodes = [startNode(), printNode(), calc, numNode('n1', 10), numNode('n2', 2)];
-    const edges = [
-      edge('e1', 'start', 'seq_out', 'print', 'seq_in'),
-      edge('e2', 'calc', 'res_out', 'print', 'val_in'),
-      edge('e3', 'n1', 'val_out', 'calc', 'a_in'),
-      edge('e4', 'n2', 'val_out', 'calc', 'b_in'),
-    ];
-    const code = generateAlifCodeFromGraph(nodes, edges);
-    expect(code).toContain('(10 / 2)');
-    expect(code).not.toContain('(10 \\ 2)');
+  it('uses Alif backslash operators and normalizes legacy / and %', () => {
+    const calcWith = (op: string) =>
+      node('calc', 'بيانات/حساب', {
+        inputs: [
+          { id: 'a_in', label: 'أ', type: 'data' },
+          { id: 'b_in', label: 'ب', type: 'data' },
+        ],
+        outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
+        controls: [{ id: 'op', type: 'select', label: 'عملية', value: op, options: [] }],
+      });
+    const runCalc = (op: string) => {
+      const nodes = [startNode(), printNode(), calcWith(op), numNode('n1', 10), numNode('n2', 2)];
+      const edges = [
+        edge('e1', 'start', 'seq_out', 'print', 'seq_in'),
+        edge('e2', 'calc', 'res_out', 'print', 'val_in'),
+        edge('e3', 'n1', 'val_out', 'calc', 'a_in'),
+        edge('e4', 'n2', 'val_out', 'calc', 'b_in'),
+      ];
+      return generateAlifCodeFromGraph(nodes, edges);
+    };
+    // Canonical Alif operators (verified against the interpreter)
+    expect(runCalc('\\')).toContain('(10 \\ 2)');
+    expect(runCalc('\\\\')).toContain('(10 \\\\ 2)');
+    expect(runCalc('\\*')).toContain('(10 \\* 2)');
+    // Legacy values stored by earlier editor versions are normalized
+    expect(runCalc('/')).toContain('(10 \\ 2)');
+    expect(runCalc('%')).toContain('(10 \\\\ 2)');
+    expect(runCalc('/')).not.toContain('(10 / 2)');
   });
 
   it('collects multiple call args and emits empty parens when unconnected', () => {
@@ -192,7 +201,8 @@ describe('generateAlifCodeFromGraph', () => {
     expect(code).not.toContain('var_');
   });
 
-  it('generates حاول blocks without a trailing نهاية: line', () => {    const tryNode = node('try1', 'أخطاء/محاولة', {
+  it('generates حاول blocks with نهاية: and no else unless wired', () => {
+    const tryNode = node('try1', 'أخطاء/محاولة', {
       inputs: [{ ...SEQ_IN }],
       outputs: [
         { id: 'try_out', label: 'حاول', type: 'event' },
@@ -223,8 +233,8 @@ describe('generateAlifCodeFromGraph', () => {
     const code = generateAlifCodeFromGraph(nodes, edges);
     expect(code).toContain('حاول:');
     expect(code).toContain('خلل:');
-    expect(code).toContain('والا:');
-    expect(code).not.toContain('نهاية:');
+    expect(code).toContain('نهاية:');
+    expect(code).not.toContain('والا:');
     expect(code).not.toContain('وإلا:');
   });
 
@@ -334,6 +344,208 @@ describe('generateAlifCodeFromGraph', () => {
     expect(code).toContain('سيارتي.السرعة = 200');
     expect(code).toContain('اطبع(سيارتي.السرعة)');
     expect(code).toContain('اطبع(هذا.العمر)');
+  });
+
+  it('generates افصل() for the split node', () => {
+    const split = node('sp1', 'نصوص/تقسيم', {
+      inputs: [
+        { id: 'str_in', label: 'النص', type: 'data' },
+        { id: 'sep_in', label: 'الفاصل', type: 'data' },
+      ],
+      outputs: [{ id: 'res_out', label: 'المصفوفة', type: 'data' }],
+      controls: [{ id: 'sep', type: 'text', label: 'الفاصل الافتراضي', value: ' ' }],
+    });
+    const nodes = [startNode(), printNode(), split, textNode('t1', 'أ,ب')];
+    const edges = [
+      edge('e1', 'start', 'seq_out', 'print', 'seq_in'),
+      edge('e2', 'sp1', 'res_out', 'print', 'val_in'),
+      edge('e3', 't1', 'val_out', 'sp1', 'str_in'),
+    ];
+    // No separator wired and default is space -> bare افصل()
+    const bare = generateAlifCodeFromGraph(nodes, edges);
+    expect(bare).toContain('.افصل()');
+    expect(bare).not.toContain('.قسم(');
+
+    // Wired separator -> افصل(sep)
+    const comma = textNode('c1', ',');
+    const nodes2 = [...nodes, comma];
+    const edges2 = [...edges, edge('e4', 'c1', 'val_out', 'sp1', 'sep_in')];
+    expect(generateAlifCodeFromGraph(nodes2, edges2)).toContain('.افصل(",")');
+  });
+
+  it('chains اواذا between اذا and والا', () => {
+    const ifNode = node('if1', 'شروط/اذا', {
+      inputs: [{ ...SEQ_IN }, { id: 'cond_in', label: 'الشرط', type: 'data' }],
+      outputs: [
+        { id: 'true_out', label: 'اذا صح', type: 'event' },
+        { id: 'false_out', label: 'والا / اواذا', type: 'event' },
+        { ...SEQ_OUT },
+      ],
+    });
+    const elifNode = node('elif1', 'شروط/اواذا', {
+      inputs: [{ ...SEQ_IN }, { id: 'cond_in', label: 'الشرط', type: 'data' }],
+      outputs: [
+        { id: 'true_out', label: 'اذا صح', type: 'event' },
+        { id: 'false_out', label: 'والا / اواذا', type: 'event' },
+      ],
+    });
+    const nodes = [
+      startNode(),
+      ifNode,
+      elifNode,
+      printNode('pT'),
+      textNode('tT', 'كبير'),
+      printNode('pE'),
+      textNode('tE', 'يساوي'),
+      printNode('pF'),
+      textNode('tF', 'صغير'),
+      numNode('n6a', 6),
+      numNode('n9', 9),
+      numNode('n6b', 6),
+      numNode('n6c', 6),
+    ];
+    const cmp = (id: string) =>
+      node(id, 'شروط/مقارنة', {
+        inputs: [
+          { id: 'a_in', label: 'أ', type: 'data' },
+          { id: 'b_in', label: 'ب', type: 'data' },
+        ],
+        outputs: [{ id: 'res_out', label: 'نتيجة', type: 'data' }],
+        controls: [{ id: 'op', type: 'select', label: 'مقارنة', value: '==', options: [] }],
+      });
+    const allNodes = [...nodes, cmp('c1'), cmp('c2')];
+    const edges = [
+      edge('e1', 'start', 'seq_out', 'if1', 'seq_in'),
+      edge('e2', 'c1', 'res_out', 'if1', 'cond_in'),
+      edge('e3', 'n6a', 'val_out', 'c1', 'a_in'),
+      edge('e4', 'n9', 'val_out', 'c1', 'b_in'),
+      edge('e5', 'if1', 'true_out', 'pT', 'seq_in'),
+      edge('e6', 'tT', 'val_out', 'pT', 'val_in'),
+      edge('e7', 'if1', 'false_out', 'elif1', 'seq_in'),
+      edge('e8', 'c2', 'res_out', 'elif1', 'cond_in'),
+      edge('e9', 'n6b', 'val_out', 'c2', 'a_in'),
+      edge('e10', 'n6c', 'val_out', 'c2', 'b_in'),
+      edge('e11', 'elif1', 'true_out', 'pE', 'seq_in'),
+      edge('e12', 'tE', 'val_out', 'pE', 'val_in'),
+      edge('e13', 'elif1', 'false_out', 'pF', 'seq_in'),
+      edge('e14', 'tF', 'val_out', 'pF', 'val_in'),
+    ];
+    const code = generateAlifCodeFromGraph(allNodes, edges);
+    const lines = code.split('\n');
+    const ifIdx = lines.findIndex((l) => l.startsWith('اذا'));
+    const elifIdx = lines.findIndex((l) => l.startsWith('اواذا'));
+    const elseIdx = lines.findIndex((l) => l.startsWith('والا:'));
+    expect(ifIdx).toBeGreaterThanOrEqual(0);
+    expect(elifIdx).toBeGreaterThan(ifIdx);
+    expect(elseIdx).toBeGreaterThan(elifIdx);
+  });
+
+  it('emits typed catch with والا and نهاية clauses in order', () => {
+    const tryNode = node('try1', 'أخطاء/محاولة', {
+      inputs: [{ ...SEQ_IN }],
+      outputs: [
+        { id: 'try_out', label: 'حاول', type: 'event' },
+        { id: 'catch_out', label: 'في حال الخطأ', type: 'event' },
+        { id: 'else_out', label: 'والا', type: 'event' },
+        { id: 'finally_out', label: 'نهاية', type: 'event' },
+        { ...SEQ_OUT },
+      ],
+      controls: [{ id: 'err_type', type: 'text', label: 'نوع الخطأ', value: 'خطأ_نوع' }],
+    });
+    const nodes = [
+      startNode(),
+      tryNode,
+      printNode('pT'),
+      textNode('tT', 'جرب'),
+      printNode('pC'),
+      textNode('tC', 'نوع'),
+      printNode('pE'),
+      textNode('tE', 'والا'),
+      printNode('pF'),
+      textNode('tF', 'نهاية'),
+    ];
+    const edges = [
+      edge('e1', 'start', 'seq_out', 'try1', 'seq_in'),
+      edge('e2', 'try1', 'try_out', 'pT', 'seq_in'),
+      edge('e3', 'tT', 'val_out', 'pT', 'val_in'),
+      edge('e4', 'try1', 'catch_out', 'pC', 'seq_in'),
+      edge('e5', 'tC', 'val_out', 'pC', 'val_in'),
+      edge('e6', 'try1', 'else_out', 'pE', 'seq_in'),
+      edge('e7', 'tE', 'val_out', 'pE', 'val_in'),
+      edge('e8', 'try1', 'finally_out', 'pF', 'seq_in'),
+      edge('e9', 'tF', 'val_out', 'pF', 'val_in'),
+    ];
+    const code = generateAlifCodeFromGraph(nodes, edges);
+    const lines = code.split('\n');
+    const tryIdx = lines.findIndex((l) => l.startsWith('حاول:'));
+    const catchIdx = lines.findIndex((l) => l.startsWith('خلل خطأ_نوع:'));
+    const elseIdx = lines.findIndex((l) => l.startsWith('والا:'));
+    const finIdx = lines.findIndex((l) => l.startsWith('نهاية:'));
+    expect(tryIdx).toBeGreaterThanOrEqual(0);
+    expect(catchIdx).toBeGreaterThan(tryIdx);
+    expect(elseIdx).toBeGreaterThan(catchIdx);
+    expect(finIdx).toBeGreaterThan(elseIdx);
+    expect(code).not.toContain('وإلا:');
+  });
+
+  it('generates رتب() and صحيح() conversions', () => {
+    const sort = node('s1', 'مصفوفات/ترتيب', {
+      inputs: [{ ...SEQ_IN }, { id: 'arr_in', label: 'المصفوفة', type: 'data' }],
+      outputs: [{ ...SEQ_OUT }],
+    });
+    const sahih = node('h1', 'بيانات/تحويل لصحيح', {
+      inputs: [{ id: 'val_in', label: 'القيمة', type: 'data' }],
+      outputs: [{ id: 'res_out', label: 'العدد الصحيح', type: 'data' }],
+    });
+    const arrVar = node('arr', 'متغيرات/قراءة', {
+      outputs: [{ id: 'val_out', label: 'القيمة', type: 'data' }],
+      controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'ارقام' }],
+    });
+    const nodes = [startNode(), sort, arrVar, printNode(), sahih, textNode('t5', '5')];
+    const edges = [
+      edge('e1', 'start', 'seq_out', 's1', 'seq_in'),
+      edge('e2', 'arr', 'val_out', 's1', 'arr_in'),
+      edge('e3', 's1', 'seq_out', 'print', 'seq_in'),
+      edge('e4', 'h1', 'res_out', 'print', 'val_in'),
+      edge('e5', 't5', 'val_out', 'h1', 'val_in'),
+    ];
+    const code = generateAlifCodeFromGraph(nodes, edges);
+    expect(code).toContain('ارقام.رتب()');
+    expect(code).toContain('صحيح("5")');
+  });
+
+  it('generates مدى with 1, 2 or 3 args depending on wiring', () => {
+    const dataIn = (pid: string, label: string): Port => ({ id: pid, label, type: 'data' });
+    const loopWith = (id: string, inputs: Port[], values: Array<[string, number]>) => {
+      const loop = node(id, 'حلقات/لكل', {
+        inputs: [{ ...SEQ_IN }, ...inputs],
+        outputs: [
+          { id: 'body_out', label: 'جسم', type: 'event' },
+          { id: 'done_out', label: 'انتهى', type: 'event' },
+        ],
+        controls: [{ id: 'var_name', type: 'text', label: 'المتغير', value: 'ب' }],
+      });
+      const nums = values.map(([nid, v]) => numNode(nid, v));
+      const edges = [edge(`e-${id}`, 'start', 'seq_out', id, 'seq_in')];
+      inputs.forEach((inp, i) => {
+        edges.push(edge(`w-${id}-${i}`, values[i][0], 'val_out', id, inp.id));
+      });
+      return generateAlifCodeFromGraph([startNode(), loop, ...nums], edges);
+    };
+    // End only -> مدى(5)
+    expect(loopWith('l1', [dataIn('end_in', 'إلى')], [['n5', 5]])).toContain('مدى(5)');
+    // Start + end -> مدى(1, 5)
+    expect(
+      loopWith('l2', [dataIn('start_in', 'من'), dataIn('end_in', 'إلى')], [['n1', 1], ['n5', 5]])
+    ).toContain('مدى(1, 5)');
+    // Start + end + step -> مدى(1, 10, 2)
+    expect(
+      loopWith(
+        'l3',
+        [dataIn('start_in', 'من'), dataIn('end_in', 'إلى'), dataIn('step_in', 'الخطوة')],
+        [['n1', 1], ['n10', 10], ['n2', 2]]
+      )
+    ).toContain('مدى(1, 10, 2)');
   });
 
   it('asks for a start node when the graph is empty of entry points', () => {

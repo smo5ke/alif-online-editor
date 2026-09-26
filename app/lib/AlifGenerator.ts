@@ -19,9 +19,13 @@ export function generateAlifCodeFromGraph(
     };
 
     const normalizeOp = (op: any): string => {
-      // Legacy graphs stored division as backslash; Alif 5.3 uses forward slash
-      if (op === '\\') return '/';
-      if (op === '\\=') return '/=';
+      // Batches 1-6 stored '/' and '%' (invalid in Alif: '/' and '%' are syntax errors).
+      // Canonical Alif operators verified against the interpreter:
+      // \ division, \\ modulo, \* integer division, ^ power
+      if (op === '/') return '\\';
+      if (op === '%') return '\\\\';
+      if (op === '/=') return '\\=';
+      if (op === '%=') return '\\\\=';
       return op;
     };
     
@@ -100,6 +104,10 @@ export function generateAlifCodeFromGraph(
         let val = resolveInput(node.id, 'val_in') ?? 'عدم';
         return `عشري(${val})`;
       }
+      if (type === 'بيانات/تحويل لصحيح') {
+        let val = resolveInput(node.id, 'val_in') ?? 'عدم';
+        return `صحيح(${val})`;
+      }
       if (type === 'بيانات/نوع') {
         let val = resolveInput(node.id, 'val_in') ?? 'عدم';
         return `نوع(${val})`;
@@ -174,8 +182,10 @@ export function generateAlifCodeFromGraph(
       if (type === 'نصوص/تقسيم') {
         let str = resolveInput(node.id, 'str_in') ?? '""';
         let sepIn = resolveInput(node.id, 'sep_in');
-        let sep = sepIn !== undefined && sepIn !== null ? sepIn : `"${escapeAlifString(getControlValue('sep') || ' ')}"`;
-        return `${str}.قسم(${sep})`;
+        if (sepIn !== undefined && sepIn !== null) return `${str}.افصل(${sepIn})`;
+        const defaultSep = getControlValue('sep') || ' ';
+        if (defaultSep === ' ') return `${str}.افصل()`;
+        return `${str}.افصل("${escapeAlifString(defaultSep)}")`;
       }
       if (type === 'نصوص/تنظيف') {
         let str = resolveInput(node.id, 'str_in') ?? '""';
@@ -280,6 +290,29 @@ export function generateAlifCodeFromGraph(
     function walkExecution(currNodeId: string | null, indent: string, pathVisited: Set<string>): string {
       let code = '';
       let safetyLimit = 0;
+
+      // Emits اواذا chain members or a final والا: block for a false-branch target
+      const emitFalseBranch = (falseId: string | null): void => {
+        if (!falseId) return;
+        const falseNode = nodes.find((n) => n.id === falseId);
+        if (falseNode && (falseNode.data as any).originalType === 'شروط/اواذا') {
+          if (pathVisited.has(falseId)) {
+            code += indent + '# تحذير: حلقة لا نهائية\n';
+            return;
+          }
+          pathVisited.add(falseId);
+          visitedNodes.add(falseId);
+          const cond2 = resolveInput(falseId, 'cond_in') ?? 'خطأ';
+          code += indent + `اواذا ${cond2}:\n`;
+          const t2 = getNextNodeId(falseId, 'true_out');
+          if (t2) code += walkExecution(t2, indent + '\t', new Set(pathVisited));
+          else code += indent + '\tتجاوز\n';
+          emitFalseBranch(getNextNodeId(falseId, 'false_out'));
+          return;
+        }
+        code += indent + `والا:\n`;
+        code += walkExecution(falseId, indent + '\t', new Set(pathVisited));
+      };
   
       while (currNodeId && safetyLimit < 100) {
         safetyLimit++;
@@ -460,25 +493,39 @@ export function generateAlifCodeFromGraph(
           let retVal = resolveInput(currNode.id, 'val_in') ?? 'عدم';
           code += indent + `ارجع ${retVal} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
-        } else if (type === 'شروط/اذا') {
+        } else if (type === 'شروط/اذا' || type === 'شروط/اواذا') {
+          // A standalone اواذا (not chained after اذا/اواذا) is emitted as اذا to stay valid
+          const chained = type === 'شروط/اواذا' &&
+            edges.some((e) => e.sourceHandle === 'false_out' && e.target === currNode.id);
+          const keyword = type === 'شروط/اواذا' && chained ? 'اواذا' : 'اذا';
           let cond = resolveInput(currNode.id, 'cond_in') ?? 'خطأ';
-          code += indent + `اذا ${cond}:\n`;
+          code += indent + `${keyword} ${cond}:\n`;
           let trueNodeId = getNextNodeId(currNode.id, 'true_out');
           if (trueNodeId) code += walkExecution(trueNodeId, indent + '\t', new Set(pathVisited));
           else code += indent + '\tتجاوز\n';
-          
-          let falseNodeId = getNextNodeId(currNode.id, 'false_out');
-          if (falseNodeId) {
-            code += indent + `والا:\n`;
-            code += walkExecution(falseNodeId, indent + '\t', new Set(pathVisited));
-          }
+
+          emitFalseBranch(getNextNodeId(currNode.id, 'false_out'));
           // Continuation after the branch (new seq_out); old graphs without it simply end here
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'حلقات/لكل') {
-          let startVal = resolveInput(currNode.id, 'start_in') ?? 1;
-          let endVal = resolveInput(currNode.id, 'end_in') ?? 10;
+          const startVal = resolveInput(currNode.id, 'start_in');
+          const endVal = resolveInput(currNode.id, 'end_in');
+          const stepVal = resolveInput(currNode.id, 'step_in');
+          const has = (v: unknown) => v !== null && v !== undefined;
+          let rangeArgs: string;
+          if (has(stepVal)) {
+            rangeArgs = `${has(startVal) ? startVal : 1}, ${has(endVal) ? endVal : 10}, ${stepVal}`;
+          } else if (has(startVal) && has(endVal)) {
+            rangeArgs = `${startVal}, ${endVal}`;
+          } else if (has(startVal)) {
+            rangeArgs = `${startVal}`;
+          } else if (has(endVal)) {
+            rangeArgs = `${endVal}`;
+          } else {
+            rangeArgs = '1, 10';
+          }
           let varName = getControlValue('var_name') || 'س';
-          code += indent + `لكل ${varName} في مدى(${startVal}, ${endVal}):\n`;
+          code += indent + `لكل ${varName} في مدى(${rangeArgs}):\n`;
           
           let bodyNodeId = getNextNodeId(currNode.id, 'body_out');
           if (bodyNodeId) code += walkExecution(bodyNodeId, indent + '\t', new Set(pathVisited));
@@ -516,16 +563,23 @@ export function generateAlifCodeFromGraph(
           let tryNodeId = getNextNodeId(currNode.id, 'try_out');
           if (tryNodeId) code += walkExecution(tryNodeId, indent + '\t', new Set(pathVisited));
           else code += indent + '\tتجاوز\n';
-          
+
           let catchNodeId = getNextNodeId(currNode.id, 'catch_out');
           if (catchNodeId) {
-            code += indent + `خلل:\n`;
+            const errType = (getControlValue('err_type') || '').trim();
+            code += indent + (errType ? `خلل ${errType}:\n` : `خلل:\n`);
             code += walkExecution(catchNodeId, indent + '\t', new Set(pathVisited));
           }
-          
+
+          let elseNodeId = getNextNodeId(currNode.id, 'else_out');
+          if (elseNodeId) {
+            code += indent + `والا:\n`;
+            code += walkExecution(elseNodeId, indent + '\t', new Set(pathVisited));
+          }
+
           let finallyNodeId = getNextNodeId(currNode.id, 'finally_out');
           if (finallyNodeId) {
-            code += indent + `والا:\n`;
+            code += indent + `نهاية:\n`;
             code += walkExecution(finallyNodeId, indent + '\t', new Set(pathVisited));
           }
           // Continuation after try/catch (new seq_out); old graphs without it simply end here
