@@ -24,6 +24,10 @@ body {
   font-size: 13px;
   letter-spacing: normal !important;
   word-spacing: normal !important;
+  /* Prevent Android Chrome auto-inflating wide code lines while the narrow
+     gutter stays small, which desyncs line numbers from real lines. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 @media (min-width: 640px) {

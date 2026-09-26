@@ -25,7 +25,7 @@ export default function TextEditor() {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const preRef = useRef<HTMLPreElement>(null);
-  const gutterRef = useRef<HTMLDivElement>(null);
+  const gutterInnerRef = useRef<HTMLDivElement>(null);
 
   const [fontSize, setFontSize] = useState<number>(15);
   const [copied, setCopied] = useState(false);
@@ -40,8 +40,10 @@ export default function TextEditor() {
     return textCode.split('\n');
   }, [textCode]);
 
-  // Sync scrolling between textarea, pre, and gutter
-  const handleScroll = () => {
+  // Sync scrolling between textarea, pre, and gutter.
+  // The gutter is driven by transform (compositor layer) instead of a nested
+  // scroller, so it can never drift out of sync on mobile browsers.
+  const syncScrollLayers = () => {
     if (!textareaRef.current) return;
     const { scrollTop, scrollLeft } = textareaRef.current;
 
@@ -49,10 +51,31 @@ export default function TextEditor() {
       preRef.current.scrollTop = scrollTop;
       preRef.current.scrollLeft = scrollLeft;
     }
-    if (gutterRef.current) {
-      gutterRef.current.scrollTop = scrollTop;
+    if (gutterInnerRef.current) {
+      gutterInnerRef.current.style.transform = `translateY(${-scrollTop}px)`;
     }
   };
+
+  const handleScroll = () => {
+    syncScrollLayers();
+  };
+
+  // Re-sync after layout changes (font size, keyboard, viewport resize),
+  // since mobile browsers may adjust scroll positions without scroll events.
+  useEffect(() => {
+    syncScrollLayers();
+    const onViewportChange = () => syncScrollLayers();
+    window.addEventListener('resize', onViewportChange);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', onViewportChange);
+    }
+    return () => {
+      window.removeEventListener('resize', onViewportChange);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', onViewportChange);
+      }
+    };
+  }, [fontSize, textCode]);
 
   // Track cursor line and column
   const updateCursorPosition = () => {
@@ -269,40 +292,45 @@ export default function TextEditor() {
 
       {/* Editor Body: Gutter + Synchronized Editor View */}
       <div className="relative flex-1 flex min-h-0 min-w-0 bg-[#0b1120] overflow-hidden">
-        {/* Line Numbers Gutter */}
+        {/* Line Numbers Gutter (transform-driven, never a nested scroller) */}
         <div
-          ref={gutterRef}
-          className="code-font w-12 sm:w-14 shrink-0 bg-slate-900/70 border-l border-slate-800/80 text-slate-500 py-4 select-none overflow-hidden flex flex-col items-stretch"
+          className="code-font w-12 sm:w-14 shrink-0 bg-slate-900/70 border-l border-slate-800/80 text-slate-500 select-none overflow-hidden"
           style={{
             fontSize: `${fontSize}px`,
             lineHeight: '1.75',
           }}
         >
-          {lines.map((_, i) => {
-            const lineNum = i + 1;
-            const isError = errorLineNumber === lineNum;
-            const isCurrent = cursorPos.line === lineNum;
+          <div
+            ref={gutterInnerRef}
+            className="pt-4 will-change-transform"
+          >
+            {lines.map((_, i) => {
+              const lineNum = i + 1;
+              const isError = errorLineNumber === lineNum;
+              const isCurrent = cursorPos.line === lineNum;
 
-            return (
-              <div
-                key={i}
-                className={`h-[1.75em] flex items-center justify-between px-2 transition-colors ${
-                  isError
-                    ? 'bg-red-950/70 text-red-400 font-bold border-r-2 border-red-500'
-                    : isCurrent
-                    ? 'text-sky-300 font-semibold bg-slate-800/40'
-                    : 'text-slate-600'
-                }`}
-              >
-                <span className="text-left font-mono text-[0.85em]">{lineNum}</span>
-                {isError && (
-                  <span title={`خطأ برمجي في السطر ${lineNum}`} className="flex items-center">
-                    <AlertCircle size={12} className="text-red-400 animate-pulse shrink-0" />
-                  </span>
-                )}
-              </div>
-            );
-          })}
+              return (
+                <div
+                  key={i}
+                  className={`relative px-2 transition-colors ${
+                    isError
+                      ? 'bg-red-950/70 text-red-400 font-bold'
+                      : isCurrent
+                      ? 'text-sky-300 font-semibold bg-slate-800/40'
+                      : 'text-slate-600'
+                  }`}
+                >
+                  <span className="font-mono text-[0.85em]">{lineNum}</span>
+                  {isError && (
+                    <span title={`خطأ برمجي في السطر ${lineNum}`} className="absolute left-1 top-1/2 -translate-y-1/2 flex items-center">
+                      <AlertCircle size={12} className="text-red-400 animate-pulse shrink-0" />
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+            <div className="pb-4" />
+          </div>
         </div>
 
         {/* Editor Writing Area */}
