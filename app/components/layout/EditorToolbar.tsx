@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useEditorStore, codeExamples } from '../../store/useEditorStore';
 import { visualExamples } from '../../store/visualExamples';
-import { generateAlifCodeFromGraph } from '../../lib/AlifGenerator';
+import { generateRunnableCode } from '../../lib/runnableGraph';
 import { buildShareUrl, parseSharedCode } from '../../lib/shareCode';
 import { FileText, Copy, Share2, Download, Save, RotateCcw, Maximize, ChevronDown, Code, Undo2, Redo2, BookOpen } from 'lucide-react';
 import CheatsheetModal from '../modals/CheatsheetModal';
@@ -9,21 +9,7 @@ import CheatsheetModal from '../modals/CheatsheetModal';
 function getActiveCode(): string {
   const state = useEditorStore.getState();
   if (state.activeMode === 'visual') {
-    let finalMainNodes = state.nodes;
-    let finalMainEdges = state.edges;
-    const finalMacros = { ...state.macros };
-    if (state.currentGraphId !== 'main') {
-      finalMainNodes = state.mainGraph.nodes;
-      finalMainEdges = state.mainGraph.edges;
-      if (finalMacros[state.currentGraphId]) {
-        finalMacros[state.currentGraphId] = {
-          ...finalMacros[state.currentGraphId],
-          nodes: state.nodes,
-          edges: state.edges
-        };
-      }
-    }
-    return generateAlifCodeFromGraph(finalMainNodes, finalMainEdges, finalMacros).replace(/\u00A0/g, " ");
+    return generateRunnableCode();
   }
   return state.textCode.replace(/\u00A0/g, " ");
 }

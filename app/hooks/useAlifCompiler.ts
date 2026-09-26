@@ -1,7 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { create } from 'zustand';
 import { useEditorStore } from '../store/useEditorStore';
-import { generateAlifCodeFromGraph } from '../lib/AlifGenerator';
+import { generateRunnableCode } from '../lib/runnableGraph';
 
 export type RunState = 'ready' | 'connecting' | 'running' | 'error';
 
@@ -142,27 +142,9 @@ export function useAlifCompiler() {
     setIsTerminalHidden(false);
 
     let codeToRun = '';
-    
+
     if (activeMode === 'visual') {
-      const state = useEditorStore.getState();
-      let finalMainNodes = state.nodes;
-      let finalMainEdges = state.edges;
-      const finalMacros = { ...state.macros };
-
-      if (state.currentGraphId !== 'main') {
-        finalMainNodes = state.mainGraph.nodes;
-        finalMainEdges = state.mainGraph.edges;
-        if (finalMacros[state.currentGraphId]) {
-          finalMacros[state.currentGraphId] = {
-            ...finalMacros[state.currentGraphId],
-            nodes: state.nodes,
-            edges: state.edges
-          };
-        }
-      }
-
-      const generated = generateAlifCodeFromGraph(finalMainNodes, finalMainEdges, finalMacros);
-      codeToRun = generated.replace(/\u00A0/g, " ");
+      codeToRun = generateRunnableCode();
     } else {
       codeToRun = textCode.replace(/\u00A0/g, " ");
     }

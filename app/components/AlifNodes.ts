@@ -1,4 +1,23 @@
-import { NodeData } from './DynamicNode';
+import { NodeData, DataType } from './DynamicNode';
+
+export type MacroPort = { id: string; label: string; type: DataType };
+
+/**
+ * Builds the ports of a macro CALL node from a macro definition:
+ * canonical seq_in/seq_out flow ports plus the mirrored data ports
+ * (event ports of the definition are intentionally NOT mirrored).
+ */
+export function buildMacroCallPorts(
+  defOutputs: MacroPort[] | undefined,
+  defInputs: MacroPort[] | undefined
+): { inputs: MacroPort[]; outputs: MacroPort[] } {
+  const dataOuts = (defOutputs || []).filter((o) => o.type !== 'event');
+  const dataIns = (defInputs || []).filter((i) => i.type !== 'event');
+  return {
+    inputs: [{ id: 'seq_in', label: 'تسلسل', type: 'event' }, ...dataOuts],
+    outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }, ...dataIns],
+  };
+}
 
 export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> = {
   'ماكرو/مدخلات': {

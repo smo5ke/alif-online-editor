@@ -2606,7 +2606,10 @@ export const visualExamples: Record<string, VisualExample> = {
             { id: 'seq_in', label: 'تسلسل', type: 'event' },
             { id: 'num_arg', label: 'عدد', type: 'data' }
           ],
-          outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }]
+          outputs: [
+            { id: 'seq_out', label: 'التالي', type: 'event' },
+            { id: 'res_out', label: 'النتيجة', type: 'data' }
+          ]
         }
       },
       {

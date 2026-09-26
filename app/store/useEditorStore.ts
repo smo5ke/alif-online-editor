@@ -1,6 +1,8 @@
 import { create } from 'zustand';
+import { v4 as uuidv4 } from 'uuid';
 import { Node, Edge, NodeChange, EdgeChange, applyNodeChanges, applyEdgeChanges } from '@xyflow/react';
 import { visualExamples } from './visualExamples';
+import { buildMacroCallPorts } from '../components/AlifNodes';
 
 type EditorMode = 'visual' | 'code' | 'terminal';
 
@@ -402,12 +404,16 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   syncMacroInstances: (macroId: string) => set((state) => {
     // Determine where the macro's latest definition is
     const macroNodes = state.currentGraphId === macroId ? state.nodes : state.macros[macroId]?.nodes || [];
-    
+
     const inputsNode = macroNodes.find(n => (n.data as any).originalType === 'ماكرو/مدخلات');
     const outputsNode = macroNodes.find(n => (n.data as any).originalType === 'ماكرو/مخرجات');
-    
-    const macroCallInputs = (inputsNode?.data as any)?.outputs || [];
-    const macroCallOutputs = (outputsNode?.data as any)?.inputs || [];
+
+    // Canonical seq flow ports plus mirrored data ports (definition event
+    // ports are never mirrored, and existing seq edges are preserved).
+    const { inputs: macroCallInputs, outputs: macroCallOutputs } = buildMacroCallPorts(
+      (inputsNode?.data as any)?.outputs,
+      (outputsNode?.data as any)?.inputs
+    );
 
     const updateNodes = (nodes: Node[]) => nodes.map(n => {
       if ((n.data as any).isMacro && (n.data as any).macroId === macroId) {
@@ -478,7 +484,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   createMacro: (name: string) => {
     get().commitHistory();
-    const macroId = `macro_${Date.now()}`;
+    const macroId = `macro_${uuidv4()}`;
     set((state) => ({
       macros: {
         ...state.macros,

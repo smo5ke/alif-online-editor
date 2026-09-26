@@ -5,11 +5,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { useEditorStore } from '../../store/useEditorStore';
 import DynamicNode, { NodeData } from '../DynamicNode';
 import DeletableEdge from '../DeletableEdge';
-import { nodeDefinitions } from '../AlifNodes';
+import { nodeDefinitions, buildMacroCallPorts } from '../AlifNodes';
 import '@xyflow/react/dist/style.css';
 
 import { getLayoutedElements } from '../../lib/layoutUtils';
-import { generateAlifCodeFromGraph } from '../../lib/AlifGenerator';
+import { generateRunnableCode } from '../../lib/runnableGraph';
 import { LayoutTemplate, Code, X, Camera } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
@@ -57,15 +57,20 @@ export default function VisualEditor() {
   // Combine static node definitions with dynamic macro definitions
   const combinedNodeDefinitions = React.useMemo(() => {
     const combined: Record<string, any> = { ...nodeDefinitions };
-    
+
     Object.entries(macros || {}).forEach(([id, macro]) => {
-      const inputsNode = macro.nodes.find(n => n.data.originalType === 'ماكرو/مدخلات');
-      const outputsNode = macro.nodes.find(n => n.data.originalType === 'ماكرو/مخرجات');
-      
-      // The outputs of the Macro Inputs node become the INPUTS of the macro call node.
-      const macroCallInputs = inputsNode?.data?.outputs || [];
-      // The inputs of the Macro Outputs node become the OUTPUTS of the macro call node.
-      const macroCallOutputs = outputsNode?.data?.inputs || [];
+      // While viewing the macro itself, read the LIVE nodes so the menu
+      // reflects port edits immediately instead of a stale stored copy.
+      const defNodes = currentGraphId === id ? nodes : macro.nodes;
+      const inputsNode = defNodes.find(n => n.data.originalType === 'ماكرو/مدخلات');
+      const outputsNode = defNodes.find(n => n.data.originalType === 'ماكرو/مخرجات');
+
+      // The data outputs of the Macro Inputs node become the data INPUTS
+      // of the macro call node (plus canonical seq flow ports).
+      const { inputs: macroCallInputs, outputs: macroCallOutputs } = buildMacroCallPorts(
+        (inputsNode?.data as any)?.outputs,
+        (outputsNode?.data as any)?.inputs
+      );
 
       combined[`macro:${id}`] = {
         label: macro.name,
@@ -79,9 +84,10 @@ export default function VisualEditor() {
       };
     });
     return combined;
-  }, [macros]);
+  }, [macros, nodes, currentGraphId]);
 
   const onLayout = useCallback(() => {
+    commitHistory();
     const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
       nodes,
       edges,
@@ -89,7 +95,7 @@ export default function VisualEditor() {
     );
     setNodes(layoutedNodes);
     setEdges(layoutedEdges);
-  }, [nodes, edges, setNodes, setEdges]);
+  }, [nodes, edges, setNodes, setEdges, commitHistory]);
 
   const onConnect = useCallback((params: Connection) => {
     if (!params.source || !params.target || params.source === params.target) return;
@@ -277,8 +283,10 @@ export default function VisualEditor() {
       },
     };
     
-    setNodes((nds) => nds.concat(newNode));
     setMenuPos(null);
+    // Record pre-add state so Ctrl+Z removes the added node
+    useEditorStore.getState().commitHistory();
+    setNodes((nds) => nds.concat(newNode));
   };
 
   useEffect(() => {
@@ -385,7 +393,9 @@ export default function VisualEditor() {
       <div className="absolute bottom-6 md:bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-3 z-30">
         <button
           onClick={() => {
-            setGeneratedCode(generateAlifCodeFromGraph(nodes, edges, macros));
+            // Always preview the full runnable program (same as Run),
+            // even when viewing inside a macro.
+            setGeneratedCode(generateRunnableCode());
             setShowCodeModal(true);
           }}
           className="bg-slate-700 hover:bg-slate-600 text-white rounded-full shadow-2xl w-12 h-12 flex items-center justify-center transition-colors border border-slate-600/50"
@@ -548,6 +558,7 @@ export default function VisualEditor() {
             </div>
             <button
               onClick={() => {
+                useEditorStore.getState().commitHistory();
                 setNodes(nds => nds.filter(n => n.id !== editMenuPos.nodeId));
                 setEditMenuPos(null);
               }}
