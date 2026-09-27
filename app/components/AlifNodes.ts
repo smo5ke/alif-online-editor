@@ -388,6 +388,19 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
     inputs: [{ id: 'val_in', label: 'القيمة', type: 'data' }],
     outputs: [{ id: 'res_out', label: 'المميزة', type: 'data' }],
   },
+  'بيانات/مترابطة حرفية': {
+    label: 'مترابطة حرفية',
+    subtitle: '(أ, ب)',
+    iconName: 'Combine',
+    color: '#06b6d4',
+    allowDynamicInputs: true,
+    dynamicInputLabel: 'عنصر',
+    inputs: [
+      { id: 'a_in', label: 'أ', type: 'data' },
+      { id: 'b_in', label: 'ب', type: 'data' },
+    ],
+    outputs: [{ id: 'res_out', label: 'المترابطة', type: 'data' }],
+  },
   'بيانات/نوع': {
     label: 'نوع البيانات',
     subtitle: 'نوع()',
@@ -666,15 +679,19 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
   // --- حزمة النصوص ---
   'نصوص/تقسيم': {
     label: 'تقسيم نص',
-    subtitle: 'قسم()',
+    subtitle: 'افصل() / اقسم()',
     iconName: 'Split',
     color: '#eab308',
     inputs: [
       { id: 'str_in', label: 'النص', type: 'data' },
       { id: 'sep_in', label: 'الفاصل', type: 'data' },
+      { id: 'count_in', label: 'العدد (اختياري)', type: 'data' },
     ],
     outputs: [{ id: 'res_out', label: 'المصفوفة', type: 'data' }],
-    controls: [{ id: 'sep', type: 'text', label: 'الفاصل الافتراضي', value: ' ' }],
+    controls: [
+      { id: 'method', type: 'select', label: 'الطريقة', value: 'افصل', options: ['افصل', 'اقسم'] },
+      { id: 'sep', type: 'text', label: 'الفاصل الافتراضي', value: ' ' },
+    ],
   },
   'نصوص/فحص': {
     label: 'فحص النص',
@@ -962,27 +979,33 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
   // --- حزمة الشيفرة الحرة المخصصة ---
   'بيانات/تعبير مخصص': {
     label: 'تعبير برمجي مخصص',
-    subtitle: 'تعبير ألف حر',
+    subtitle: 'تعبير ألف حر {1}',
     iconName: 'FileCode',
     color: '#8b5cf6',
+    allowDynamicInputs: true,
+    dynamicInputLabel: 'مدخل',
     inputs: [
-      { id: 'a_in', label: 'مدخل أ (اختياري)', type: 'data' },
-      { id: 'b_in', label: 'مدخل ب (اختياري)', type: 'data' },
+      { id: 'a_in', label: 'مدخل 1', type: 'data' },
+      { id: 'b_in', label: 'مدخل 2', type: 'data' },
     ],
     outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
-    controls: [{ id: 'expr', type: 'text', label: 'التعبير (استخدم أ و ب)', value: 'أ + ب' }],
+    controls: [{ id: 'expr', type: 'textarea', label: 'التعبير (استخدم {1} {2} ...)', value: '({1} + {2})' }],
+    customCode: true,
   },
   'أوامر/سطر مخصص': {
     label: 'سطر برمجي مخصص',
-    subtitle: 'تعليمة ألف حرة',
+    subtitle: 'تعليمة ألف حرة {1}',
     iconName: 'Terminal',
     color: '#ec4899',
+    allowDynamicInputs: true,
+    dynamicInputLabel: 'مدخل',
     inputs: [
       { id: 'seq_in', label: 'تسلسل', type: 'event' },
-      { id: 'a_in', label: 'مدخل أ (اختياري)', type: 'data' },
-      { id: 'b_in', label: 'مدخل ب (اختياري)', type: 'data' },
+      { id: 'a_in', label: 'مدخل 1', type: 'data' },
+      { id: 'b_in', label: 'مدخل 2', type: 'data' },
     ],
     outputs: [{ id: 'seq_out', label: 'التالي', type: 'event' }],
-    controls: [{ id: 'code', type: 'text', label: 'التعليمة البرمجية', value: 'اطبع("مرحباً بك!")' }],
+    controls: [{ id: 'code', type: 'textarea', label: 'التعليمة (استخدم {1} {2} ...)', value: 'اطبع("القيمة: {1}")' }],
+    customCode: true,
   },
 };

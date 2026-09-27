@@ -1,7 +1,42 @@
 import { describe, it, expect } from 'vitest';
 import type { Node, Edge } from '@xyflow/react';
-import { generateAlifCodeFromGraph, macroTempVar } from '../AlifGenerator';
+import { generateAlifCodeFromGraph, macroTempVar, resolveCustomTemplate, validateCustomCode } from '../AlifGenerator';
 import { visualExamples } from '../../store/visualExamples';
+
+describe('resolveCustomTemplate', () => {
+  it('fills numbered placeholders by input order (values are code fragments)', () => {
+    expect(resolveCustomTemplate('اطبع({1}, {2})', ['"أ"', '5'])).toBe('اطبع("أ", 5)');
+  });
+
+  it('renders unwired placeholders as عدم and keeps unknown numbers as عدم', () => {
+    expect(resolveCustomTemplate('{1} + {2} + {9}', ['س'])).toBe('س + عدم + عدم');
+  });
+
+  it('unescapes double braces literally', () => {
+    expect(resolveCustomTemplate('م"{{{1}}}"', ['س'])).toBe('م"{س}"');
+    expect(resolveCustomTemplate('{{1}}', ['س'])).toBe('{1}');
+  });
+
+  it('handles multiline templates', () => {
+    expect(resolveCustomTemplate('س = {1}\nاطبع(س)', ['5'])).toBe('س = 5\nاطبع(س)');
+  });
+});
+
+describe('validateCustomCode', () => {
+  it('accepts balanced code', () => {
+    expect(validateCustomCode('اطبع(م"{س}")')).toEqual([]);
+    expect(validateCustomCode('')).toEqual([]);
+  });
+
+  it('reports unbalanced delimiters and quotes', () => {
+    const unclosedParen = 'اطبع' + '(س';
+    const extraClose = 'س))';
+    const unclosedQuote = 'اطبع' + '("س';
+    expect(validateCustomCode(unclosedParen).length).toBeGreaterThan(0);
+    expect(validateCustomCode(extraClose).length).toBeGreaterThan(0);
+    expect(validateCustomCode(unclosedQuote).length).toBeGreaterThan(0);
+  });
+});
 
 describe('built-in visual examples', () => {
   for (const [id, example] of Object.entries(visualExamples)) {
@@ -804,6 +839,78 @@ describe('generateAlifCodeFromGraph', () => {
       ]
     );
     expect(code2).toContain('[2 لكل ص في 4]');
+  });
+
+  it('generates مترابطة حرفية and اقسم/count splits', () => {
+    const tup = node('tp1', 'بيانات/مترابطة حرفية', {
+      inputs: [
+        { id: 'a_in', label: 'أ', type: 'data' },
+        { id: 'b_in', label: 'ب', type: 'data' },
+      ],
+      outputs: [{ id: 'res_out', label: 'المترابطة', type: 'data' }],
+    });
+    const split = node('sp1', 'نصوص/تقسيم', {
+      inputs: [
+        { id: 'str_in', label: 'النص', type: 'data' },
+        { id: 'sep_in', label: 'الفاصل', type: 'data' },
+        { id: 'count_in', label: 'العدد', type: 'data' },
+      ],
+      outputs: [{ id: 'res_out', label: 'المصفوفة', type: 'data' }],
+      controls: [
+        { id: 'method', type: 'select', label: 'الطريقة', value: 'اقسم', options: ['افصل', 'اقسم'] },
+        { id: 'sep', type: 'text', label: 'الفاصل الافتراضي', value: ' ' },
+      ],
+    });
+    const code = generateAlifCodeFromGraph(
+      [startNode(), printNode(), printNode('p2'), tup, textNode('t1', 'أ'), textNode('t2', 'ب'), split, textNode('t3', 'ملف.لاحقة'), textNode('t4', '.'), numNode('n1', 1)],
+      [
+        edge('e1', 'start', 'seq_out', 'print', 'seq_in'),
+        edge('e2', 'tp1', 'res_out', 'print', 'val_in'),
+        edge('e3', 't1', 'val_out', 'tp1', 'a_in'),
+        edge('e4', 't2', 'val_out', 'tp1', 'b_in'),
+        edge('e5', 't3', 'val_out', 'sp1', 'str_in'),
+        edge('e6', 't4', 'val_out', 'sp1', 'sep_in'),
+        edge('e7', 'n1', 'val_out', 'sp1', 'count_in'),
+        edge('e8', 'print', 'seq_out', 'p2', 'seq_in'),
+        edge('e9', 'sp1', 'res_out', 'p2', 'val_in'),
+      ]
+    );
+    expect(code).toContain('("أ", "ب")');
+    expect(code).toContain('.اقسم(".", 1)');
+  });
+
+  it('generates custom statement and expression nodes via the engine', () => {
+    const customLine = node('cl1', 'أوامر/سطر مخصص', {
+      inputs: [
+        { ...SEQ_IN },
+        { id: 'a_in', label: 'مدخل 1', type: 'data' },
+        { id: 'item_0', label: 'مدخل 3', type: 'data' },
+      ],
+      outputs: [{ ...SEQ_OUT }],
+      controls: [{ id: 'code', type: 'textarea', label: 'التعليمة', value: 'اطبع({1}, {2}, {3})' }],
+    });
+    const customExpr = node('ce1', 'بيانات/تعبير مخصص', {
+      inputs: [
+        { id: 'a_in', label: 'مدخل 1', type: 'data' },
+        { id: 'b_in', label: 'مدخل 2', type: 'data' },
+      ],
+      outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
+      controls: [{ id: 'expr', type: 'textarea', label: 'التعبير', value: '({1} \\ {2})' }],
+    });
+    const code = generateAlifCodeFromGraph(
+      [startNode(), customLine, printNode('p2'), customExpr, textNode('t1', 'أ'), numNode('n2', 2), numNode('n10', 10), numNode('n4', 4)],
+      [
+        edge('e1', 'start', 'seq_out', 'cl1', 'seq_in'),
+        edge('e2', 't1', 'val_out', 'cl1', 'a_in'),
+        edge('e3', 'n2', 'val_out', 'cl1', 'item_0'),
+        edge('e4', 'cl1', 'seq_out', 'p2', 'seq_in'),
+        edge('e5', 'ce1', 'res_out', 'p2', 'val_in'),
+        edge('e6', 'n10', 'val_out', 'ce1', 'a_in'),
+        edge('e7', 'n4', 'val_out', 'ce1', 'b_in'),
+      ]
+    );
+    expect(code).toContain('اطبع("أ", 2, عدم)');
+    expect(code).toContain('((10 \\ 4))');
   });
 
   it('asks for a start node when the graph is empty of entry points', () => {

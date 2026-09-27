@@ -5,7 +5,7 @@ import { useEditorStore } from '../store/useEditorStore';
 
 export type NodeControl = {
   id: string;
-  type: 'text' | 'number' | 'select';
+  type: 'text' | 'number' | 'select' | 'textarea';
   label: string;
   value: any;
   options?: string[];
@@ -24,6 +24,7 @@ export type NodeData = {
   controls?: NodeControl[];
   allowDynamicInputs?: boolean | 'pair';
   allowDynamicOutputs?: boolean;
+  customCode?: boolean;
   onControlChange?: (controlId: string, value: any) => void;
   onAddDynamicInput?: (nodeId: string) => void;
   onAddDynamicOutput?: (nodeId: string) => void;
@@ -114,6 +115,19 @@ export default function DynamicNode({ data, id }: { data: NodeData; id: string }
                     </select>
                     <LucideIcons.ChevronDown size={14} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none" />
                   </div>
+                ) : control.type === 'textarea' ? (
+                  <textarea
+                    rows={3}
+                    className="code-font w-full bg-[#27272a] border border-white/10 text-slate-200 text-xs rounded-xl px-3 py-2.5 outline-none focus:ring-2 transition-all nodrag font-medium resize-y"
+                    style={{ '--tw-ring-color': headerColor } as React.CSSProperties}
+                    value={control.value}
+                    onChange={(e) => {
+                      updateNodeControl(id, control.id, e.target.value);
+                      data.onControlChange?.(control.id, e.target.value);
+                    }}
+                    dir="auto"
+                    spellCheck={false}
+                  />
                 ) : (
                   <input
                     type={control.type}
@@ -128,6 +142,29 @@ export default function DynamicNode({ data, id }: { data: NodeData; id: string }
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Placeholder hint for custom-code nodes */}
+        {data.customCode && (
+          <div className="mx-3 mb-3 rounded-xl bg-white/5 border border-white/10 px-3 py-2">
+            <div className="text-[10px] font-bold text-slate-400 mb-1">البدائل المتاحة:</div>
+            <div className="flex flex-wrap gap-1.5" dir="ltr">
+              {(data.inputs || [])
+                .filter((i) => i.type !== 'event')
+                .map((inp, idx) => (
+                  <span
+                    key={inp.id}
+                    className="font-mono text-[10px] px-1.5 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-emerald-300"
+                    title={inp.label}
+                  >
+                    {'{'}{idx + 1}{'}'}
+                  </span>
+                ))}
+              {(!(data.inputs || []).some((i) => i.type !== 'event')) && (
+                <span className="text-[10px] text-slate-500">أضف مدخلاً بزر + لاستخدامه</span>
+              )}
+            </div>
           </div>
         )}
 

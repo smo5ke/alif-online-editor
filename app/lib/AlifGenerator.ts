@@ -18,6 +18,58 @@ export function macroTempVar(nodeId: string, sourceHandle?: string): string {
   return `ناتج_${h}`;
 }
 
+/**
+ * Professional custom-code template engine shared by the سطر/تعبير مخصص nodes.
+ *
+ * Placeholders are 1-based by data-input order: {1} is the first connected
+ * (or defaulted) data input. Literal braces are escaped as {{ and }}.
+ * Missing/unwired values render as عدم, matching the rest of the generator.
+ *
+ * A single left-to-right pass is essential: greedy pre-stripping of {{
+ * would steal the braces of an adjacent placeholder (e.g. in {{{1}}}).
+ */
+export function resolveCustomTemplate(template: string, values: string[]): string {
+  return String(template ?? '').replace(/{{|}}|\{(\d+)\}/g, (m, num) => {
+    if (m === '{{') return '{';
+    if (m === '}}') return '}';
+    const idx = parseInt(num, 10) - 1;
+    return idx >= 0 && idx < values.length ? values[idx] : 'عدم';
+  });
+}
+
+/**
+ * Lightweight validation for custom code: balanced (), [], {} and
+ * an even number of unescaped double quotes. Returns warning strings
+ * (empty when the template looks fine).
+ */
+export function validateCustomCode(template: string): string[] {
+  const warnings: string[] = [];
+  const src = String(template ?? '').replace(/{{/g, '').replace(/}}/g, '');
+  const pairs: Record<string, string> = { '(': ')', '[': ']', '{': '}' };
+  const stack: string[] = [];
+  let inString = false;
+  for (let i = 0; i < src.length; i++) {
+    const ch = src[i];
+    if (ch === '"' && src[i - 1] !== '\\') {
+      inString = !inString;
+      continue;
+    }
+    if (inString) continue;
+    if (pairs[ch]) {
+      stack.push(ch);
+    } else if (Object.values(pairs).includes(ch)) {
+      const last = stack.pop();
+      if (!last || pairs[last] !== ch) {
+        warnings.push(`قوس غير متوازن: ${ch}`);
+        break;
+      }
+    }
+  }
+  if (inString) warnings.push('علامة اقتباس مزدوجة غير مغلقة');
+  if (stack.length > 0) warnings.push(`قوس غير مغلق: ${stack[stack.length - 1]}`);
+  return warnings;
+}
+
 export function generateAlifCodeFromGraph(
   mainNodes: Node[], 
   mainEdges: Edge[],
@@ -66,7 +118,6 @@ export function generateAlifCodeFromGraph(
     function resolveCallArgs(node: Node): string[] {
       return resolveCallArgsExcept(node, []);
     }
-
     // Same as above but skips inputs with the given ids (e.g. obj_in of method calls)
     function resolveCallArgsExcept(node: Node, excludeIds: string[]): string[] {
       const callInputs = (((node.data as any).inputs as any[]) || [])
@@ -78,6 +129,18 @@ export function generateAlifCodeFromGraph(
       });
       return args;
     }
+
+    // All data-input values in port order for custom-code templates
+    // (unwired ports become عدم, matching the rest of the generator).
+    function resolveDataInputs(node: Node): string[] {
+      return (((node.data as any).inputs as any[]) || [])
+        .filter((i: any) => i.type !== 'event')
+        .map((inp: any) => resolveInput(node.id, inp.id) ?? 'عدم');
+    }
+
+    // Validation warnings from custom-code nodes, flushed as comments
+    // at the end of the compiled context.
+    const customWarnings: string[] = [];
   
     function resolveValue(node: Node, sourceHandle?: string): any {
       if (!node) return 'عدم';
@@ -136,6 +199,11 @@ export function generateAlifCodeFromGraph(
       if (type === 'بيانات/تحويل لمميزة') {
         let val = resolveInput(node.id, 'val_in') ?? 'عدم';
         return `مميزة(${val})`;
+      }
+      if (type === 'بيانات/مترابطة حرفية') {
+        const inputs = data.inputs || [];
+        const elements = inputs.map((input: any) => resolveInput(node.id, input.id) ?? 'عدم');
+        return `(${elements.join(', ')})`;
       }
       if (type === 'بيانات/نوع') {
         let val = resolveInput(node.id, 'val_in') ?? 'عدم';
@@ -245,11 +313,15 @@ export function generateAlifCodeFromGraph(
       }
       if (type === 'نصوص/تقسيم') {
         let str = resolveInput(node.id, 'str_in') ?? '""';
+        const method = getControlValue('method') === 'اقسم' ? 'اقسم' : 'افصل';
         let sepIn = resolveInput(node.id, 'sep_in');
-        if (sepIn !== undefined && sepIn !== null) return `${str}.افصل(${sepIn})`;
-        const defaultSep = getControlValue('sep') || ' ';
-        if (defaultSep === ' ') return `${str}.افصل()`;
-        return `${str}.افصل("${escapeAlifString(defaultSep)}")`;
+        if (sepIn === undefined || sepIn === null) {
+          const defaultSep = getControlValue('sep') || ' ';
+          sepIn = defaultSep === ' ' && method === 'افصل' ? null : `"${escapeAlifString(defaultSep)}"`;
+        }
+        const countIn = resolveInput(node.id, 'count_in');
+        const args = sepIn !== null ? (countIn !== null && countIn !== undefined ? `${sepIn}, ${countIn}` : `${sepIn}`) : '';
+        return `${str}.${method}(${args})`;
       }
       if (type === 'نصوص/فحص') {
         let str = resolveInput(node.id, 'str_in') ?? '""';
@@ -347,16 +419,11 @@ export function generateAlifCodeFromGraph(
         return `(${key} في ${dict})`;
       }
       if (type === 'بيانات/تعبير مخصص') {
-        let expr = getControlValue('expr') || 'أ + ب';
-        let a = resolveInput(node.id, 'a_in');
-        let b = resolveInput(node.id, 'b_in');
-        if (a !== null && a !== undefined) {
-          expr = expr.replace(/\bأ\b/g, `(${a})`);
+        const expr = getControlValue('expr') || '({1} + {2})';
+        for (const w of validateCustomCode(expr)) {
+          customWarnings.push(`# ⚠️ تعبير مخصص (${node.id}): ${w}`);
         }
-        if (b !== null && b !== undefined) {
-          expr = expr.replace(/\bب\b/g, `(${b})`);
-        }
-        return `(${expr})`;
+        return `(${resolveCustomTemplate(expr, resolveDataInputs(node))})`;
       }
       return 'عدم';
     }
@@ -456,16 +523,16 @@ export function generateAlifCodeFromGraph(
           code += indent + `اطبع(${argsStr}) # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'أوامر/سطر مخصص') {
-          let cmd = getControlValue('code') || 'تجاوز';
-          let a = resolveInput(currNode.id, 'a_in');
-          let b = resolveInput(currNode.id, 'b_in');
-          if (a !== null && a !== undefined) {
-            cmd = cmd.replace(/\bأ\b/g, `${a}`);
+          const template = getControlValue('code') || 'تجاوز';
+          for (const w of validateCustomCode(template)) {
+            customWarnings.push(`# ⚠️ سطر مخصص (${currNode.id}): ${w}`);
           }
-          if (b !== null && b !== undefined) {
-            cmd = cmd.replace(/\bب\b/g, `${b}`);
+          const filled = resolveCustomTemplate(template, resolveDataInputs(currNode)).replace(/\s+$/, '');
+          const cmdLines = filled.split('\n');
+          code += indent + `${cmdLines[0]} # @node:${currNode.id}\n`;
+          for (let li = 1; li < cmdLines.length; li++) {
+            code += indent + `${cmdLines[li]}\n`;
           }
-          code += indent + `${cmd} # @node:${currNode.id}\n`;
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'متغيرات/إسناد') {
           let varName = getControlValue('var_name');
@@ -809,6 +876,10 @@ export function generateAlifCodeFromGraph(
           localCode += `# - ${(n.data as any).label}\n`;
         });
       }
+    }
+
+    if (customWarnings.length > 0) {
+      localCode += '\n' + [...new Set(customWarnings)].join('\n') + '\n';
     }
   
     return localCode;
