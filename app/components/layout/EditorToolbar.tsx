@@ -80,6 +80,7 @@ export default function EditorToolbar() {
     { id: 'files', title: 'المثال 22: الملفات' },
     { id: 'sets', title: 'المثال 23: المميزة' },
     { id: 'lambda', title: 'المثال 24: الخطية' },
+    { id: 'custom', title: 'المثال 25: الشيفرة المخصصة' },
     { id: 'blank', title: 'مستند فارغ' },
   ];
 
