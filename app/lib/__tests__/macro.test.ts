@@ -121,8 +121,9 @@ describe('syncMacroInstances', () => {
     expect(state.edges.map((e) => e.id).sort()).toEqual(['e1', 'e2']);
     // Call node gained the new data port while keeping flow ports
     const syncedCall = state.nodes.find((n) => n.id === 'call1');
-    const inputIds = ((syncedCall?.data as any)?.inputs || []).map((p: any) => p.id);
-    const outputIds = ((syncedCall?.data as any)?.outputs || []).map((p: any) => p.id);
+    const callData = (syncedCall?.data ?? {}) as { inputs?: Array<{ id: string }>; outputs?: Array<{ id: string }> };
+    const inputIds = (callData.inputs || []).map((p) => p.id);
+    const outputIds = (callData.outputs || []).map((p) => p.id);
     expect(inputIds).toContain('seq_in');
     expect(inputIds).toContain('extra_in');
     expect(outputIds).toContain('seq_out');

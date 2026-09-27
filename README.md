@@ -16,7 +16,7 @@ npm run dev      # http://localhost:3000
 | `npm run dev` | خادم التطوير |
 | `npm run build` | بناء نسخة الإنتاج (تصدير ثابت `out/`) |
 | `npm start` | تشغيل نسخة الإنتاج |
-| `npm test` | اختبارات الوحدة (vitest) — 20 اختباراً |
+| `npm test` | اختبارات الوحدة (vitest) — 64 اختباراً، كلها مؤكدة على المفسر |
 | `npm run lint` | فحص ESLint |
 
 ## البنية باختصار
@@ -24,7 +24,8 @@ npm run dev      # http://localhost:3000
 - `app/page.tsx` — الصفحة الرئيسية (محرر + طرفية)
 - `app/components/editors/VisualEditor.tsx` — المحرر المرئي بالعقد
 - `app/components/editors/TextEditor.tsx` — محرر الشيفرة مع التلوين
-- `app/components/AlifNodes.ts` — تعريفات ~60 عقدة برمجية
+- `app/components/AlifNodes.ts` — تعريفات ~95 عقدة برمجية (كلها مؤكدة على المفسر الحقيقي)
+- `app/store/visualExamples.ts` — 24 مثالاً مرئياً جاهزاً (كلها شُغّلت على المفسر)
 - `app/lib/AlifGenerator.ts` — توليد كود ألف من الجراف (مع `# @node:id` لتتبع الأخطاء)
 - `app/lib/alifHighlighter.ts` — التلوين والتنسيق
 - `app/lib/shareCode.ts` — ترميز روابط المشاركة `?code=`
@@ -35,6 +36,8 @@ npm run dev      # http://localhost:3000
 
 - `Ctrl+Enter` (أو `Cmd+Enter`) — تشغيل البرنامج
 - `Ctrl+Z` / `Ctrl+Shift+Z` / `Ctrl+Y` — تراجع / إعادة في المحرر المرئي
+- `Delete` / `Backspace` — حذف العقد والخطوط المحددة
+- `Tab` / `Shift+Tab` — مسافة بادئة / إزاحتها (محرر الشيفرة)
 
 ## النشر
 
