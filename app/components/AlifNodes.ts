@@ -978,8 +978,8 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
 
   // --- حزمة الشيفرة الحرة المخصصة ---
   'بيانات/تعبير مخصص': {
-    label: 'تعبير برمجي مخصص',
-    subtitle: 'تعبير ألف حر {1}',
+    label: 'دالة مخصصة',
+    subtitle: 'تعريف دالة حرة',
     iconName: 'FileCode',
     color: '#8b5cf6',
     allowDynamicInputs: true,
@@ -988,8 +988,11 @@ export const nodeDefinitions: Record<string, Omit<NodeData, 'onControlChange'>> 
       { id: 'a_in', label: 'مدخل 1', type: 'data' },
       { id: 'b_in', label: 'مدخل 2', type: 'data' },
     ],
-    outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
-    controls: [{ id: 'expr', type: 'textarea', label: 'التعبير (استخدم {1} {2} ...)', value: '({1} + {2})' }],
+    outputs: [{ id: 'res_out', label: 'اسم الدالة', type: 'data' }],
+    controls: [
+      { id: 'func_name', type: 'text', label: 'اسم الدالة', value: 'تجربة' },
+      { id: 'body', type: 'textarea', label: 'التعريف الكامل (استخدم {1} {2} ...)', value: 'دالة تجربة(معمل={1}, معمل2={2}):\n\tاطبع(معمل)' },
+    ],
     customCode: true,
   },
   'أوامر/سطر مخصص': {

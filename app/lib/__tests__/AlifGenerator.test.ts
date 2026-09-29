@@ -913,6 +913,73 @@ describe('generateAlifCodeFromGraph', () => {
     expect(code).toContain('((10 \\ 4))');
   });
 
+  it('emits a دالة مخصصة definition callable from استدعاء', () => {
+    const def = node('d1', 'بيانات/تعبير مخصص', {
+      inputs: [
+        { id: 'a_in', label: 'مدخل 1', type: 'data' },
+        { id: 'b_in', label: 'مدخل 2', type: 'data' },
+      ],
+      outputs: [{ id: 'res_out', label: 'اسم الدالة', type: 'data' }],
+      controls: [
+        { id: 'func_name', type: 'text', label: 'اسم الدالة', value: 'تجربة' },
+        { id: 'body', type: 'textarea', label: 'التعريف', value: 'دالة تجربة(معمل={1}, معمل2={2}):\n\tاطبع(معمل)' },
+      ],
+    });
+    const call = node('c1', 'دوال/استدعاء', {
+      inputs: [
+        { ...SEQ_IN },
+        { id: 'arg_in', label: 'المعامل', type: 'data' },
+      ],
+      outputs: [{ ...SEQ_OUT }, { id: 'res_out', label: 'النتيجة', type: 'data' }],
+      controls: [
+        { id: 'func_name', type: 'text', label: 'الاسم', value: 'تجربة' },
+        { id: 'kwargs', type: 'text', label: 'مفتاحية', value: '' },
+      ],
+    });
+    const code = generateAlifCodeFromGraph(
+      [startNode(), printNode(), def, call, numNode('n39', 39), numNode('n45', 45)],
+      [
+        edge('e1', 'start', 'seq_out', 'print', 'seq_in'),
+        edge('e2', 'c1', 'res_out', 'print', 'val_in'),
+        edge('e3', 'n39', 'val_out', 'c1', 'arg_in'),
+        edge('e4', 'n39', 'val_out', 'd1', 'a_in'),
+        edge('e5', 'n45', 'val_out', 'd1', 'b_in'),
+      ]
+    );
+    expect(code).toContain('دالة تجربة(معمل=39, معمل2=45):');
+    expect(code).toContain('تجربة(39)');
+    // res_out of a definition resolves to its name
+    const code2 = generateAlifCodeFromGraph(
+      [startNode(), printNode('p2'), def],
+      [
+        edge('e1', 'start', 'seq_out', 'p2', 'seq_in'),
+        edge('e2', 'd1', 'res_out', 'p2', 'val_in'),
+      ]
+    );
+    expect(code2).toContain('اطبع(تجربة)');
+  });
+
+  it('keeps legacy expr-mode custom nodes working', () => {
+    const legacy = node('lx', 'بيانات/تعبير مخصص', {
+      inputs: [
+        { id: 'a_in', label: 'مدخل أ', type: 'data' },
+        { id: 'b_in', label: 'مدخل ب', type: 'data' },
+      ],
+      outputs: [{ id: 'res_out', label: 'النتيجة', type: 'data' }],
+      controls: [{ id: 'expr', type: 'text', label: 'التعبير', value: '({1} + {2})' }],
+    });
+    const code = generateAlifCodeFromGraph(
+      [startNode(), printNode(), legacy, numNode('n1', 1), numNode('n2', 2)],
+      [
+        edge('e1', 'start', 'seq_out', 'print', 'seq_in'),
+        edge('e2', 'lx', 'res_out', 'print', 'val_in'),
+        edge('e3', 'n1', 'val_out', 'lx', 'a_in'),
+        edge('e4', 'n2', 'val_out', 'lx', 'b_in'),
+      ]
+    );
+    expect(code).toContain('((1 + 2))');
+  });
+
   it('asks for a start node when the graph is empty of entry points', () => {
     const code = generateAlifCodeFromGraph([printNode()], []);
     expect(code).toContain('بداية البرنامج');

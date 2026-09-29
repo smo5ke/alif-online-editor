@@ -118,6 +118,13 @@ export function generateAlifCodeFromGraph(
     function resolveCallArgs(node: Node): string[] {
       return resolveCallArgsExcept(node, []);
     }
+    // A بيانات/تعبير مخصص node with a func_name control is a full function
+    // definition (new mode); with an expr control it is a legacy expression.
+    function isCustomDef(n: Node): boolean {
+      return (n.data as any).originalType === 'بيانات/تعبير مخصص' &&
+        (((n.data as any).controls as any[]) || []).some((c: any) => c.id === 'func_name');
+    }
+
     // Same as above but skips inputs with the given ids (e.g. obj_in of method calls)
     function resolveCallArgsExcept(node: Node, excludeIds: string[]): string[] {
       const callInputs = (((node.data as any).inputs as any[]) || [])
@@ -419,6 +426,12 @@ export function generateAlifCodeFromGraph(
         return `(${key} في ${dict})`;
       }
       if (type === 'بيانات/تعبير مخصص') {
+        const hasDefMode = (controls || []).some((c: any) => c.id === 'func_name');
+        if (hasDefMode) {
+          // Definition mode: res_out resolves to the function name itself
+          return getControlValue('func_name') || 'دالة_مخصصة';
+        }
+        // Legacy expression mode (pre-{1} engine graphs)
         const expr = getControlValue('expr') || '({1} + {2})';
         for (const w of validateCustomCode(expr)) {
           customWarnings.push(`# ⚠️ تعبير مخصص (${node.id}): ${w}`);
@@ -530,8 +543,9 @@ export function generateAlifCodeFromGraph(
           const filled = resolveCustomTemplate(template, resolveDataInputs(currNode)).replace(/\s+$/, '');
           const cmdLines = filled.split('\n');
           code += indent + `${cmdLines[0]} # @node:${currNode.id}\n`;
+          // Following lines keep the author's own indentation verbatim
           for (let li = 1; li < cmdLines.length; li++) {
-            code += indent + `${cmdLines[li]}\n`;
+            code += `${cmdLines[li]}\n`;
           }
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'متغيرات/إسناد') {
@@ -789,6 +803,24 @@ export function generateAlifCodeFromGraph(
           if (defBodyId) code += walkExecution(defBodyId, indent + '\t', new Set(pathVisited));
           else code += indent + '\tتجاوز\n';
           currNodeId = getNextNodeId(currNode.id, 'seq_out');
+        } else if (type === 'بيانات/تعبير مخصص' && indent !== '' && isCustomDef(currNode)) {
+          // Nested custom definition (e.g. a method inside صنف body):
+          // the template already holds the full definition text.
+          const filled = resolveCustomTemplate(
+            getControlValue('body') || 'دالة دالة_مخصصة():\n\tتجاوز',
+            resolveDataInputs(currNode)
+          ).replace(/\s+$/, '');
+          for (const w of validateCustomCode(filled)) {
+            customWarnings.push(`# ⚠️ دالة مخصصة (${currNode.id}): ${w}`);
+          }
+          const defLines = filled.split('\n');
+          // First line takes the current indent; body lines keep the user's
+          // own indentation verbatim (the template holds the full definition).
+          code += indent + `${defLines[0]} # @node:${currNode.id}\n`;
+          for (let li = 1; li < defLines.length; li++) {
+            code += `${defLines[li]}\n`;
+          }
+          currNodeId = getNextNodeId(currNode.id, 'seq_out');
         } else if (type === 'أوامر/بداية البرنامج' || type === 'دوال/تعريف دالة' || type === 'ماكرو/مدخلات') {
           currNodeId = getNextNodeId(currNode.id, 'seq_out') || getNextNodeId(currNode.id, 'body_out');
         } else {
@@ -817,7 +849,7 @@ export function generateAlifCodeFromGraph(
           const next = getNextNodeId(nid, h);
           if (next) {
             const target = nodes.find(n => n.id === next);
-            if (target && (target.data as any).originalType === 'دوال/تعريف دالة') {
+            if (target && ((target.data as any).originalType === 'دوال/تعريف دالة' || isCustomDef(target))) {
               nestedDefIds.add(next);
             }
             stack.push(next);
@@ -835,6 +867,22 @@ export function generateAlifCodeFromGraph(
       if (bodyNodeId) localCode += walkExecution(bodyNodeId, '\t', new Set<string>());
       else localCode += '\tتجاوز\n';
       localCode += '\n';
+    });
+
+    // Custom function definitions (دالة مخصصة nodes): the template holds
+    // the complete definition text, emitted here at top level.
+    const customDefNodes = nodes.filter(n => isCustomDef(n) && !nestedDefIds.has(n.id));
+    customDefNodes.forEach((node) => {
+      const controls = ((node.data as NodeData).controls || []);
+      const getControlValue = (id: string) => controls.find((c: any) => c.id === id)?.value;
+      const template = getControlValue('body') || 'دالة دالة_مخصصة():\n\tتجاوز';
+      const dataInputs = (((node.data as any).inputs as any[]) || [])
+        .filter((i: any) => i.type !== 'event')
+        .map((inp: any) => resolveInput(node.id, inp.id) ?? 'عدم');
+      for (const w of validateCustomCode(template)) {
+        customWarnings.push(`# ⚠️ دالة مخصصة (${node.id}): ${w}`);
+      }
+      localCode += resolveCustomTemplate(template, dataInputs).replace(/\s+$/, '') + '\n\n';
     });
   
     if (isMacro && macroName) {
@@ -858,7 +906,7 @@ export function generateAlifCodeFromGraph(
       const startNodes = nodes.filter(n => (n.data as any).originalType === 'أوامر/بداية البرنامج');
       if (startNodes.length > 0) {
         localCode += walkExecution(startNodes[0].id, '', new Set<string>());
-      } else if (funcNodes.length === 0) {
+      } else if (funcNodes.length === 0 && customDefNodes.length === 0) {
         return '# يرجى إضافة وتوصيل عقدة (بداية البرنامج) أو (تعريف دالة)\n';
       }
     }
@@ -868,6 +916,7 @@ export function generateAlifCodeFromGraph(
       const unvisitedNodes = nodes.filter(n => !visitedNodes.has(n.id) && 
         (n.data as any).originalType !== 'أوامر/بداية البرنامج' && 
         (n.data as any).originalType !== 'دوال/تعريف دالة' &&
+        !isCustomDef(n) &&
         !(n.data as any).isMacro);
       
       if (unvisitedNodes.length > 0) {
