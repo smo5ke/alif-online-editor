@@ -3,7 +3,8 @@ import { useEditorStore, codeExamples } from '../../store/useEditorStore';
 import { visualExamples } from '../../store/visualExamples';
 import { generateRunnableCode } from '../../lib/runnableGraph';
 import { buildShareUrl, parseSharedCode } from '../../lib/shareCode';
-import { FileText, Copy, Share2, Download, Save, RotateCcw, Maximize, ChevronDown, Code, Undo2, Redo2, BookOpen, Keyboard } from 'lucide-react';
+import { sanitizeProject, parseProjectFile } from '../../lib/projectFile';
+import { FileText, Copy, Share2, Download, Save, RotateCcw, Maximize, ChevronDown, Code, Undo2, Redo2, BookOpen, Keyboard, FilePlus2, FolderOpen } from 'lucide-react';
 import CheatsheetModal from '../modals/CheatsheetModal';
 
 const SHORTCUTS: Array<[string, string]> = [
@@ -23,7 +24,8 @@ function getActiveCode(): string {
 }
 
 export default function EditorToolbar() {
-  const { activeMode, setMode, setTextCode, currentProjectId, isTerminalHidden, setIsTerminalHidden, setNodes, setEdges, undo, redo, past, future } = useEditorStore();
+  const { activeMode, setMode, setTextCode, currentProjectId, customPages, isTerminalHidden, setIsTerminalHidden, setNodes, setEdges, undo, redo, past, future } = useEditorStore();
+  const customPageIds = Object.keys(customPages);
   
   const [isExamplesOpen, setIsExamplesOpen] = useState(false);
   const [isCheatsheetOpen, setIsCheatsheetOpen] = useState(false);
@@ -31,6 +33,7 @@ export default function EditorToolbar() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside + load shared ?code= links
+  // + hydrate user pages + flush pages before unload
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -38,6 +41,11 @@ export default function EditorToolbar() {
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
+
+    useEditorStore.getState().hydrateCustomPages();
+
+    const flushPages = () => useEditorStore.getState().persistCustomPages();
+    window.addEventListener('beforeunload', flushPages);
 
     try {
       const decoded = parseSharedCode(window.location.search);
@@ -52,7 +60,10 @@ export default function EditorToolbar() {
       console.error('فشل تحميل الرابط المشترك:', e);
     }
 
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('beforeunload', flushPages);
+    };
   }, []);
 
   const examplesList = [
@@ -83,6 +94,17 @@ export default function EditorToolbar() {
     { id: 'custom', title: 'المثال 25: الشيفرة المخصصة' },
     { id: 'blank', title: 'مستند فارغ' },
   ];
+
+  const currentTitle =
+    customPages[currentProjectId ?? '']?.title ||
+    examplesList.find(ex => ex.id === currentProjectId)?.title ||
+    'الأمثلة البرمجية';
+
+  const handleSelectPage = (id: string) => {
+    // loadProject restores the cached state when present, else starts blank
+    useEditorStore.getState().loadProject(id, '', [], [], {});
+    setIsExamplesOpen(false);
+  };
 
   const handleSelectExample = (val: string) => {
     if (codeExamples[val] !== undefined) {
@@ -131,6 +153,79 @@ export default function EditorToolbar() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  };
+
+  const handleExportProject = () => {
+    try {
+      const state = useEditorStore.getState();
+      const title =
+        state.customPages[state.currentProjectId ?? '']?.title ||
+        examplesList.find((ex) => ex.id === state.currentProjectId)?.title ||
+        'مشروع ألف';
+      // The file always stores the MAIN graph in nodes/edges plus the full
+      // macro storage, so it reloads identically regardless of viewed graph.
+      const mergedMacros = { ...state.macros };
+      let mainNodes = state.nodes;
+      let mainEdges = state.edges;
+      if (state.currentGraphId !== 'main') {
+        mainNodes = state.mainGraph.nodes;
+        mainEdges = state.mainGraph.edges;
+        if (mergedMacros[state.currentGraphId]) {
+          mergedMacros[state.currentGraphId] = {
+            ...mergedMacros[state.currentGraphId],
+            nodes: state.nodes,
+            edges: state.edges,
+          };
+        }
+      }
+      const file = sanitizeProject(title, {
+        textCode: state.textCode,
+        nodes: mainNodes,
+        edges: mainEdges,
+        mainGraph: { nodes: mainNodes, edges: mainEdges },
+        macros: mergedMacros,
+        currentGraphId: state.currentGraphId,
+      });
+      const blob = new Blob([JSON.stringify(file)], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'project.alif.json';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('فشل التصدير:', err);
+      alert('فشل تصدير المشروع.');
+    }
+  };
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImportFile = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = parseProjectFile(JSON.parse(text));
+      if (!parsed) {
+        alert('ملف المشروع غير صالح.');
+        return;
+      }
+      useEditorStore.getState().loadProjectState(`custom_${Date.now()}`, parsed.title, parsed.state);
+      setIsExamplesOpen(false);
+      alert(`تم فتح المشروع "${parsed.title}" كصفحة جديدة!`);
+    } catch (err) {
+      console.error('فشل الاستيراد:', err);
+      alert('فشل فتح الملف.');
+    }
+  };
+
+  const handleCreatePage = () => {
+    const title = prompt('اسم الصفحة الجديدة:');
+    if (!title || !title.trim()) return;
+    useEditorStore.getState().createCustomPage(title);
+    setIsExamplesOpen(false);
   };
 
   const handleSave = () => {
@@ -258,6 +353,16 @@ export default function EditorToolbar() {
             <button onClick={() => setIsShortcutsOpen(true)} className="text-slate-400 hover:text-slate-200 hover:bg-slate-700 p-1.5 rounded-md transition-colors shrink-0" title="اختصارات لوحة المفاتيح">
               <Keyboard size={16} className="w-4 h-4 sm:w-4 sm:h-4" />
             </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json,application/json"
+              className="hidden"
+              onChange={(e) => {
+                handleImportFile(e.target.files?.[0]);
+                e.target.value = '';
+              }}
+            />
           </div>
         </div>
         
@@ -271,13 +376,13 @@ export default function EditorToolbar() {
             >
               <ChevronDown size={14} className={`transition-transform duration-300 shrink-0 ${isExamplesOpen ? 'rotate-180' : ''}`} />
               <span className="font-semibold truncate">
-                {examplesList.find(ex => ex.id === currentProjectId)?.title || 'الأمثلة البرمجية'}
+                {currentTitle}
               </span>
             </button>
             
             {/* Dropdown Menu */}
             {isExamplesOpen && (
-              <div className="absolute top-full left-0 mt-2 w-52 bg-slate-800/95 backdrop-blur-xl border border-slate-700 rounded-xl shadow-2xl overflow-hidden flex flex-col z-50 transform origin-top transition-all animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="absolute top-full left-0 mt-2 w-60 bg-slate-800/95 backdrop-blur-xl border border-slate-700 rounded-xl shadow-2xl overflow-hidden flex flex-col z-50 transform origin-top transition-all animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="bg-slate-700/30 px-3 py-2 border-b border-slate-700/50">
                   <span className="text-xs font-bold text-slate-400">اختر مثالاً لتجربته:</span>
                 </div>
@@ -292,6 +397,79 @@ export default function EditorToolbar() {
                       <span>{ex.title}</span>
                     </button>
                   ))}
+                </div>
+                <div className="bg-slate-700/30 px-3 py-2 border-y border-slate-700/50 flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-400">صفحاتي:</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={handleCreatePage}
+                      className="p-1 rounded-md text-emerald-400 hover:text-white hover:bg-emerald-600/60 transition-colors"
+                      title="صفحة فارغة جديدة"
+                    >
+                      <FilePlus2 size={14} />
+                    </button>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="p-1 rounded-md text-slate-300 hover:text-white hover:bg-slate-600/60 transition-colors"
+                      title="فتح ملف مشروع (alif.json)"
+                    >
+                      <FolderOpen size={14} />
+                    </button>
+                    <button
+                      onClick={handleExportProject}
+                      className="p-1 rounded-md text-slate-300 hover:text-white hover:bg-slate-600/60 transition-colors"
+                      title="تصدير المشروع الحالي كملف"
+                    >
+                      <Download size={14} />
+                    </button>
+                  </div>
+                </div>
+                <div className="max-h-48 overflow-y-auto custom-menu-scroll py-1">
+                  {customPageIds.length === 0 ? (
+                    <div className="px-4 py-3 text-xs text-slate-500 text-center">
+                      لا صفحات بعد — أنشئ واحدة بزر +
+                    </div>
+                  ) : (
+                    customPageIds.map((id) => (
+                      <div
+                        key={id}
+                        className={`w-full flex items-center justify-between pl-2 pr-4 py-2 text-sm transition-colors border-b border-slate-700/30 last:border-0 group ${
+                          currentProjectId === id ? 'bg-emerald-600/20 text-emerald-300' : 'text-slate-300 hover:bg-slate-700/80'
+                        }`}
+                        dir="rtl"
+                      >
+                        <button
+                          onClick={() => handleSelectPage(id)}
+                          className="flex-1 text-right truncate hover:text-emerald-400"
+                        >
+                          <span>{customPages[id]?.title || 'صفحة'}</span>
+                        </button>
+                        <span className="flex items-center gap-0.5 opacity-60 group-hover:opacity-100">
+                          <button
+                            onClick={() => {
+                              const t = prompt('اسم جديد للصفحة:', customPages[id]?.title || '');
+                              if (t) useEditorStore.getState().renameCustomPage(id, t);
+                            }}
+                            className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-600/60 text-xs"
+                            title="إعادة تسمية"
+                          >
+                            ✎
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm(`حذف الصفحة "${customPages[id]?.title}"؟`)) {
+                                useEditorStore.getState().deleteCustomPage(id);
+                              }
+                            }}
+                            className="p-1 rounded text-slate-400 hover:text-red-300 hover:bg-red-600/40 text-xs"
+                            title="حذف الصفحة"
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}

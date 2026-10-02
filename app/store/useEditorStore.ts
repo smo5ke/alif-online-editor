@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Node, Edge, NodeChange, EdgeChange, applyNodeChanges, applyEdgeChanges } from '@xyflow/react';
 import { visualExamples } from './visualExamples';
 import { buildMacroCallPorts } from '../components/AlifNodes';
+import { sanitizeProject, parseProjectFile, type ProjectFileData } from '../lib/projectFile';
 
 type EditorMode = 'visual' | 'code' | 'terminal';
 
@@ -36,6 +37,13 @@ export type ProjectState = {
   currentGraphId: string;
 };
 
+export interface CustomPageMeta {
+  title: string;
+  createdAt: number;
+}
+
+const CUSTOM_PROJECTS_KEY = 'alif_custom_projects';
+
 interface EditorState {
   // State
   activeMode: EditorMode;
@@ -51,6 +59,8 @@ interface EditorState {
 
   projectCache: Record<string, ProjectState>;
   currentProjectId: string | null;
+  customPages: Record<string, CustomPageMeta>;
+  customPagesHydrated: boolean;
 
   errorNodeId: string | null;
   errorLineNumber: number | null;
@@ -83,6 +93,12 @@ interface EditorState {
   deleteMacro: (macroId: string) => void;
   switchGraph: (targetId: string) => void;
   loadProject: (projectId: string, code: string, visualNodes: Node[], visualEdges: Edge[], visualMacros?: Record<string, MacroData>) => void;
+  loadProjectState: (projectId: string, title: string, fileState: ProjectState) => void;
+  createCustomPage: (title: string) => string;
+  renameCustomPage: (pageId: string, title: string) => void;
+  deleteCustomPage: (pageId: string) => void;
+  persistCustomPages: () => void;
+  hydrateCustomPages: () => void;
   setErrorNode: (nodeId: string | null) => void;
   setErrorLineNumber: (line: number | null) => void;
   setLastRunCode: (code: string) => void;
@@ -138,6 +154,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   projectCache: {},
   currentProjectId: 'hello',
+  customPages: {},
+  customPagesHydrated: false,
 
   errorNodeId: null,
   errorLineNumber: null,
@@ -660,5 +678,148 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       errorLineNumber: null,
       terminalOutput: []
     });
+
+    // Keep user pages durable across reloads
+    get().persistCustomPages();
+  },
+
+  createCustomPage: (title: string) => {
+    const id = `custom_${uuidv4()}`;
+    const cleanTitle = title.trim() || 'صفحة جديدة';
+    get().loadProject(id, '', [], [], {});
+    set((state) => ({
+      customPages: {
+        ...state.customPages,
+        [id]: { title: cleanTitle, createdAt: Date.now() },
+      },
+    }));
+    get().persistCustomPages();
+    return id;
+  },
+
+  loadProjectState: (projectId: string, title: string, fileState: ProjectState) => {
+    // Save current work into the cache first (same as loadProject)
+    const state = get();
+    const newCache = { ...state.projectCache };
+    if (state.currentProjectId) {
+      newCache[state.currentProjectId] = {
+        textCode: state.textCode,
+        nodes: state.nodes,
+        edges: state.edges,
+        mainGraph: state.mainGraph,
+        macros: state.macros,
+        currentGraphId: state.currentGraphId,
+      };
+    }
+    newCache[projectId] = fileState;
+
+    const viewing = fileState.currentGraphId !== 'main' && fileState.macros[fileState.currentGraphId]
+      ? fileState.currentGraphId
+      : 'main';
+    const viewNodes = viewing === 'main' ? fileState.nodes : fileState.macros[viewing].nodes;
+    const viewEdges = viewing === 'main' ? fileState.edges : fileState.macros[viewing].edges;
+
+    set({
+      projectCache: newCache,
+      currentProjectId: projectId,
+      textCode: fileState.textCode,
+      nodes: viewNodes,
+      edges: viewEdges,
+      mainGraph: fileState.mainGraph,
+      macros: fileState.macros,
+      currentGraphId: viewing,
+      customPages: {
+        ...state.customPages,
+        [projectId]: state.customPages[projectId] ?? { title, createdAt: Date.now() },
+      },
+      past: [],
+      future: [],
+      errorNodeId: null,
+      errorLineNumber: null,
+      terminalOutput: [],
+    });
+    get().persistCustomPages();
+  },
+
+  renameCustomPage: (pageId: string, title: string) => {
+    const cleanTitle = title.trim();
+    if (!cleanTitle || !get().customPages[pageId]) return;
+    set((state) => ({
+      customPages: {
+        ...state.customPages,
+        [pageId]: { ...state.customPages[pageId], title: cleanTitle },
+      },
+    }));
+    get().persistCustomPages();
+  },
+
+  deleteCustomPage: (pageId: string) => {
+    const state = get();
+    if (!state.customPages[pageId]) return;
+    if (state.currentProjectId === pageId) {
+      const helloNodes = visualExamples['hello'] ? visualExamples['hello'].nodes : [];
+      const helloEdges = visualExamples['hello'] ? visualExamples['hello'].edges : [];
+      get().loadProject('hello', codeExamples['hello'], helloNodes, helloEdges);
+    }
+    set((s) => {
+      const newCache = { ...s.projectCache };
+      delete newCache[pageId];
+      const newPages = { ...s.customPages };
+      delete newPages[pageId];
+      return { projectCache: newCache, customPages: newPages };
+    });
+    get().persistCustomPages();
+  },
+
+  persistCustomPages: () => {
+    try {
+      if (typeof window === 'undefined' || !window.localStorage) return;
+      const state = get();
+      const out: Record<string, ProjectFileData> = {};
+      for (const [id, meta] of Object.entries(state.customPages)) {
+        const live: ProjectState | undefined = state.currentProjectId === id
+          ? {
+              textCode: state.textCode,
+              nodes: state.nodes,
+              edges: state.edges,
+              mainGraph: state.mainGraph,
+              macros: state.macros,
+              currentGraphId: state.currentGraphId,
+            }
+          : state.projectCache[id];
+        if (!live) continue;
+        out[id] = sanitizeProject(meta.title, live);
+      }
+      window.localStorage.setItem(CUSTOM_PROJECTS_KEY, JSON.stringify(out));
+    } catch (e) {
+      console.error('فشل حفظ الصفحات:', e);
+    }
+  },
+
+  hydrateCustomPages: () => {
+    try {
+      if (typeof window === 'undefined' || !window.localStorage) return;
+      if (get().customPagesHydrated) return;
+      set({ customPagesHydrated: true });
+      const raw = window.localStorage.getItem(CUSTOM_PROJECTS_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      const pages: Record<string, CustomPageMeta> = {};
+      const cache: Record<string, ProjectState> = {};
+      for (const [id, entry] of Object.entries(parsed)) {
+        const file = parseProjectFile(entry);
+        if (!file) continue;
+        pages[id] = { title: file.title, createdAt: Date.now() };
+        cache[id] = file.state;
+      }
+      if (Object.keys(pages).length > 0) {
+        set((state) => ({
+          customPages: { ...pages, ...state.customPages },
+          projectCache: { ...state.projectCache, ...cache },
+        }));
+      }
+    } catch (e) {
+      console.error('فشل استعادة الصفحات:', e);
+    }
   },
 }));
